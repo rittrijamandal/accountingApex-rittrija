@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign up — Accounting APEX</title>
+  <link rel="stylesheet" href="auth-ui.css" />
+</head>
+<body>
+  <div class="auth-card">
+    <h1>APEX<span>.</span>ACCT</h1>
+    <p class="auth-sub">Create an account. You will be assigned the <strong>Grader</strong> role by default. Ask an Admin to promote you to Expert if you need to create worlds.</p>
+    <div class="err" id="err"></div>
+    <form id="form">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" autocomplete="email" required />
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" minlength="6" required />
+      <button type="submit" class="btn" id="submit">Create account</button>
+    </form>
+    <div class="auth-footer">
+      Already have an account? <a href="login.html">Sign in</a>
+    </div>
+  </div>
+  <script type="module">
+    import { getSupabase, fetchMyProfile, roleHomePath, getSession } from './js/auth-core.js';
+
+    const errEl = document.getElementById('err');
+    const form = document.getElementById('form');
+    const submit = document.getElementById('submit');
+
+    function showErr(msg) {
+      errEl.textContent = msg;
+      errEl.classList.add('visible');
+    }
+
+    (async () => {
+      try {
+        const existing = await getSession();
+        if (existing) {
+          const profile = await fetchMyProfile();
+          if (profile) {
+            window.location.replace(roleHomePath(profile.role));
+            return;
+          }
+        }
+      } catch (e) {
+        showErr(e.message || String(e));
+      }
+    })();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errEl.classList.remove('visible');
+      submit.disabled = true;
+      try {
+        const sb = await getSupabase();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const { data, error } = await sb.auth.signUp({ email, password });
+        if (error) throw error;
+        if (data.session) {
+          const profile = await fetchMyProfile();
+          if (!profile) throw new Error('Profile not created. Apply the database migration in Supabase.');
+          window.location.replace(roleHomePath(profile.role));
+          return;
+        }
+        showErr('Check your email to confirm your account, then sign in.');
+      } catch (err) {
+        showErr(err.message || 'Sign up failed');
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

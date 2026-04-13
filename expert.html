@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expert — Accounting APEX</title>
+  <link rel="stylesheet" href="expert.css" />
+</head>
+<body class="expert-shell">
+  <div class="wrap" id="expert-root">
+    <header class="expert-top">
+      <h1>Expert <span>worlds</span></h1>
+      <p class="muted" style="flex-basis:100%;margin-top:-8px">
+        Signed in as <strong id="email" style="color:var(--text)"></strong>.
+        Build accounting worlds manually (no AI). Publish when Graders should see them.
+      </p>
+      <div class="spacer"></div>
+      <div class="expert-actions">
+        <a href="admin.html" id="nav-admin" class="btn btn-ghost" style="display:none;text-decoration:none;text-align:center">Admin dashboard</a>
+        <button type="button" class="btn" id="new-world">+ New world</button>
+        <a href="viewer.html" class="btn btn-ghost">Sample viewer</a>
+        <button type="button" class="btn btn-ghost" id="logout">Sign out</button>
+      </div>
+    </header>
+
+    <p class="muted" style="margin-bottom:16px;line-height:1.5;font-size:13px">
+      The editor covers <strong>meta</strong>, <strong>bank transactions</strong>, <strong>charts of accounts</strong> (current + misleading),
+      <strong>expense policies</strong>, <strong>invoices</strong>, <strong>rubric</strong>, <strong>task prompt</strong>, and <strong>ambiguity / misleading files</strong> — the same conceptual model as the benchmark JSON.
+      Run SQL migration <code class="muted">20260413000000_worlds_payload.sql</code> once if saves fail.
+    </p>
+
+    <div class="data-table-wrap" style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <table class="world-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Updated</th>
+            <th>Creator hint</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="world-rows">
+          <tr><td colspan="5" class="muted" style="padding:16px">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script type="module" src="js/expert-list.js"></script>
+</body>
+</html>

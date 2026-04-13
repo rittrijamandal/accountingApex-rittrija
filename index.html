@@ -3,14 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Accounting APEX — World Viewer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css" />
+  <title>Accounting APEX</title>
+  <link rel="stylesheet" href="auth-ui.css" />
 </head>
 <body>
-  <div id="root"></div>
-  <script src="data.js"></script>
-  <script src="app.js"></script>
+  <div class="auth-card">
+    <h1>APEX<span>.</span>ACCT</h1>
+    <p class="loading-note" id="status">Checking session…</p>
+    <div id="fallback" hidden>
+      <p class="auth-sub" id="msg"></p>
+      <a href="login.html" class="btn" style="display:inline-block;text-align:center;text-decoration:none;width:auto;padding:10px 20px">Go to login</a>
+    </div>
+  </div>
+  <script type="module" src="js/index-redirect.js"></script>
 </body>
 </html>

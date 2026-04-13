@@ -1,12 +1,9 @@
 // ─────────────────────────────────────────────
-//  APP.JS  —  UI logic + AI generation
+//  APP.JS — sample world viewer (no external generation)
 // ─────────────────────────────────────────────
 
-let activeFile      = 'bank';
-let activeTab       = 'view';
-let activeArchetype = ARCHETYPES[0];
-let apiKey          = localStorage.getItem('apex_api_key') || '';
-let isGenerating    = false;
+let activeFile = 'bank';
+let activeTab  = 'view';
 
 // ── ACTIVE WORLD DATA (starts with static fallback) ──
 let WORLD = {
@@ -338,18 +335,6 @@ function buildTopbar() {
     </div>`;
 }
 
-// ── ARCHETYPE BAR ─────────────────────────────
-
-function buildArchetypeBar() {
-  const btns = ARCHETYPES.map(a => `
-    <button class="arch-btn ${a.id === activeArchetype.id ? 'active' : ''}"
-            onclick="selectArchetype('${a.id}')">${escHtml(a.label)}</button>`).join('');
-  return `
-    <span class="arch-label">archetype</span>
-    ${btns}
-    <button class="gen-btn" id="gen-btn" onclick="generateWorld()">⟳ Generate World</button>`;
-}
-
 // ── INTERACTIONS ──────────────────────────────
 
 function selectFile(id, el) {
@@ -368,138 +353,6 @@ function switchTab(tab) {
   if (tab === 'meta') document.getElementById('panel').innerHTML = renderWorldMeta();
 }
 
-function selectArchetype(id) {
-  activeArchetype = ARCHETYPES.find(a => a.id === id) || ARCHETYPES[0];
-  document.querySelectorAll('.arch-btn').forEach(b => b.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-}
-
-// ── API KEY MODAL ─────────────────────────────
-
-function showApiKeyModal(onConfirm) {
-  const modal = document.getElementById('apikey-modal');
-  document.getElementById('apikey-input').value = apiKey;
-  modal.classList.add('visible');
-  document.getElementById('apikey-cancel').onclick  = () => modal.classList.remove('visible');
-  document.getElementById('apikey-confirm').onclick = () => {
-    const val = document.getElementById('apikey-input').value.trim();
-    if (!val) return;
-    apiKey = val;
-    localStorage.setItem('apex_api_key', val);
-    modal.classList.remove('visible');
-    onConfirm();
-  };
-}
-
-// ── LOADING ───────────────────────────────────
-
-const LOAD_STEPS = [
-  'Inventing a fictional business...',
-  'Seeding transaction history...',
-  'Planting misleading files...',
-  'Writing rubric criteria...',
-  'Finalising world...',
-];
-
-function showLoading() {
-  document.getElementById('loading-title').textContent = `Generating world — ${activeArchetype.label}`;
-  const overlay = document.getElementById('loading-overlay');
-  overlay.classList.add('visible');
-  const bar      = document.getElementById('loading-bar');
-  const stepsEl  = document.getElementById('loading-steps');
-  stepsEl.innerHTML = LOAD_STEPS.map(s => `<div>${s}</div>`).join('');
-  bar.style.width = '0%';
-  let step = 0;
-  const interval = setInterval(() => {
-    step++;
-    bar.style.width = Math.min((step / LOAD_STEPS.length) * 82, 82) + '%';
-    const divs = stepsEl.querySelectorAll('div');
-    if (divs[step - 1]) divs[step - 1].classList.add('done');
-    if (step >= LOAD_STEPS.length) clearInterval(interval);
-  }, 900);
-  return { interval, bar };
-}
-
-function hideLoading(ctx) {
-  clearInterval(ctx.interval);
-  ctx.bar.style.width = '100%';
-  setTimeout(() => document.getElementById('loading-overlay').classList.remove('visible'), 400);
-}
-
-// ── GENERATION ────────────────────────────────
-
-async function generateWorld() {
-  if (isGenerating) return;
-  if (!apiKey) { showApiKeyModal(() => generateWorld()); return; }
-
-  isGenerating = true;
-  document.getElementById('gen-btn').disabled = true;
-  document.querySelectorAll('.arch-btn').forEach(b => b.disabled = true);
-
-  const loadCtx = showLoading();
-
-  try {
-    const res = await fetch('/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key':    apiKey,
-      },
-      body: JSON.stringify({
-        model:      'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        messages:   [{ role: 'user', content: buildGenerationPrompt(activeArchetype) }],
-      }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `API error ${res.status}`);
-    }
-
-    const data    = await res.json();
-    const raw     = data.content.find(b => b.type === 'text')?.text || '';
-    const cleaned = raw.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```$/,'').trim();
-    const world   = JSON.parse(cleaned);
-
-    WORLD = {
-      meta:               world.meta,
-      transactions:       world.transactions,
-      chartOfAccounts:    world.chartOfAccounts,
-      oldChartOfAccounts: world.oldChartOfAccounts,
-      expensePolicy:      world.expensePolicy,
-      oldExpensePolicy:   world.oldExpensePolicy,
-      invoices:           world.invoices,
-      rubric:             world.rubric,
-      taskPrompt:         world.taskPrompt,
-      ambiguityTypes:     world.ambiguityTypes,
-      misleadingFiles:    world.misleadingFiles,
-    };
-
-    activeFile = 'bank';
-    activeTab  = 'view';
-    hideLoading(loadCtx);
-    rebuildUI();
-
-  } catch (err) {
-    hideLoading(loadCtx);
-    const isAuth = err.message.includes('401') || err.message.toLowerCase().includes('auth');
-    if (isAuth) {
-      apiKey = '';
-      localStorage.removeItem('apex_api_key');
-    }
-    document.getElementById('panel').innerHTML = `
-      <div class="error-banner">
-        ${isAuth ? 'API key invalid. ' : 'Generation failed: ' + escHtml(err.message) + '. '}
-        <span style="cursor:pointer;text-decoration:underline" onclick="generateWorld()">Try again →</span>
-      </div>`;
-  } finally {
-    isGenerating = false;
-    document.getElementById('gen-btn').disabled  = false;
-    document.querySelectorAll('.arch-btn').forEach(b => b.disabled = false);
-  }
-}
-
 // ── LAUNCH AGENT ─────────────────────────────
 
 function launchAgent() {
@@ -512,9 +365,8 @@ function launchAgent() {
 // ── REBUILD ───────────────────────────────────
 
 function rebuildUI() {
-  document.getElementById('topbar').innerHTML        = buildTopbar();
-  document.getElementById('archetype-bar').innerHTML = buildArchetypeBar();
-  document.getElementById('sb-files').innerHTML      = buildFiletree();
+  document.getElementById('topbar').innerHTML   = buildTopbar();
+  document.getElementById('sb-files').innerHTML = buildFiletree();
   activeTab = 'view';
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-view').classList.add('active');
@@ -526,30 +378,7 @@ function rebuildUI() {
 function init() {
   document.getElementById('root').innerHTML = `
 
-    <div id="apikey-modal">
-      <div class="modal-box">
-        <div class="modal-title">Anthropic API key</div>
-        <div class="modal-sub">
-          Enter your Anthropic API key to generate worlds with Claude.<br>
-          Stored locally in your browser — sent only to api.anthropic.com.
-        </div>
-        <input id="apikey-input" class="modal-input" type="password" placeholder="sk-ant-..." />
-        <div class="modal-actions">
-          <button class="modal-btn modal-btn-cancel" id="apikey-cancel">Cancel</button>
-          <button class="modal-btn modal-btn-confirm" id="apikey-confirm">Save &amp; generate</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="loading-overlay">
-      <div class="loading-title" id="loading-title">Generating world...</div>
-      <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
-      <div class="loading-steps" id="loading-steps"></div>
-      <div class="loading-sub">This takes about 10–15 seconds</div>
-    </div>
-
     <div id="topbar">${buildTopbar()}</div>
-    <div id="archetype-bar">${buildArchetypeBar()}</div>
 
     <div id="main" style="position:relative">
       <div id="sidebar">

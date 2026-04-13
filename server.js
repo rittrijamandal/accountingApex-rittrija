@@ -1,13 +1,28 @@
+require('dotenv').config();
 const express = require('express');
 const path    = require('path');
 
 const app  = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+
+const SUPABASE_URL     = process.env.SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
 
 app.use(express.json({ limit: '2mb' }));
-app.use(express.static(path.join(__dirname)));
 
-async function anthropicPost(apiKey, body, res) {
+/** Public config for browser Supabase client (anon key is safe with RLS). */
+app.get('/api/bootstrap', (_req, res) => {
+  res.json({
+    supabaseUrl:     SUPABASE_URL,
+    supabaseAnonKey: SUPABASE_ANON_KEY,
+  });
+});
+
+/**
+ * Sole external integration: Claude Messages API for Expert "Test Grader" / agent tooling.
+ * Expects Anthropic API key in `x-api-key` (browser continues to supply the caller's key until Phase 2+ server-side secrets).
+ */
+async function anthropicMessagesPost(apiKey, body, res) {
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -25,20 +40,18 @@ async function anthropicPost(apiKey, body, res) {
   }
 }
 
-app.post('/generate', async (req, res) => {
+app.post('/api/test-grader', async (req, res) => {
   const apiKey = req.headers['x-api-key'];
   if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
-  await anthropicPost(apiKey, req.body, res);
+  await anthropicMessagesPost(apiKey, req.body, res);
 });
 
-app.post('/agent', async (req, res) => {
-  const apiKey = req.headers['x-api-key'];
-  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
-  await anthropicPost(apiKey, req.body, res);
-});
+app.use(express.static(path.join(__dirname)));
 
 app.listen(PORT, () => {
   console.log(`\n  APEX server running at http://localhost:${PORT}`);
-  console.log(`  World viewer: http://localhost:${PORT}/`);
-  console.log(`  Agent runner: http://localhost:${PORT}/agent.html\n`);
+  console.log(`  Home (auth redirect): http://localhost:${PORT}/`);
+  console.log(`  Sample world viewer:  http://localhost:${PORT}/viewer.html`);
+  console.log(`  Agent runner UI:      http://localhost:${PORT}/agent.html`);
+  console.log(`  Claude proxy only:    POST /api/test-grader\n`);
 });

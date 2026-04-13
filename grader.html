@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grader — Accounting APEX</title>
+  <link rel="stylesheet" href="auth-ui.css" />
+</head>
+<body>
+  <div class="dashboard">
+    <h1>Grader <span>console</span></h1>
+    <p>Signed in as <strong id="email"></strong>. Phase 1 placeholder — upcoming: browse published worlds and run external agents. This role cannot create worlds.</p>
+    <div class="row">
+      <button type="button" class="btn btn-inline" id="logout">Sign out</button>
+      <a href="viewer.html" class="btn btn-inline btn-ghost" style="text-decoration:none;display:inline-block">Sample viewer (static demo)</a>
+      <a href="agent.html" class="btn btn-inline btn-ghost" style="text-decoration:none;display:inline-block">Legacy agent UI</a>
+    </div>
+  </div>
+  <script type="module">
+    import { requireRoles } from './js/auth-guard.js';
+    import { signOut } from './js/auth-core.js';
+
+    const ctx = await requireRoles(['grader']);
+    if (!ctx) return;
+    document.getElementById('email').textContent = ctx.profile.email || ctx.session.user.email || ctx.profile.id;
+
+    document.getElementById('logout').addEventListener('click', async () => {
+      await signOut();
+      window.location.href = '/login.html';
+    });
+  </script>
+</body>
+</html>

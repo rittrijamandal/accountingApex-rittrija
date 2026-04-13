@@ -392,7 +392,7 @@ async function callClaude(messages) {
   const apiKey = localStorage.getItem('apex_api_key');
   if (!apiKey) throw new Error('No API key. Go back to the world viewer and enter your key first.');
 
-  const res = await fetch('/agent', {
+  const res = await fetch('/api/test-grader', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
     body: JSON.stringify({
@@ -570,7 +570,7 @@ Return a JSON array with one object per rubric criterion. Example format:
 [{"n":1,"met":true,"reasoning":"explanation"},{"n":2,"met":false,"reasoning":"explanation"}]`;
 
   try {
-    const res = await fetch('/agent', {
+    const res = await fetch('/api/test-grader', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
       body: JSON.stringify({
