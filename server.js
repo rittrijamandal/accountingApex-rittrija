@@ -46,6 +46,11 @@ app.post('/api/test-grader', async (req, res) => {
   await anthropicMessagesPost(apiKey, req.body, res);
 });
 
+// Ensure root always resolves on serverless platforms.
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.get('/admin', (_req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
