@@ -8,6 +8,7 @@
         "includeFiles": [
           "*.html",
           "*.css",
+          "*.js",
           "js/**",
           "assets/**",
           "supabase/**"
