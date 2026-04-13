@@ -61,7 +61,41 @@ export function roleHomePath(role) {
   return '/grader.html';
 }
 
+/** Remove Supabase session from localStorage (keys like sb-<ref>-auth-token). */
+export function clearSupabaseLocalStorage() {
+  try {
+    for (const k of Object.keys(localStorage)) {
+      if (k.startsWith('sb-')) localStorage.removeItem(k);
+    }
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+/**
+ * End session and drop cached client. Uses scope 'local' so it works even if revoke API fails.
+ * Always clears storage so the next page load is logged out.
+ */
 export async function signOut() {
-  const sb = await getSupabase();
-  await sb.auth.signOut();
+  try {
+    const sb = await getSupabase();
+    const { error } = await sb.auth.signOut({ scope: 'local' });
+    if (error) console.warn('[apex] signOut:', error.message);
+  } catch (e) {
+    console.warn('[apex] signOut failed (still clearing local session):', e);
+  } finally {
+    clearSupabaseLocalStorage();
+    client = null;
+    boot = null;
+  }
+}
+
+/** Works for pages served from the app root (e.g. /admin.html → /login.html). */
+export function goToLogin() {
+  window.location.href = '/login.html';
+}
+
+export async function signOutAndRedirect() {
+  await signOut();
+  goToLogin();
 }

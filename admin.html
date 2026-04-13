@@ -7,33 +7,36 @@
   <link rel="stylesheet" href="auth-ui.css" />
 </head>
 <body>
-  <div class="dashboard">
+  <div class="dashboard dashboard-wide">
     <h1>Admin <span>dashboard</span></h1>
-    <p>Signed in as <strong id="email"></strong>. Admins can open every area of the app; use Expert to author worlds, Grader to run agents against published worlds.</p>
+    <p>Signed in as <strong id="email"></strong>.</p>
 
-    <p style="margin:18px 0 10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em">Go to</p>
-    <div class="row" style="flex-direction:column;align-items:stretch;gap:10px;max-width:420px">
-      <a href="expert.html" class="btn" style="text-decoration:none;text-align:center;display:block;box-sizing:border-box">Expert — worlds &amp; editor</a>
-      <a href="grader.html" class="btn btn-ghost" style="text-decoration:none;text-align:center;display:block;box-sizing:border-box;margin-top:0">Grader console</a>
-      <a href="viewer.html" class="btn btn-ghost" style="text-decoration:none;text-align:center;display:block;box-sizing:border-box;margin-top:0">Sample world viewer (static demo)</a>
-    </div>
+    <h2 class="admin-section-title">1 · Admin mode</h2>
+    <p class="muted" style="margin-bottom:8px;line-height:1.5">
+      All users, roles, and worlds. Use <strong>Save role</strong> to assign <code>admin</code>, <code>expert</code>, or <code>grader</code>.
+      World count is per creator. <span id="admin-status"></span>
+    </p>
+    <div id="admin-users"></div>
 
-    <div class="row" style="margin-top:22px">
+    <h2 class="admin-section-title">All worlds</h2>
+    <p class="muted" style="margin-bottom:8px;line-height:1.5">Open <strong>Edit</strong> to use the same editor Experts use (admins can edit any world).</p>
+    <div id="admin-worlds"></div>
+
+    <h2 class="admin-section-title">2 · Expert experience</h2>
+    <p class="muted" style="margin-bottom:10px">Same tools as an Expert: create and edit worlds (including others’ worlds from the table above).</p>
+    <a href="expert.html" class="btn" style="text-decoration:none;text-align:center;display:inline-block;box-sizing:border-box;width:auto;padding:10px 20px">Open Expert workspace</a>
+
+    <h2 class="admin-section-title">3 · Grader experience</h2>
+    <p class="muted" style="margin-bottom:10px">Same view as a Grader: published worlds only.</p>
+    <a href="grader.html" class="btn btn-ghost" style="text-decoration:none;text-align:center;display:inline-block;box-sizing:border-box;width:auto;padding:10px 20px;margin-top:0">Open Grader console</a>
+
+    <h2 class="admin-section-title">Extra</h2>
+    <a href="viewer.html" class="btn btn-ghost" style="text-decoration:none;text-align:center;display:inline-block;box-sizing:border-box;width:auto;padding:10px 20px;margin-top:0">Static sample viewer (demo)</a>
+
+    <div class="row" style="margin-top:28px">
       <button type="button" class="btn btn-inline" id="logout">Sign out</button>
     </div>
   </div>
-  <script type="module">
-    import { requireRoles } from './js/auth-guard.js';
-    import { signOut } from './js/auth-core.js';
-
-    const ctx = await requireRoles(['admin']);
-    if (!ctx) return;
-    document.getElementById('email').textContent = ctx.profile.email || ctx.session.user.email || ctx.profile.id;
-
-    document.getElementById('logout').addEventListener('click', async () => {
-      await signOut();
-      window.location.href = '/login.html';
-    });
-  </script>
+  <script type="module" src="js/admin-app.js"></script>
 </body>
 </html>

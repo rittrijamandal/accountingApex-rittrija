@@ -7,27 +7,18 @@
   <link rel="stylesheet" href="auth-ui.css" />
 </head>
 <body>
-  <div class="dashboard">
+  <div class="dashboard dashboard-wide">
     <h1>Grader <span>console</span></h1>
-    <p>Signed in as <strong id="email"></strong>. Phase 1 placeholder — upcoming: browse published worlds and run external agents. This role cannot create worlds.</p>
-    <div class="row">
+    <p>Signed in as <strong id="email"></strong>. You can browse <strong>published</strong> worlds only and load them into the sample viewer. You cannot create or edit worlds.</p>
+    <div class="row" style="margin-bottom:16px">
       <button type="button" class="btn btn-inline" id="logout">Sign out</button>
-      <a href="viewer.html" class="btn btn-inline btn-ghost" style="text-decoration:none;display:inline-block">Sample viewer (static demo)</a>
+      <a href="viewer.html" class="btn btn-inline btn-ghost" style="text-decoration:none;display:inline-block">Sample viewer (no world loaded)</a>
       <a href="agent.html" class="btn btn-inline btn-ghost" style="text-decoration:none;display:inline-block">Legacy agent UI</a>
     </div>
+
+    <h2 class="admin-section-title">Published worlds</h2>
+    <div id="grader-worlds"><p class="muted">Loading…</p></div>
   </div>
-  <script type="module">
-    import { requireRoles } from './js/auth-guard.js';
-    import { signOut } from './js/auth-core.js';
-
-    const ctx = await requireRoles(['grader']);
-    if (!ctx) return;
-    document.getElementById('email').textContent = ctx.profile.email || ctx.session.user.email || ctx.profile.id;
-
-    document.getElementById('logout').addEventListener('click', async () => {
-      await signOut();
-      window.location.href = '/login.html';
-    });
-  </script>
+  <script type="module" src="js/grader-app.js"></script>
 </body>
 </html>

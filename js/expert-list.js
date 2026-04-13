@@ -1,4 +1,4 @@
-import { getSupabase, signOut } from './auth-core.js';
+import { getSupabase, signOutAndRedirect } from './auth-core.js';
 import { requireRoles } from './auth-guard.js';
 import { emptyPayload } from './world-payload.js';
 
@@ -26,9 +26,8 @@ async function init() {
   const navAdmin = document.getElementById('nav-admin');
   if (navAdmin && ctx.profile.role === 'admin') navAdmin.style.display = 'inline-flex';
 
-  document.getElementById('logout').addEventListener('click', async () => {
-    await signOut();
-    window.location.href = '/login.html';
+  document.getElementById('logout').addEventListener('click', () => {
+    void signOutAndRedirect();
   });
 
   const sb = await getSupabase();
