@@ -3,16 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Accounting APEX</title>
+  <title>SYMBAL ACCOUNTING APEX</title>
   <link rel="stylesheet" href="auth-ui.css" />
 </head>
-<body>
+<body class="page-login">
   <div class="auth-card">
-    <h1>APEX<span>.</span>ACCT</h1>
-    <p class="loading-note" id="status">Checking session…</p>
+    <header class="login-brand">
+      <img src="/assets/symbal-logo.png" alt="SYMBAL" class="login-brand-logo" width="56" height="56" />
+      <h1 class="login-brand-title">SYMBAL ACCOUNTING <span class="title-serif">apex</span></h1>
+    </header>
+    <p class="loading-note" id="status">CHECKING SESSION…</p>
     <div id="fallback" hidden>
       <p class="auth-sub" id="msg"></p>
-      <a href="login.html" class="btn" style="display:inline-block;text-align:center;text-decoration:none;width:auto;padding:10px 20px">Go to login</a>
+      <a href="login.html" class="btn" style="display:inline-block;text-align:center;text-decoration:none;width:auto;margin-top:12px">GO TO LOGIN</a>
     </div>
   </div>
   <script type="module" src="js/index-redirect.js"></script>

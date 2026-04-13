@@ -3,131 +3,179 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>APEX Agent Runner</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <title>SYMBAL ACCOUNTING APEX — Agent Runner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;1,500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0f0f0f; --bg2: #161616; --bg3: #1e1e1e; --bg4: #252525;
-      --border: #2e2e2e; --border2: #3a3a3a;
-      --text: #e8e6e0; --text2: #9a9690; --text3: #5c5a56;
-      --green: #4caf7d; --green-bg: #0d1f15;
-      --amber: #d4a84b; --amber-bg: #1e1600;
-      --red: #e05252; --red-bg: #1f0d0d;
-      --blue: #5b9cf6; --blue-bg: #0d1525;
-      --mono: 'IBM Plex Mono', monospace;
+      --bg: #f1f5f9;
+      --bg2: #ffffff;
+      --bg3: #f8fafc;
+      --bg4: #e2e8f0;
+      --border: #e2e8f0;
+      --border2: #cbd5e1;
+      --text: #0f172a;
+      --text2: #64748b;
+      --text3: #94a3b8;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-soft: #dbeafe;
+      --accent-muted: #eff6ff;
+      --amber: #b45309;
+      --amber-bg: #fffbeb;
+      --amber-border: #fde68a;
+      --red: #dc2626;
+      --red-bg: #fef2f2;
+      --red-border: #fecaca;
+      --blue: #2563eb;
+      --blue-bg: #eff6ff;
+      --blue-border: #bfdbfe;
+      --pos: #059669;
+      --pos-bg: #ecfdf5;
+      --pos-border: #a7f3d0;
+      --mono: 'IBM Plex Mono', ui-monospace, monospace;
+      --sans: 'Inter', system-ui, sans-serif;
+      --green: var(--accent);
+      --green-bg: var(--accent-soft);
     }
-    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 12px; overflow: hidden; }
+    html, body {
+      height: 100%;
+      background: linear-gradient(165deg, #f8fafc 0%, #e2e8f0 55%, #dbeafe 100%);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      overflow: hidden;
+    }
 
-    /* ── LAYOUT ── */
+    .title-serif {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-weight: 500;
+      color: var(--accent);
+      text-transform: none;
+      letter-spacing: 0.02em;
+    }
+
     #root { display: flex; flex-direction: column; height: 100vh; }
 
-    /* ── TOPBAR ── */
     #topbar {
       display: flex; align-items: center; gap: 12px;
-      padding: 0 20px; height: 44px; min-height: 44px;
+      padding: 0 20px; height: 48px; min-height: 48px;
       background: var(--bg2); border-bottom: 1px solid var(--border);
       font-size: 12px; flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     }
-    .tb-logo { font-weight: 600; font-size: 11px; letter-spacing: 0.05em; }
-    .tb-logo span { color: var(--green); }
+    .tb-logo {
+      font-weight: 600; color: var(--text); letter-spacing: 0.06em; font-size: 10px;
+      text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .tb-logo-img { display: block; width: 22px; height: 22px; object-fit: contain; }
+    .tb-logo .title-serif { font-size: 12px; margin-left: 2px; }
     .tb-sep { color: var(--border2); }
     .back-btn {
       margin-left: auto; padding: 4px 12px;
-      border: 1px solid var(--border2); border-radius: 3px;
-      background: transparent; color: var(--text2);
-      font-family: var(--mono); font-size: 11px; cursor: pointer;
+      border: 1px solid var(--border2); border-radius: 0;
+      background: var(--bg3); color: var(--text2);
+      font-family: var(--sans); font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer;
     }
-    .back-btn:hover { border-color: var(--text2); color: var(--text); }
+    .back-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-muted); }
 
-    /* ── MAIN SPLIT ── */
     #main { display: flex; flex: 1; overflow: hidden; }
 
-    /* ── LEFT: AGENT CONSOLE ── */
     #console-pane {
       width: 55%; border-right: 1px solid var(--border);
       display: flex; flex-direction: column; overflow: hidden;
+      background: var(--bg2);
     }
     #console-header {
       display: flex; align-items: center; gap: 10px;
       padding: 10px 16px; border-bottom: 1px solid var(--border);
-      background: var(--bg2); flex-shrink: 0;
+      background: var(--bg3); flex-shrink: 0;
     }
-    .pane-title { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; flex: 1; }
+    .pane-title {
+      font-size: 10px; color: var(--text2); letter-spacing: 0.1em; text-transform: uppercase; flex: 1;
+      font-family: var(--sans); font-weight: 600;
+    }
     .run-btn {
-      padding: 5px 16px; border: 1px solid var(--green);
-      border-radius: 3px; background: var(--green-bg); color: var(--green);
-      font-family: var(--mono); font-size: 11px; font-weight: 600;
-      cursor: pointer; letter-spacing: 0.04em; transition: all 0.15s;
+      padding: 5px 16px; border: 1px solid var(--accent);
+      border-radius: 0; background: var(--accent-soft); color: var(--accent);
+      font-family: var(--sans); font-size: 10px; font-weight: 600;
+      cursor: pointer; letter-spacing: 0.04em; text-transform: uppercase;
+      transition: background 0.15s, border-color 0.15s;
     }
-    .run-btn:hover { background: #132e1e; }
-    .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .run-btn:hover:not(:disabled) { background: var(--accent-muted); border-color: var(--accent-hover); }
+    .run-btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .stop-btn {
       padding: 5px 16px; border: 1px solid var(--red);
-      border-radius: 3px; background: var(--red-bg); color: var(--red);
-      font-family: var(--mono); font-size: 11px; font-weight: 600;
+      border-radius: 0; background: var(--red-bg); color: var(--red);
+      font-family: var(--sans); font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.04em;
       cursor: pointer; display: none;
     }
-    .step-counter { font-size: 10px; color: var(--text3); }
+    .step-counter { font-size: 10px; color: var(--text3); font-family: var(--mono); }
 
     #console-log {
       flex: 1; overflow-y: auto; padding: 12px 16px;
       display: flex; flex-direction: column; gap: 4px;
+      background: var(--bg3);
     }
     #console-log::-webkit-scrollbar { width: 4px; }
-    #console-log::-webkit-scrollbar-thumb { background: var(--border2); }
+    #console-log::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 0; }
 
     .log-entry { display: flex; gap: 10px; align-items: flex-start; line-height: 1.6; }
-    .log-ts { color: var(--text3); font-size: 10px; min-width: 52px; padding-top: 1px; flex-shrink: 0; }
-    .log-msg { flex: 1; font-size: 11px; }
+    .log-ts { color: var(--text3); font-size: 10px; min-width: 52px; padding-top: 1px; flex-shrink: 0; font-family: var(--mono); }
+    .log-msg { flex: 1; font-size: 11px; font-family: var(--mono); }
     .log-system  { color: var(--text3); font-style: italic; }
     .log-think   { color: var(--blue); }
     .log-tool    { color: var(--amber); }
     .log-result  { color: var(--text2); }
-    .log-output  { color: var(--green); }
+    .log-output  { color: var(--pos); font-weight: 500; }
     .log-error   { color: var(--red); }
 
     .tool-call {
-      background: var(--amber-bg); border: 1px solid #3d2e00;
-      border-radius: 3px; padding: 6px 10px; margin: 2px 0;
-      font-size: 10px; color: var(--amber);
+      background: var(--amber-bg); border: 1px solid var(--amber-border);
+      border-radius: 0; padding: 6px 10px; margin: 2px 0;
+      font-size: 10px; color: var(--amber); font-family: var(--mono);
     }
     .tool-result {
-      background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 3px; padding: 6px 10px; margin: 2px 0;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 0; padding: 6px 10px; margin: 2px 0;
       font-size: 10px; color: var(--text2); max-height: 120px;
       overflow-y: auto; white-space: pre-wrap; word-break: break-all;
+      font-family: var(--mono);
     }
 
-    /* ── RIGHT: SCORE PANEL ── */
     #score-pane {
       flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      background: var(--bg2);
     }
     #score-header {
       display: flex; align-items: center; gap: 10px;
       padding: 10px 16px; border-bottom: 1px solid var(--border);
-      background: var(--bg2); flex-shrink: 0;
+      background: var(--bg3); flex-shrink: 0;
     }
-    #score-content { flex: 1; overflow-y: auto; padding: 16px; }
+    #score-content { flex: 1; overflow-y: auto; padding: 16px; background: var(--bg3); }
     #score-content::-webkit-scrollbar { width: 4px; }
-    #score-content::-webkit-scrollbar-thumb { background: var(--border2); }
+    #score-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 0; }
 
     .score-placeholder {
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; height: 100%; gap: 10px;
-      color: var(--text3); text-align: center;
+      color: var(--text3); text-align: center; font-family: var(--sans);
     }
-    .score-placeholder .big { font-size: 32px; margin-bottom: 8px; }
+    .score-placeholder .big { font-size: 32px; margin-bottom: 8px; color: var(--accent); opacity: 0.35; }
 
-    .metrics-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .metrics-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .metric-card {
-      flex: 1; background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 4px; padding: 10px 12px;
+      flex: 1; min-width: 100px; background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 0; padding: 10px 12px;
     }
-    .metric-label { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-    .metric-value { font-size: 18px; font-weight: 600; }
-    .mv-green { color: var(--green); }
+    .metric-label { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; font-family: var(--sans); }
+    .metric-value { font-size: 18px; font-weight: 600; color: var(--text); font-family: var(--sans); }
+    .mv-green { color: var(--pos); }
     .mv-amber { color: var(--amber); }
     .mv-red   { color: var(--red); }
 
@@ -138,32 +186,36 @@
     .rubric-score-item:last-child { border-bottom: none; }
     .rs-icon { font-size: 13px; min-width: 18px; padding-top: 1px; }
     .rs-body { flex: 1; }
-    .rs-text { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 4px; }
+    .rs-text { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 4px; font-family: var(--sans); }
     .rs-reasoning { font-size: 10px; color: var(--text3); line-height: 1.5; font-style: italic; }
-    .rs-type { font-size: 9px; padding: 1px 5px; border-radius: 2px; font-weight: 600; }
-    .rst-det { background: var(--green-bg); color: var(--green); border: 1px solid #1a3d28; }
-    .rst-llm { background: var(--blue-bg); color: var(--blue); border: 1px solid #152240; }
-    .rst-neg { background: var(--red-bg); color: var(--red); border: 1px solid #3d1515; }
+    .rs-type { font-size: 9px; padding: 2px 6px; border-radius: 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .rst-det { background: var(--pos-bg); color: var(--pos); border: 1px solid var(--pos-border); }
+    .rst-llm { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+    .rst-neg { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
 
-    .section-label { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+    .section-label { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; font-family: var(--sans); font-weight: 600; }
 
     .agent-output-box {
-      background: var(--bg3); border: 1px solid var(--border2);
-      border-radius: 4px; padding: 12px; font-size: 11px;
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 0; padding: 12px; font-size: 11px;
       line-height: 1.7; color: var(--text2); margin-bottom: 16px;
       max-height: 300px; overflow-y: auto; white-space: pre-wrap;
+      font-family: var(--mono);
     }
   </style>
 </head>
 <body>
 <div id="root">
   <div id="topbar">
-    <span class="tb-logo">APEX<span>.</span>ACCT</span>
+    <span class="tb-logo">
+      <img src="/assets/symbal-logo.png" alt="" class="tb-logo-img" width="22" height="22" />
+      SYMBAL ACCOUNTING <span class="title-serif">apex</span>
+    </span>
     <span class="tb-sep">/</span>
-    <span style="color:var(--text2)">Agent Runner</span>
+    <span style="color:var(--text2);font-weight:500">Agent Runner</span>
     <span class="tb-sep">·</span>
-    <span id="world-name" style="color:var(--text);font-size:11px">Pixel &amp; Pine Studio</span>
-    <button class="back-btn" onclick="window.location.href='/'">← World Viewer</button>
+    <span id="world-name" style="color:var(--text);font-size:11px;font-weight:600">Pixel &amp; Pine Studio</span>
+    <button type="button" class="back-btn" onclick="window.location.href='/'">← World Viewer</button>
   </div>
   <div id="main">
     <div id="console-pane">
@@ -607,7 +659,7 @@ function renderScore(scores, summary, errorMsg) {
     const score = scores.find(s => s.n === r.n);
     const met   = score?.met;
     const icon  = met === true ? '✓' : met === false ? '✗' : '?';
-    const iconColor = met === true ? 'color:var(--green)' : met === false ? 'color:var(--red)' : 'color:var(--text3)';
+    const iconColor = met === true ? 'color:var(--pos)' : met === false ? 'color:var(--red)' : 'color:var(--text3)';
     return `
       <div class="rubric-score-item">
         <div class="rs-icon" style="${iconColor}">${icon}</div>
@@ -634,7 +686,7 @@ function renderScore(scores, summary, errorMsg) {
     .length;
 
   document.getElementById('score-content').innerHTML = `
-    ${errorMsg ? `<div style="background:var(--red-bg);border:1px solid #3d1515;border-radius:4px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:var(--red)">${escHtml(errorMsg)}</div>` : ''}
+    ${errorMsg ? `<div style="background:var(--red-bg);border:1px solid var(--red-border);border-radius:0;padding:10px 12px;margin-bottom:16px;font-size:11px;color:var(--red)">${escHtml(errorMsg)}</div>` : ''}
 
     <div class="metrics-row">
       <div class="metric-card">
@@ -656,7 +708,7 @@ function renderScore(scores, summary, errorMsg) {
     </div>
 
     ${misleadOpened > 0 ? `
-      <div style="background:var(--amber-bg);border:1px solid #3d2e00;border-radius:4px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:var(--amber)">
+      <div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:0;padding:10px 12px;margin-bottom:16px;font-size:11px;color:var(--amber)">
         ⚠ Agent opened ${misleadOpened} misleading file${misleadOpened > 1 ? 's' : ''} — may have used outdated data
       </div>` : ''}
 

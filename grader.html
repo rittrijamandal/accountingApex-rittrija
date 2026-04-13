@@ -3,31 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Grader — Accounting APEX</title>
-  <link rel="stylesheet" href="auth-ui.css" />
+  <title>Grader Console — Accounting APEX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;1,500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="dashboard">
-    <h1>Grader <span>console</span></h1>
-    <p>Signed in as <strong id="email"></strong>. Phase 1 placeholder — upcoming: browse published worlds and run external agents. This role cannot create worlds.</p>
-    <div class="row">
-      <button type="button" class="btn btn-inline" id="logout">Sign out</button>
-      <a href="viewer.html" class="btn btn-inline btn-ghost" style="text-decoration:none;display:inline-block">Sample viewer (static demo)</a>
-      <a href="agent.html" class="btn btn-inline btn-ghost" style="text-decoration:none;display:inline-block">Legacy agent UI</a>
-    </div>
-  </div>
-  <script type="module">
-    import { requireRoles } from './js/auth-guard.js';
-    import { signOut } from './js/auth-core.js';
-
-    const ctx = await requireRoles(['grader']);
-    if (!ctx) return;
-    document.getElementById('email').textContent = ctx.profile.email || ctx.session.user.email || ctx.profile.id;
-
-    document.getElementById('logout').addEventListener('click', async () => {
-      await signOut();
-      window.location.href = '/login.html';
-    });
-  </script>
+  <div id="root"></div>
+  <script src="data.js"></script>
+  <script src="js/grader-console.js"></script>
 </body>
 </html>

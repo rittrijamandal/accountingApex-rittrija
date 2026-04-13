@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIGNING OUT — SYMBAL ACCOUNTING APEX</title>
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <link rel="stylesheet" href="auth-ui.css" />
+</head>
+<body class="page-login">
+  <div class="auth-card" style="text-align:center">
+    <p class="loading-note" style="margin:0">SIGNING YOU OUT…</p>
+    <p class="auth-sub" style="margin-top:16px;margin-bottom:0">
+      <a href="/login.html" style="color:var(--accent);text-decoration:none;font-weight:600">GO TO LOGIN</a> IF NOTHING HAPPENS.
+    </p>
+  </div>
+  <script>
+    (function () {
+      function wipe(store) {
+        try {
+          var keys = Object.keys(store);
+          for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            if (k.indexOf('sb-') === 0 || k.indexOf('supabase.auth') !== -1 || k === 'supabase.auth.token') {
+              store.removeItem(k);
+            }
+          }
+        } catch (e) {}
+      }
+      wipe(localStorage);
+      wipe(sessionStorage);
+      window.location.replace('/login.html');
+    })();
+  </script>
+</body>
+</html>

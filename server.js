@@ -46,12 +46,22 @@ app.post('/api/test-grader', async (req, res) => {
   await anthropicMessagesPost(apiKey, req.body, res);
 });
 
+app.get('/admin', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 app.use(express.static(path.join(__dirname)));
 
-app.listen(PORT, () => {
-  console.log(`\n  APEX server running at http://localhost:${PORT}`);
-  console.log(`  Home (auth redirect): http://localhost:${PORT}/`);
-  console.log(`  Sample world viewer:  http://localhost:${PORT}/viewer.html`);
-  console.log(`  Agent runner UI:      http://localhost:${PORT}/agent.html`);
-  console.log(`  Claude proxy only:    POST /api/test-grader\n`);
-});
+// Vercel serverless entrypoint
+module.exports = app;
+
+// Local dev server
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n  APEX server running at http://localhost:${PORT}`);
+    console.log(`  Home (auth redirect): http://localhost:${PORT}/`);
+    console.log(`  Sample world viewer:  http://localhost:${PORT}/viewer.html`);
+    console.log(`  Agent runner UI:      http://localhost:${PORT}/agent.html`);
+    console.log(`  Claude proxy only:    POST /api/test-grader\n`);
+  });
+}

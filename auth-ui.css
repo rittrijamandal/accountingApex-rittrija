@@ -1,22 +1,32 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;1,500&display=swap');
 
+/* Hybrid (B): light Symbal-adjacent palette, square corners, caps tool UI, serif italic accents */
 :root {
-  --bg: #0f0f0f;
-  --card: #161616;
-  --border: #2e2e2e;
-  --text: #e8e6e0;
-  --muted: #9a9690;
-  --green: #4caf7d;
-  --red: #e05252;
+  --bg: #e8eef4;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --border-focus: #93c5fd;
+  --text: #0f172a;
+  --muted: #64748b;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: #dbeafe;
+  --accent-muted: #eff6ff;
+  --input-bg: #f8fafc;
+  --red: #dc2626;
+  --red-soft: #fef2f2;
+  --red-text: #991b1b;
+  /* legacy token for inline styles */
+  --green: var(--accent);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   min-height: 100vh;
-  background: var(--bg);
+  background: linear-gradient(165deg, #f8fafc 0%, #e2e8f0 48%, #dbeafe 100%);
   color: var(--text);
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 15px;
   display: flex;
   align-items: center;
@@ -24,13 +34,23 @@ body {
   padding: 24px;
 }
 
+.auth-card,
+.dashboard,
+input,
+.btn,
+.btn-ghost,
+.btn-inline,
+.err {
+  border-radius: 0;
+}
+
 .auth-card {
   width: 100%;
   max-width: 400px;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 8px;
   padding: 28px 28px 24px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
 .auth-card h1 {
@@ -40,69 +60,88 @@ body {
   margin-bottom: 6px;
 }
 
-.auth-card h1 span { color: var(--green); }
-
 .auth-sub { color: var(--muted); font-size: 13px; margin-bottom: 22px; line-height: 1.45; }
 
-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 
 input {
   width: 100%;
   padding: 10px 12px;
-  border-radius: 6px;
   border: 1px solid var(--border);
-  background: #0a0a0a;
+  background: var(--input-bg);
   color: var(--text);
   font-size: 14px;
   margin-bottom: 16px;
+  font-family: inherit;
 }
 
 input:focus {
   outline: none;
-  border-color: #4a4a4a;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft);
 }
 
 .btn {
   width: 100%;
   padding: 11px 16px;
-  border-radius: 6px;
   border: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  background: var(--green);
-  color: #0a0a0a;
+  background: var(--accent);
+  color: #ffffff;
+  font-family: inherit;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--accent-hover);
 }
 
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-ghost {
-  background: transparent;
+  background: var(--card);
   color: var(--muted);
   border: 1px solid var(--border);
   margin-top: 12px;
 }
 
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .err {
-  background: #1f0d0d;
-  color: #f0a0a0;
+  background: var(--red-soft);
+  color: var(--red-text);
   font-size: 13px;
   padding: 10px 12px;
-  border-radius: 6px;
   margin-bottom: 16px;
   display: none;
+  border: 1px solid #fecaca;
 }
 
 .err.visible { display: block; }
 
 .auth-footer {
   margin-top: 20px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--muted);
   text-align: center;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.auth-footer a { color: var(--green); text-decoration: none; }
+.auth-footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 .auth-footer a:hover { text-decoration: underline; }
 
 .dashboard {
@@ -110,20 +149,93 @@ input:focus {
   max-width: 720px;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 8px;
   padding: 28px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
-.dashboard h1 { font-size: 20px; margin-bottom: 8px; }
-.dashboard h1 span { color: var(--green); }
-.dashboard p { color: var(--muted); line-height: 1.5; margin-bottom: 20px; }
+.dashboard h1 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.dashboard p { color: var(--muted); line-height: 1.5; margin-bottom: 20px; font-size: 13px; }
 
 .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 
 .btn-inline {
   width: auto;
   padding: 8px 16px;
-  font-size: 13px;
+  font-size: 12px;
 }
 
-.loading-note { color: var(--muted); font-size: 14px; }
+.loading-note { color: var(--muted); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+.app-kicker {
+  margin: 18px 0 10px;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Serif italic accent (reference: emphasized word in hero) */
+.title-serif {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--accent);
+}
+
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.login-brand-logo {
+  display: block;
+  width: 56px;
+  height: 56px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+body.page-login .login-brand-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  margin: 0;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+body.page-login .login-brand-title .title-serif {
+  color: var(--accent);
+}
+
+body.page-login .auth-sub {
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+body.page-login .auth-footer {
+  letter-spacing: 0.06em;
+  font-size: 12px;
+}
+
+.dashboard h1 .title-serif {
+  color: var(--accent);
+}

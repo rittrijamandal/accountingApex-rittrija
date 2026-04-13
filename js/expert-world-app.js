@@ -1,4 +1,4 @@
-import { getSupabase } from './auth-core.js';
+import { getSupabase, signOutAndRedirect } from './auth-core.js';
 import { requireRoles } from './auth-guard.js';
 import { emptyPayload, normalizePayload } from './world-payload.js';
 
@@ -107,6 +107,7 @@ function render(app, dbRow, p, isAdmin) {
           <span class="muted">Published (visible to Graders)</span>
         </label>
         <button type="button" class="btn" id="btn-save">Save world</button>
+        <button type="button" class="btn btn-ghost" id="btn-logout">Sign out</button>
         <span class="save-status" id="save-status"></span>
       </div>
     </div>
@@ -445,6 +446,10 @@ async function init() {
   app.classList.add('wrap');
   render(app, row, payload, ctx.profile.role === 'admin');
   wireDynamic(app);
+
+  document.getElementById('btn-logout')?.addEventListener('click', async () => {
+    await signOutAndRedirect();
+  });
 
   const statusEl = document.getElementById('save-status');
   document.getElementById('btn-save').addEventListener('click', async () => {

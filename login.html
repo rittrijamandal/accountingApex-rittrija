@@ -3,23 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign in — Accounting APEX</title>
+  <title>Sign in — SYMBAL ACCOUNTING APEX</title>
   <link rel="stylesheet" href="auth-ui.css" />
 </head>
-<body>
+<body class="page-login">
   <div class="auth-card">
-    <h1>APEX<span>.</span>ACCT</h1>
-    <p class="auth-sub">Sign in with your Supabase account. New users default to the Grader role until an Admin updates their role.</p>
+    <header class="login-brand">
+      <img src="/assets/symbal-logo.png" alt="SYMBAL" class="login-brand-logo" width="56" height="56" />
+      <h1 class="login-brand-title">SYMBAL ACCOUNTING <span class="title-serif">apex</span></h1>
+    </header>
+    <p class="auth-sub">SIGN IN WITH EMAIL</p>
     <div class="err" id="err"></div>
     <form id="form">
-      <label for="email">Email</label>
+      <label for="email">EMAIL</label>
       <input id="email" name="email" type="email" autocomplete="email" required />
-      <label for="password">Password</label>
+      <label for="password">PASSWORD</label>
       <input id="password" name="password" type="password" autocomplete="current-password" required />
-      <button type="submit" class="btn" id="submit">Sign in</button>
+      <button type="submit" class="btn" id="submit">SIGN IN</button>
     </form>
     <div class="auth-footer">
-      No account? <a href="signup.html">Create one</a>
+      DON'T HAVE AN ACCOUNT? <a href="signup.html">CREATE ONE</a>.
     </div>
   </div>
   <script type="module">

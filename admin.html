@@ -3,37 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin — Accounting APEX</title>
-  <link rel="stylesheet" href="auth-ui.css" />
-</head>
-<body>
-  <div class="dashboard">
-    <h1>Admin <span>dashboard</span></h1>
-    <p>Signed in as <strong id="email"></strong>. Admins can open every area of the app; use Expert to author worlds, Grader to run agents against published worlds.</p>
-
-    <p style="margin:18px 0 10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em">Go to</p>
-    <div class="row" style="flex-direction:column;align-items:stretch;gap:10px;max-width:420px">
-      <a href="expert.html" class="btn" style="text-decoration:none;text-align:center;display:block;box-sizing:border-box">Expert — worlds &amp; editor</a>
-      <a href="grader.html" class="btn btn-ghost" style="text-decoration:none;text-align:center;display:block;box-sizing:border-box;margin-top:0">Grader console</a>
-      <a href="viewer.html" class="btn btn-ghost" style="text-decoration:none;text-align:center;display:block;box-sizing:border-box;margin-top:0">Sample world viewer (static demo)</a>
-    </div>
-
-    <div class="row" style="margin-top:22px">
-      <button type="button" class="btn btn-inline" id="logout">Sign out</button>
-    </div>
-  </div>
-  <script type="module">
-    import { requireRoles } from './js/auth-guard.js';
-    import { signOut } from './js/auth-core.js';
-
-    const ctx = await requireRoles(['admin']);
-    if (!ctx) return;
-    document.getElementById('email').textContent = ctx.profile.email || ctx.session.user.email || ctx.profile.id;
-
-    document.getElementById('logout').addEventListener('click', async () => {
-      await signOut();
-      window.location.href = '/login.html';
-    });
+  <title>Admin Console — Accounting APEX</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          borderRadius: {
+            none: '0',
+            sm: '0',
+            DEFAULT: '0',
+            md: '0',
+            lg: '0',
+            xl: '0',
+            '2xl': '0',
+            '3xl': '0',
+            full: '0',
+          },
+          colors: {
+            apexBg: '#f1f5f9',
+            apexCard: '#ffffff',
+            apexBorder: '#e2e8f0',
+            apexText: '#0f172a',
+            apexMuted: '#64748b',
+            apexAccent: '#2563eb',
+            apexAccentSoft: '#dbeafe',
+            apexPos: '#059669',
+            apexWarn: '#b45309',
+            apexDanger: '#dc2626',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'],
+          },
+        },
+      },
+    };
   </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="m-0 min-h-screen bg-apexBg text-apexText font-sans">
+  <div id="admin-app" class="h-screen"></div>
+  <script type="module" src="/js/admin-dashboard.js"></script>
 </body>
 </html>

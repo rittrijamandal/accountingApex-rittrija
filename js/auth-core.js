@@ -61,7 +61,37 @@ export function roleHomePath(role) {
   return '/grader.html';
 }
 
+export function clearSupabaseLocalStorage() {
+  const shouldDrop = (k) =>
+    k.startsWith('sb-') || k.includes('supabase.auth') || k === 'supabase.auth.token';
+  try {
+    for (const store of [localStorage, sessionStorage]) {
+      for (const k of [...Object.keys(store)]) {
+        if (shouldDrop(k)) store.removeItem(k);
+      }
+    }
+  } catch (_) {
+    // ignore storage access errors
+  }
+}
+
 export async function signOut() {
-  const sb = await getSupabase();
-  await sb.auth.signOut();
+  // Local wipe first so logout cannot get stuck on Supabase internals.
+  clearSupabaseLocalStorage();
+  try {
+    const sb = await getSupabase();
+    await Promise.race([
+      sb.auth.signOut({ scope: 'local' }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('signOut timeout')), 2500)),
+    ]);
+  } catch (_) {
+    // ignore: local storage already wiped
+  } finally {
+    clearSupabaseLocalStorage();
+  }
+}
+
+export async function signOutAndRedirect() {
+  await signOut();
+  window.location.replace('/login.html');
 }

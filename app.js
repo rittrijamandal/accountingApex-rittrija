@@ -20,6 +20,20 @@ let WORLD = {
   misleadingFiles:    null,
 };
 
+// If another view (e.g. Expert list) provides a selected world, use it.
+try {
+  const stored = sessionStorage.getItem('apex_active_world');
+  if (stored) {
+    const parsed = JSON.parse(stored);
+    if (parsed && typeof parsed === 'object') {
+      WORLD = {
+        ...WORLD,
+        ...parsed,
+      };
+    }
+  }
+} catch (_) {}
+
 // ── HELPERS ──────────────────────────────────
 
 function fmt(n) {
@@ -318,7 +332,10 @@ function buildFiletree() {
 
 function buildTopbar() {
   return `
-    <span class="tb-logo">APEX<span>.</span>ACCT</span>
+    <span class="tb-logo">
+      <img src="/assets/symbal-logo.png" alt="" class="tb-logo-img" width="22" height="22" />
+      SYMBAL ACCOUNTING <span class="title-serif">apex</span>
+    </span>
     <span class="tb-sep">/</span>
     <span class="tb-world">${WORLD.meta.id}</span>
     <span class="tb-sep">·</span>
@@ -330,7 +347,7 @@ function buildTopbar() {
       <span>1 task</span>
       <span>${WORLD.meta.tier}</span>
       <span>
-        <button onclick="launchAgent()" style="padding:3px 10px;border:1px solid var(--green);border-radius:3px;background:var(--green-bg);color:var(--green);font-family:var(--mono);font-size:10px;cursor:pointer;font-weight:600">▶ Run Agent</button>
+        <button onclick="launchAgent()" style="padding:4px 12px;border:1px solid var(--accent);border-radius:0;background:var(--accent-soft);color:var(--accent);font-family:var(--sans);font-size:10px;cursor:pointer;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">▶ Run Agent</button>
       </span>
     </div>`;
 }
