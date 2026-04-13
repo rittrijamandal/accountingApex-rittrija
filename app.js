@@ -20,31 +20,6 @@ let WORLD = {
   misleadingFiles:    null,
 };
 
-// Grader / agent flow: optional world injected from sessionStorage (see grader-app.js)
-try {
-  const raw = sessionStorage.getItem('apex_active_world');
-  if (raw) {
-    const w = JSON.parse(raw);
-    if (w && w.meta) {
-      WORLD = {
-        meta:               w.meta,
-        transactions:       w.transactions || [],
-        chartOfAccounts:    w.chartOfAccounts || [],
-        oldChartOfAccounts: w.oldChartOfAccounts || [],
-        expensePolicy:      w.expensePolicy || [],
-        oldExpensePolicy:   w.oldExpensePolicy || [],
-        invoices:           w.invoices || [],
-        rubric:             w.rubric || [],
-        taskPrompt:         w.taskPrompt ?? null,
-        ambiguityTypes:     w.ambiguityTypes ?? null,
-        misleadingFiles:    w.misleadingFiles ?? null,
-      };
-    }
-  }
-} catch (_) {
-  /* keep sample world */
-}
-
 // ── HELPERS ──────────────────────────────────
 
 function fmt(n) {
