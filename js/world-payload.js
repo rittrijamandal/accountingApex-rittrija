@@ -24,6 +24,7 @@ export function emptyPayload() {
     taskPrompt: '',
     ambiguityTypes: [],
     misleadingFiles: [],
+    uploadedFiles: [],
   };
 }
 
@@ -44,5 +45,6 @@ export function normalizePayload(raw) {
     taskPrompt: typeof p.taskPrompt === 'string' ? p.taskPrompt : '',
     ambiguityTypes: Array.isArray(p.ambiguityTypes) ? p.ambiguityTypes : [],
     misleadingFiles: Array.isArray(p.misleadingFiles) ? p.misleadingFiles : [],
+    uploadedFiles: Array.isArray(p.uploadedFiles) ? p.uploadedFiles : [],
   };
 }
