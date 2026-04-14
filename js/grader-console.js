@@ -181,6 +181,87 @@ function buildGenerateTab() {
     </div>`;
 }
 
+function packWorldForAgentPrompt() {
+  const rows = (WORLD.transactions || [])
+    .map((t) => `${t.date},${t.desc},${t.amount >= 0 ? '+' : ''}${Number(t.amount).toFixed(2)}`)
+    .join('\n');
+  const bank = `date,description,amount\n${rows}`;
+  const coa = (WORLD.chartOfAccounts || []).map((a) => `${a.code} | ${a.name} | ${a.type}`).join('\n');
+  const pol = (WORLD.expensePolicy || []).map((p) => `${p.key}: ${p.val}`).join('\n');
+  const invs = getInvoiceList();
+  const invBlock = invs
+    .map((i) => {
+      const label = String(i.invNum || i.id || '');
+      const note = i.warn ? `\nNOTE: ${i.warn}` : '';
+      return `== ${label}.pdf ==\nVendor: ${i.vendor}\nAmount: ${i.amount}${note}\n`;
+    })
+    .join('\n');
+  const rubric = (WORLD.rubric || []).map((r, idx) => `${idx + 1}. [${r.type}] ${r.text}`).join('\n');
+  const task =
+    WORLD.taskPrompt ||
+    `You are working as a bookkeeper for ${WORLD.meta?.name || 'this business'}. Categorize each transaction using the chart of accounts and expense policy.`;
+  return `TASK:\n${task}\n\nFILES:\n== bank_statement.csv ==\n${bank}\n\n== chart_of_accounts.xlsx ==\n${coa}\n\n== expense_policy.pdf ==\n${pol}\n\n${invBlock}\nRUBRIC (for grading context):\n${rubric}`;
+}
+
+function buildEvaluateTab() {
+  return `
+    <div class="section-label">Agent testing</div>
+    <div class="task-box" style="margin-bottom:16px">
+      <strong>Run your own agent</strong> opens the full <span style="font-family:var(--mono)">agent.html</span> runner with this world loaded. You control the run; it uses your saved API key only inside that session (no world generation).
+      <div style="margin-top:10px"></div>
+      <strong>Test with Claude agent</strong> sends one sample completion request through <span style="font-family:var(--mono)">/api/test-grader</span> so you can sanity-check the task + rubric against the current files.
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <button type="button" class="gen-btn" onclick="launchOwnAgent()">Run your agent</button>
+      <button type="button" class="gen-btn" onclick="runSampleClaudeAgent()">Test with Claude agent</button>
+    </div>
+    <div class="section-label">Sample Claude output</div>
+    <div id="sample-agent-output" class="task-box" style="min-height:120px;font-family:var(--mono);font-size:11px;white-space:pre-wrap;color:var(--text2)">Run “Test with Claude agent” to see output here.</div>`;
+}
+
+function launchOwnAgent() {
+  try {
+    sessionStorage.setItem('apex_active_world', JSON.stringify(WORLD));
+  } catch (_) {}
+  window.open('/agent.html', '_blank');
+}
+
+async function runSampleClaudeAgent() {
+  const key = getApiKey();
+  if (!key) {
+    openApiKeyModal();
+    return;
+  }
+  const outEl = document.getElementById('sample-agent-output');
+  if (outEl) outEl.textContent = 'Calling Claude…';
+
+  const system =
+    'You are an external bookkeeping agent being evaluated. Return ONLY your final categorization output as plain text. Do not call tools.';
+  const user = `${packWorldForAgentPrompt()}\n\nOUTPUT: For each transaction give date, description, amount, account code, account name, flags, notes. End with a one-paragraph summary.`;
+
+  setLoading(true, 'Running sample Claude agent…');
+  try {
+    const res = await fetch('/api/test-grader', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2500,
+        system,
+        messages: [{ role: 'user', content: user }],
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error?.message || `Claude error ${res.status}`);
+    const text = String(data.content?.find((b) => b.type === 'text')?.text || '').trim();
+    if (outEl) outEl.textContent = text || '(empty response)';
+  } catch (e) {
+    if (outEl) outEl.textContent = `Error: ${e.message || String(e)}`;
+  } finally {
+    setLoading(false);
+  }
+}
+
 function rebuildUI() {
   document.getElementById('topbar').innerHTML = buildTopbar();
   document.getElementById('sb-files').innerHTML = buildFiletree();
@@ -194,6 +275,7 @@ function switchTab(tab) {
   if (tab === 'task') document.getElementById('panel').innerHTML = renderTaskTab();
   if (tab === 'meta') document.getElementById('panel').innerHTML = renderMetaTab();
   if (tab === 'generate') document.getElementById('panel').innerHTML = buildGenerateTab();
+  if (tab === 'evaluate') document.getElementById('panel').innerHTML = buildEvaluateTab();
 }
 
 function selectFile(id, el) {
@@ -271,6 +353,7 @@ function init() {
           <div class="tab" id="tab-task" onclick="switchTab('task')">task + rubric</div>
           <div class="tab" id="tab-meta" onclick="switchTab('meta')">world meta</div>
           <div class="tab" id="tab-generate" onclick="switchTab('generate')">generate</div>
+          <div class="tab" id="tab-evaluate" onclick="switchTab('evaluate')">evaluate</div>
         </div>
         <div id="panel"></div>
       </div>
@@ -302,6 +385,8 @@ window.openApiKeyModal = openApiKeyModal;
 window.closeApiKeyModal = closeApiKeyModal;
 window.hardLogout = hardLogout;
 window.setApiKey = setApiKey;
+window.launchOwnAgent = launchOwnAgent;
+window.runSampleClaudeAgent = runSampleClaudeAgent;
 
 try {
   init();
