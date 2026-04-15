@@ -1,0 +1,549 @@
+/* Grader: file browse / viewer / drawer — sharp corners, matches styles.css tokens */
+
+.grader-browse-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.grader-browse-toolbar .grader-browse-spacer {
+  flex: 1;
+}
+
+.grader-view-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  border-radius: 0;
+}
+
+.grader-view-toggle button {
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--mono);
+  padding: 8px 14px;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.grader-view-toggle button:last-child {
+  border-right: 0;
+}
+
+.grader-view-toggle button:hover {
+  color: var(--accent);
+}
+
+.grader-view-toggle button.active {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.grader-browse-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  border-radius: 0;
+}
+
+table.grader-browse-table tbody tr.grader-browse-row {
+  cursor: pointer;
+}
+
+table.grader-browse-table tbody tr.grader-browse-row:hover td {
+  background: var(--accent-muted);
+}
+
+.grader-browse-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.grader-file-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.grader-file-tile {
+  aspect-ratio: 1;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 0;
+}
+
+.grader-file-tile:hover {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+}
+
+.grader-file-tile-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.grader-file-tile-type {
+  font-size: 10px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--mono);
+}
+
+.grader-file-tile-tags {
+  margin-top: auto;
+}
+
+/* Grader: vertical tab nav (left of file tree + panel) */
+.grader-tab-sidebar {
+  width: 188px;
+  min-width: 160px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: var(--bg2);
+  padding: 12px 0 16px;
+}
+
+.grader-tab-sidebar .grader-tabnav-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 0 14px 10px;
+  font-family: var(--mono);
+}
+
+.grader-tab-sidebar .tab {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-bottom: none;
+  margin-bottom: 0;
+  padding: 12px 14px;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text3);
+  border-radius: 0;
+}
+
+.grader-tab-sidebar .tab:hover {
+  color: var(--text2);
+  background: var(--bg3);
+}
+
+.grader-tab-sidebar .tab.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+  background: var(--accent-muted);
+  border-bottom-color: transparent;
+}
+
+/* Hide file tree during list/grid browse OR when a non–file-view tab is active */
+#main.grader-browse-mode #sidebar,
+#main.grader-non-file-tab #sidebar {
+  display: none;
+}
+
+#main.grader-browse-mode #content,
+#main.grader-non-file-tab #content {
+  flex: 1;
+  min-width: 0;
+}
+
+.grader-doc-viewer {
+  position: relative;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.grader-doc-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.grader-doc-title {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text2);
+  font-family: var(--mono);
+}
+
+.grader-doc-body {
+  flex: 1;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.grader-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.32);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 80;
+  border-radius: 0;
+}
+
+.grader-drawer-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.grader-drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: min(380px, 100vw);
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 28px rgba(15, 23, 42, 0.12);
+  transform: translateX(100%);
+  transition: transform 0.18s ease;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0;
+}
+
+.grader-drawer-panel.open {
+  transform: translateX(0);
+}
+
+.grader-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text2);
+  font-family: var(--mono);
+}
+
+.grader-drawer-body {
+  padding: 14px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.grader-drawer-sec {
+  margin-bottom: 14px;
+}
+
+.grader-drawer-k {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  margin-bottom: 4px;
+  font-family: var(--mono);
+}
+
+.grader-drawer-v {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.grader-drawer-warn {
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-border);
+  color: var(--amber);
+  padding: 8px 10px;
+  font-size: 12px;
+  margin-bottom: 6px;
+  border-radius: 0;
+}
+
+.grader-drawer-pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.45;
+  max-height: 42vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  padding: 8px;
+  background: var(--bg3);
+  color: var(--text);
+  border-radius: 0;
+}
+
+/* ── Grader lobby (world picker) ── */
+.grader-lobby {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+}
+
+.grader-lobby-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  height: 48px;
+  min-height: 48px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.grader-lobby-topbar .gen-btn {
+  margin-left: 0;
+}
+
+.grader-lobby-spacer {
+  flex: 1;
+}
+
+.grader-lobby-inner {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 24px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.grader-lobby-h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.grader-lobby-sub {
+  font-size: 13px;
+  color: var(--text2);
+  margin-bottom: 22px;
+  max-width: 52ch;
+}
+
+.grader-lobby-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.grader-world-card {
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 0;
+  min-height: 200px;
+}
+
+.grader-world-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.grader-world-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.grader-pill {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--mono);
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--bg2);
+  color: var(--text2);
+}
+
+.grader-pill-arch {
+  border-color: var(--blue-border);
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.grader-pill-tier {
+  border-color: var(--amber-border);
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+
+.grader-world-card-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text2);
+  flex: 1;
+  margin: 0;
+}
+
+.grader-enter-btn {
+  width: 100%;
+  margin-left: 0;
+  margin-top: 4px;
+}
+
+/* Workspace shell: topbar + main fill viewport under lobby toggle */
+.grader-workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.grader-workspace #main {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Header world context switcher ── */
+.grader-dd-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.grader-breadcrumb-dd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 2px 6px 2px 2px;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  border-radius: 0;
+}
+
+.grader-breadcrumb-dd:hover {
+  border-color: var(--border2);
+  background: var(--bg3);
+}
+
+.grader-dd-label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.grader-dd-caret {
+  font-size: 9px;
+  color: var(--text3);
+  margin-left: 2px;
+}
+
+.grader-world-dd-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 260px;
+  max-width: min(360px, 92vw);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  z-index: 120;
+  border-radius: 0;
+  padding: 4px 0;
+}
+
+.grader-world-dd-menu.open {
+  display: block;
+}
+
+.grader-dd-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-family: var(--sans);
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.grader-dd-item:hover {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.grader-dd-item.is-active {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.grader-dd-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.grader-dd-item.grader-dd-return {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text2);
+}
+
+.grader-dd-item.grader-dd-return:hover {
+  color: var(--text);
+}

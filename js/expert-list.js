@@ -15,10 +15,21 @@ function fmtDate(iso) {
   return isNaN(d.getTime()) ? '—' : d.toLocaleString();
 }
 
+/** Postgres / PostgREST may surface booleans inconsistently in edge cases */
+function isWorldPublished(w) {
+  if (!w) return false;
+  const v = w.is_published;
+  return v === true || v === 'true' || v === 't' || v === 1;
+}
+
 async function init() {
   const root = document.getElementById('expert-root');
   const ctx = await requireRoles(['expert', 'admin']);
   if (!ctx) return;
+  try {
+    sessionStorage.removeItem('apex_viewer_mode');
+    sessionStorage.removeItem('apex_viewer_return_href');
+  } catch (_) {}
 
   document.getElementById('email').textContent =
     ctx.profile.email || ctx.session.user.email || ctx.profile.id;
@@ -47,23 +58,43 @@ async function init() {
     return;
   }
 
+  const uid = ctx.session.user.id;
+  const sorted =
+    worlds && worlds.length > 0
+      ? [...worlds].sort((a, b) => {
+          const aMine = a.creator_id === uid ? 0 : 1;
+          const bMine = b.creator_id === uid ? 0 : 1;
+          if (aMine !== bMine) return aMine - bMine;
+          const ta = new Date(a.updated_at || 0).getTime();
+          const tb = new Date(b.updated_at || 0).getTime();
+          return tb - ta;
+        })
+      : [];
+
   if (!worlds?.length) {
     tbody.innerHTML =
       '<tr><td colspan="5" class="muted" style="padding:16px">NO WORLDS YET. CREATE ONE TO OPEN THE EDITOR.</td></tr>';
   } else {
-    tbody.innerHTML = worlds
+    tbody.innerHTML = sorted
       .map((w) => {
-        const pub = w.is_published
+        const pub = isWorldPublished(w)
           ? '<span class="badge badge-pub">PUBLISHED</span>'
           : '<span class="badge badge-drf">DRAFT</span>';
         const canDelete = ctx.profile.role === 'admin' || w.creator_id === ctx.session.user.id;
+        const canEdit = ctx.profile.role === 'admin' || w.creator_id === ctx.session.user.id;
+        const editCell = canEdit
+          ? `<a class="btn btn-ghost" style="padding:6px 10px;font-size:12px;margin-top:0;text-decoration:none" href="expert-world.html?id=${esc(w.id)}">EDIT</a>`
+          : '<span class="muted" style="font-size:11px;padding:6px 10px;display:inline-block">Published · read-only</span>';
+        const titleCell = canEdit
+          ? `<a href="expert-world.html?id=${esc(w.id)}" style="color:var(--accent);font-weight:600">${esc(w.title)}</a>`
+          : `<span style="font-weight:600;color:var(--text)">${esc(w.title)}</span>`;
         return `<tr>
-          <td><a href="expert-world.html?id=${esc(w.id)}" style="color:var(--accent);font-weight:600">${esc(w.title)}</a></td>
+          <td>${titleCell}</td>
           <td>${pub}</td>
           <td class="muted" style="font-family:var(--mono);font-size:12px">${fmtDate(w.updated_at)}</td>
           <td class="muted" style="font-size:12px">${w.creator_id === ctx.session.user.id ? 'YOURS' : ctx.profile.role === 'admin' ? esc(w.creator_id.slice(0, 8)) + '…' : '—'}</td>
           <td style="white-space:nowrap">
-            <a class="btn btn-ghost" style="padding:6px 10px;font-size:12px;margin-top:0;text-decoration:none" href="expert-world.html?id=${esc(w.id)}">EDIT</a>
+            ${editCell}
             <button type="button" class="btn btn-ghost" style="padding:6px 10px;font-size:12px;margin-top:0" data-sample="${esc(w.id)}">SAMPLE VIEWER</button>
             ${canDelete ? `<button type="button" class="btn btn-danger" style="padding:6px 10px;font-size:12px;margin-top:0" data-delete="${esc(w.id)}">DELETE</button>` : ''}
           </td>
@@ -103,9 +134,11 @@ async function init() {
   document.querySelectorAll('[data-sample]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-sample');
-      const row = (worlds || []).find((w) => w.id === id);
+      const row = sorted.find((w) => w.id === id);
       if (!row) return;
       try {
+        sessionStorage.setItem('apex_viewer_mode', 'expert-world-preview');
+        sessionStorage.setItem('apex_viewer_return_href', '/expert.html');
         sessionStorage.setItem('apex_active_world', JSON.stringify(buildViewerWorld(row)));
       } catch (_) {}
       window.open('/viewer.html', '_blank');

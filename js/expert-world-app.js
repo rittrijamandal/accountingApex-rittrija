@@ -88,6 +88,20 @@ function getTypeMeta(typeId) {
   return { id: typeId, label: 'Custom', csv: false };
 }
 
+const CORE_FILE_TYPES = new Set(['chart_of_accounts', 'general_ledger', 'trial_balance', 'bank_statement']);
+
+function isCoreFileType(typeId) {
+  return CORE_FILE_TYPES.has(typeId);
+}
+
+function fileTagBadgesHtml(f) {
+  const parts = [];
+  if (isCoreFileType(f.type)) parts.push('<span class="file-tag file-tag-core">CORE</span>');
+  if (f.isMisleading) parts.push('<span class="file-tag file-tag-noise">NOISE</span>');
+  if (!parts.length) parts.push('<span class="file-tag file-tag-muted">—</span>');
+  return parts.join(' ');
+}
+
 function isCsvType(typeId, fileName) {
   const meta = getTypeMeta(typeId);
   if (meta.csv) return true;
@@ -150,6 +164,7 @@ function render(app, dbRow, state, isAdmin) {
         <div class="step-title">World Builder</div>
         <button type="button" class="btn btn-ghost" id="btn-logout">Sign out</button>
         <span class="save-status" id="save-status"></span>
+        <span id="publish-state" class="badge ${dbRow.is_published ? 'badge-pub' : 'badge-drf'}" style="margin-left:10px">${dbRow.is_published ? 'Published' : 'Draft'}</span>
       </div>
     </div>
 
@@ -188,13 +203,7 @@ function render(app, dbRow, state, isAdmin) {
 
     <section class="section" id="sec-data-room">
       <h2>Step 2: The data room</h2>
-      <div class="data-room-layout">
-        <div class="data-room-left">
-          <button type="button" class="btn" data-action="start-upload">Upload Document</button>
-          <div class="file-directory" id="file-directory"></div>
-        </div>
-        <div class="data-room-right" id="file-inspector"></div>
-      </div>
+      <div id="data-room-root" class="data-room-root"></div>
     </section>
 
     <section class="section" id="sec-agent-rules">
@@ -246,23 +255,138 @@ function renderAmbiguityControls(state) {
   </div>`;
 }
 
-function renderDirectory(state) {
-  const wrap = document.getElementById('file-directory');
-  if (!wrap) return;
+function renderBrowseDashboard(state) {
+  const listActive = state.browseLayout === 'list' ? 'active' : '';
+  const gridActive = state.browseLayout === 'grid' ? 'active' : '';
+  const toolbar = `
+    <div class="data-room-toolbar">
+      <button type="button" class="btn" data-action="start-upload">Upload Document</button>
+      <div class="view-toggle-spacer"></div>
+      <div class="view-toggle-group" role="group" aria-label="Directory view mode">
+        <button type="button" class="view-toggle-btn ${listActive}" data-action="set-browse-layout" data-layout="list">List</button>
+        <button type="button" class="view-toggle-btn ${gridActive}" data-action="set-browse-layout" data-layout="grid">Grid</button>
+      </div>
+    </div>`;
+
   if (!state.uploadedFiles.length) {
-    wrap.innerHTML = '<div class="empty-note">No files yet. Click "Upload Document".</div>';
-    return;
+    return `${toolbar}<div class="empty-note">No files yet. Click "Upload Document".</div>`;
   }
-  wrap.innerHTML = state.uploadedFiles
+
+  if (state.browseLayout === 'grid') {
+    const tiles = state.uploadedFiles
+      .map((f) => {
+        const typeLabel = f.type === CUSTOM_TYPE_ID ? f.customType || 'Custom' : getTypeMeta(f.type).label;
+        return `<button type="button" class="file-tile" data-action="open-file-viewer" data-file-id="${f.id}">
+          <div class="file-tile-name">${esc(f.displayLabel || f.fileName || 'Untitled file')}</div>
+          <div class="file-tile-type">${esc(typeLabel)}</div>
+          <div class="file-tile-tags">${fileTagBadgesHtml(f)}</div>
+        </button>`;
+      })
+      .join('');
+    return `${toolbar}<div class="file-tile-grid">${tiles}</div>`;
+  }
+
+  const rows = state.uploadedFiles
     .map((f) => {
-      const active = state.activeFileId === f.id ? 'active' : '';
       const typeLabel = f.type === CUSTOM_TYPE_ID ? f.customType || 'Custom' : getTypeMeta(f.type).label;
-      return `<button type="button" class="dir-item ${active}" data-action="select-file" data-file-id="${f.id}">
-        <span class="dir-name">${esc(f.displayLabel || f.fileName || 'Untitled file')}</span>
-        <span class="dir-meta">${esc(typeLabel)}${f.isMisleading ? ' • Red Herring' : ''}</span>
-      </button>`;
+      return `<tr class="browse-row" data-action="open-file-viewer" data-file-id="${f.id}">
+        <td>${esc(f.displayLabel || f.fileName || 'Untitled file')}</td>
+        <td>${esc(typeLabel)}</td>
+        <td>${fileTagBadgesHtml(f)}</td>
+      </tr>`;
     })
     .join('');
+  return `${toolbar}
+    <div class="browse-table-wrap">
+      <table class="world-table browse-table">
+        <thead><tr><th>File Name</th><th>Type</th><th>Tags</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderDrawerBody(file) {
+  const typeLabel = file.type === CUSTOM_TYPE_ID ? file.customType || 'Custom' : getTypeMeta(file.type).label;
+  const warn = file.isMisleading
+    ? '<div class="drawer-warn">Misleading file / red herring — treat with caution in grading.</div>'
+    : '<div class="tiny-note">Not flagged as misleading.</div>';
+  return `
+    <div class="drawer-section">
+      <div class="drawer-k">File Type</div>
+      <div class="drawer-v">${esc(typeLabel)}</div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-k">Expert Notes</div>
+      <div class="drawer-v">${esc(file.notes || '—')}</div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-k">Misleading</div>
+      ${warn}
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-k">Raw extracted text</div>
+      <pre class="drawer-pre">${esc(file.extractedText || '')}</pre>
+    </div>`;
+}
+
+function renderDocumentViewer(state, file) {
+  const drawerClass = state.drawerOpen ? 'open' : '';
+  const backdropClass = state.drawerOpen ? 'visible' : '';
+  const cells = Array.from({ length: 12 }, () => '<div class="doc-preview-cell"></div>').join('');
+  return `
+    <div class="doc-viewer-shell">
+      <div class="doc-viewer-toolbar">
+        <button type="button" class="btn btn-ghost" data-action="back-to-directory">← Back to Directory</button>
+        <span class="doc-viewer-title">${esc(file.displayLabel || file.fileName || 'Document')}</span>
+        <button type="button" class="btn btn-ghost" data-action="toggle-drawer">View Details</button>
+      </div>
+      <div class="doc-viewer-body">
+        <div class="doc-preview">
+          <div class="doc-preview-label">Document preview (placeholder)</div>
+          <div class="doc-preview-grid">${cells}</div>
+          <div class="field" style="margin-top:12px">
+            <label>Primary content</label>
+            <textarea rows="12" data-bind-viewer="extractedText">${esc(file.extractedText)}</textarea>
+          </div>
+        </div>
+        <details class="doc-meta-details">
+          <summary>Classification & structured data</summary>
+          ${renderFileView(state, file)}
+        </details>
+      </div>
+      <div class="drawer-backdrop ${backdropClass}" data-action="close-drawer" aria-hidden="true"></div>
+      <aside class="drawer-panel ${drawerClass}" aria-hidden="${state.drawerOpen ? 'false' : 'true'}">
+        <div class="drawer-header">
+          <h3>Details</h3>
+          <button type="button" class="btn-icon" data-action="close-drawer">Close</button>
+        </div>
+        <div class="drawer-body">${renderDrawerBody(file)}</div>
+      </aside>
+    </div>`;
+}
+
+function renderDataRoom(state) {
+  const root = document.getElementById('data-room-root');
+  if (!root) return;
+  if (state.uploadMode) {
+    root.innerHTML = `<div class="data-room-upload-shell">${renderUploadMode(state)}</div>`;
+    return;
+  }
+  if (state.dataRoomPhase === 'viewer' && state.activeFileId) {
+    const file = state.uploadedFiles.find((f) => f.id === state.activeFileId);
+    if (file) {
+      root.innerHTML = renderDocumentViewer(state, file);
+      return;
+    }
+  }
+  root.innerHTML = renderBrowseDashboard(state);
+}
+
+function refreshDrawerIfOpen(state) {
+  if (!state.drawerOpen) return;
+  const file = state.uploadedFiles.find((f) => f.id === state.activeFileId);
+  const body = document.querySelector('#data-room-root .drawer-body');
+  if (file && body) body.innerHTML = renderDrawerBody(file);
 }
 
 function renderUploadMode(state) {
@@ -371,21 +495,6 @@ function renderFileView(state, file) {
   `;
 }
 
-function renderInspector(state) {
-  const wrap = document.getElementById('file-inspector');
-  if (!wrap) return;
-  if (state.uploadMode) {
-    wrap.innerHTML = renderUploadMode(state);
-    return;
-  }
-  const active = state.uploadedFiles.find((f) => f.id === state.activeFileId);
-  if (!active) {
-    wrap.innerHTML = '<div class="inspector-placeholder empty">Select a file from the directory or upload a new one.</div>';
-    return;
-  }
-  wrap.innerHTML = renderFileView(state, active);
-}
-
 function renderRubric(state) {
   const wrap = document.getElementById('rubric-list');
   if (!wrap) return;
@@ -472,7 +581,7 @@ async function init() {
   const ctx = await requireRoles(['expert', 'admin']);
   if (!ctx) return;
 
-  const id = new URLSearchParams(location.search).get('id');
+  const id = new URLSearchParams(location.search).get('id')?.trim();
   if (!id) {
     app.innerHTML = '<div class="wrap"><div class="err-banner">Missing world id. <a href="expert.html" style="color:#8cf">Back</a></div></div>';
     return;
@@ -490,12 +599,17 @@ async function init() {
     return;
   }
 
+  row.is_published = row.is_published === true;
+
   const payload = normalizePayload(row.payload);
   const state = {
     meta: { ...(payload.meta || {}) },
     uploadedFiles: normalizeUploadedFiles(payload.uploadedFiles),
     activeFileId: null,
     uploadMode: false,
+    browseLayout: 'list',
+    dataRoomPhase: 'browse',
+    drawerOpen: false,
     pendingUpload: makePendingUpload(),
     taskPrompt: payload.taskPrompt || '',
     availableAmbiguityTags: [...AMBIGUITY_PRESETS],
@@ -512,30 +626,46 @@ async function init() {
 
   app.classList.add('wrap');
   render(app, row, state, ctx.profile.role === 'admin');
-  renderDirectory(state);
-  renderInspector(state);
+  renderDataRoom(state);
   renderAmbiguityControls(state);
   renderRubric(state);
 
   const statusEl = document.getElementById('save-status');
+  const publishStateEl = document.getElementById('publish-state');
   const setStatus = (msg, cls = '') => {
     statusEl.textContent = msg;
     statusEl.className = `save-status ${cls}`.trim();
   };
 
-  async function saveWorld(isPublished) {
+  function syncPublishBadge() {
+    if (!publishStateEl) return;
+    publishStateEl.textContent = row.is_published ? 'Published' : 'Draft';
+    publishStateEl.className = `badge ${row.is_published ? 'badge-pub' : 'badge-drf'}`;
+    publishStateEl.style.marginLeft = '10px';
+  }
+
+  /**
+   * Draft saves must not clear is_published (previously every "Save draft" unpublished the world).
+   * @param {'draft' | 'publish'} mode
+   */
+  async function saveWorld(mode) {
     setStatus('Saving…');
     const title = document.getElementById('world-name').value.trim() || 'Untitled world';
     const worldPayload = collectPayload(payload, state);
-    const { error: upErr } = await sb
-      .from('worlds')
-      .update({ title, is_published: isPublished, payload: worldPayload })
-      .eq('id', id);
+    const updates = { title, payload: worldPayload };
+    if (mode === 'publish') updates.is_published = true;
+    const { data: updated, error: upErr } = await sb.from('worlds').update(updates).eq('id', id).select('id,is_published').maybeSingle();
     if (upErr) {
       setStatus(upErr.message, 'err');
       return;
     }
-    setStatus(isPublished ? 'Published' : 'Draft saved', 'ok');
+    if (!updated) {
+      setStatus('Save did not apply (no row updated). Sign in as the world owner or check your Supabase RLS policies.', 'err');
+      return;
+    }
+    row.is_published = updated.is_published === true;
+    setStatus(mode === 'publish' ? 'Published' : 'Draft saved', 'ok');
+    syncPublishBadge();
     setTimeout(() => setStatus(''), 2200);
   }
 
@@ -547,14 +677,16 @@ async function init() {
     if (action === 'start-upload') {
       state.uploadMode = true;
       state.activeFileId = null;
+      state.dataRoomPhase = 'browse';
+      state.drawerOpen = false;
       state.pendingUpload = makePendingUpload();
-      renderInspector(state);
+      renderDataRoom(state);
       return;
     }
 
     if (action === 'cancel-upload') {
       state.uploadMode = false;
-      renderInspector(state);
+      renderDataRoom(state);
       return;
     }
 
@@ -576,26 +708,61 @@ async function init() {
       state.uploadedFiles.push(file);
       state.uploadMode = false;
       state.activeFileId = file.id;
-      renderDirectory(state);
-      renderInspector(state);
+      state.dataRoomPhase = 'browse';
+      state.drawerOpen = false;
+      renderDataRoom(state);
       return;
     }
 
-    if (action === 'select-file') {
+    if (action === 'open-file-viewer') {
       const fileId = el.getAttribute('data-file-id');
       state.activeFileId = fileId;
       state.uploadMode = false;
-      renderDirectory(state);
-      renderInspector(state);
+      state.dataRoomPhase = 'viewer';
+      state.drawerOpen = false;
+      renderDataRoom(state);
+      return;
+    }
+
+    if (action === 'set-browse-layout') {
+      const layout = el.getAttribute('data-layout');
+      if (layout === 'list' || layout === 'grid') state.browseLayout = layout;
+      renderDataRoom(state);
+      return;
+    }
+
+    if (action === 'back-to-directory') {
+      state.dataRoomPhase = 'browse';
+      state.drawerOpen = false;
+      renderDataRoom(state);
+      return;
+    }
+
+    if (action === 'toggle-drawer') {
+      state.drawerOpen = !state.drawerOpen;
+      renderDataRoom(state);
+      return;
+    }
+
+    if (action === 'close-drawer') {
+      state.drawerOpen = false;
+      renderDataRoom(state);
       return;
     }
 
     if (action === 'remove-file') {
       if (!state.activeFileId) return;
       state.uploadedFiles = state.uploadedFiles.filter((f) => f.id !== state.activeFileId);
-      state.activeFileId = state.uploadedFiles[0]?.id || null;
-      renderDirectory(state);
-      renderInspector(state);
+      if (!state.uploadedFiles.length) {
+        state.activeFileId = null;
+        state.dataRoomPhase = 'browse';
+        state.drawerOpen = false;
+      } else if (state.dataRoomPhase === 'viewer') {
+        state.activeFileId = state.uploadedFiles[0].id;
+      } else {
+        state.activeFileId = state.uploadedFiles[0]?.id || null;
+      }
+      renderDataRoom(state);
       return;
     }
 
@@ -604,7 +771,7 @@ async function init() {
       if (!active) return;
       if (!Array.isArray(active.gridRows)) active.gridRows = [];
       active.gridRows.push(emptyGridRow(active.type));
-      renderInspector(state);
+      renderDataRoom(state);
       return;
     }
 
@@ -647,12 +814,12 @@ async function init() {
     }
 
     if (action === 'save-draft') {
-      await saveWorld(false);
+      await saveWorld('draft');
       return;
     }
 
     if (action === 'publish') {
-      await saveWorld(true);
+      await saveWorld('publish');
     }
   });
 
@@ -673,6 +840,16 @@ async function init() {
       const active = state.uploadedFiles.find((f) => f.id === state.activeFileId);
       if (!active) return;
       active[activeField] = e.target.value;
+      refreshDrawerIfOpen(state);
+      return;
+    }
+
+    const viewerField = e.target.getAttribute('data-bind-viewer');
+    if (viewerField) {
+      const active = state.uploadedFiles.find((f) => f.id === state.activeFileId);
+      if (!active) return;
+      active[viewerField] = e.target.value;
+      refreshDrawerIfOpen(state);
       return;
     }
 
@@ -710,7 +887,7 @@ async function init() {
     const pendingField = e.target.getAttribute('data-bind-pending');
     if (pendingField) {
       state.pendingUpload[pendingField] = e.target.value;
-      if (pendingField === 'type') renderInspector(state);
+      if (pendingField === 'type') renderDataRoom(state);
       return;
     }
 
@@ -728,8 +905,7 @@ async function init() {
       if (activeField === 'type' && !isCsvType(active.type, active.fileName)) {
         active.gridRows = [];
       }
-      renderDirectory(state);
-      renderInspector(state);
+      renderDataRoom(state);
       return;
     }
 
@@ -738,7 +914,7 @@ async function init() {
       const active = state.uploadedFiles.find((f) => f.id === state.activeFileId);
       if (!active) return;
       active[activeCheck] = Boolean(e.target.checked);
-      renderDirectory(state);
+      renderDataRoom(state);
       return;
     }
 
@@ -759,7 +935,7 @@ async function init() {
           // Keep metadata even if text read fails.
         }
       }
-      renderInspector(state);
+      renderDataRoom(state);
     }
   });
 
