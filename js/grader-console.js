@@ -29,6 +29,12 @@ const ARCHETYPES = [
 ];
 let activeArchetype = ARCHETYPES[0].id;
 
+/** Registry for static fileworld datasets loaded via <script> tags */
+const FILEWORLD_MAP = {
+  STATIC_WORLD: typeof STATIC_WORLD !== 'undefined' ? STATIC_WORLD : null,
+  STATIC_AUDIT_WORLD: typeof STATIC_AUDIT_WORLD !== 'undefined' ? STATIC_AUDIT_WORLD : null,
+};
+
 let WORLD = {
   meta: WORLD_META,
   transactions: TRANSACTIONS,
@@ -826,7 +832,7 @@ function enterPublishedWorld(worldId) {
   const entry = getLobbyWorlds().find((w) => w.id === worldId);
   if (!entry) return;
   if (entry.kind === 'fileworld') {
-    const worldData = window[entry.worldRef || 'STATIC_WORLD'];
+    const worldData = FILEWORLD_MAP[entry.worldRef] || FILEWORLD_MAP['STATIC_WORLD'];
     WORLD = cloneWorld(worldData);
     fileworldActiveFilePath = null;
     fileworldExpandedFolders = new Set(entry.defaultExpandedFolders || ['']);
