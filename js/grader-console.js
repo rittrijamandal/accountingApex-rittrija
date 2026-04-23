@@ -520,7 +520,7 @@ function renderGraderViewer() {
   return `
     <div class="grader-doc-viewer">
       <div class="grader-doc-toolbar">
-        <button type="button" class="gen-btn" onclick="backToGraderDirectory()">← Back to directory</button>
+        ${isFilesWorld() ? '' : '<button type="button" class="gen-btn" onclick="backToGraderDirectory()">← Back to directory</button>'}
         <span class="grader-doc-title">${escHtml(title)}</span>
         <button type="button" class="gen-btn" onclick="toggleGraderDrawer()">View details</button>
       </div>
@@ -541,7 +541,8 @@ function updateGraderMainLayoutClasses() {
   if (!main) return;
   main.classList.toggle('grader-non-file-tab', activeTab !== 'view');
   if (activeTab === 'view') {
-    main.classList.toggle('grader-browse-mode', graderBrowsePhase === 'browse');
+    // fileworld: tree IS the nav — never hide sidebar with browse-mode
+    main.classList.toggle('grader-browse-mode', graderBrowsePhase === 'browse' && !isFilesWorld());
   } else {
     main.classList.remove('grader-browse-mode');
   }
@@ -551,8 +552,19 @@ function refreshGraderFileViewPanel() {
   const panel = document.getElementById('panel');
   if (!panel) return;
   if (activeTab !== 'view') return;
-  if (graderBrowsePhase === 'browse') panel.innerHTML = renderGraderBrowse();
-  else panel.innerHTML = renderGraderViewer();
+  if (isFilesWorld()) {
+    // Fileworld: tree is the nav, panel shows content or empty state
+    if (fileworldActiveFilePath) panel.innerHTML = renderGraderViewer();
+    else panel.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:10px;color:var(--text3);text-align:center">
+      <span style="font-size:32px">◧</span>
+      <span style="font-size:13px">Select a file from the directory tree</span>
+      <span style="font-size:11px;color:var(--text3)">Explore the company hierarchy — policies, invoices, profiles, and ledgers.</span>
+    </div>`;
+  } else if (graderBrowsePhase === 'browse') {
+    panel.innerHTML = renderGraderBrowse();
+  } else {
+    panel.innerHTML = renderGraderViewer();
+  }
   updateGraderMainLayoutClasses();
 }
 
