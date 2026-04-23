@@ -167,6 +167,19 @@ const MOCK_PUBLISHED_WORLDS = [
     description:
       'Multi-level invoice approval hierarchy: process invoices across company, team, and employee levels. Navigate policy conflicts, escalation rules, and duplicate detection.',
     kind: 'fileworld',
+    worldRef: 'STATIC_WORLD',
+    defaultExpandedFolders: ['', 'company_invoices', 'leadership', 'engineering', 'engineering/team_invoices', 'marketing', 'marketing/team_invoices', 'operations', 'operations/team_invoices'],
+  },
+  {
+    id: 'static-audit',
+    title: 'Crestline Consulting Group',
+    archetypeLabel: 'Financial Audit',
+    tierLabel: 'Tier 3 — Judgment',
+    description:
+      'Q1 2025 external audit engagement: verify payroll, revenue, and expenses across 78 files. Identify discrepancies, complete the four-tab work paper, and render an audit opinion.',
+    kind: 'fileworld',
+    worldRef: 'STATIC_AUDIT_WORLD',
+    defaultExpandedFolders: ['Audit_Workpapers', 'Audit_Workpapers/Q1_2025_Workpaper_Template', 'Finance', 'Finance/Statements', 'Finance/Statements/Q1_2025', 'HR', 'Accounts_Payable', 'Accounts_Receivable', 'Banking'],
   },
 ];
 
@@ -813,14 +826,10 @@ function enterPublishedWorld(worldId) {
   const entry = getLobbyWorlds().find((w) => w.id === worldId);
   if (!entry) return;
   if (entry.kind === 'fileworld') {
-    WORLD = cloneWorld(STATIC_WORLD);
+    const worldData = window[entry.worldRef || 'STATIC_WORLD'];
+    WORLD = cloneWorld(worldData);
     fileworldActiveFilePath = null;
-    fileworldExpandedFolders = new Set([
-      '', 'company_invoices', 'leadership',
-      'engineering', 'engineering/team_invoices',
-      'marketing', 'marketing/team_invoices',
-      'operations', 'operations/team_invoices',
-    ]);
+    fileworldExpandedFolders = new Set(entry.defaultExpandedFolders || ['']);
   } else if (entry.kind === 'default') {
     WORLD = cloneWorld(GRADER_DEFAULT_WORLD);
   } else {
