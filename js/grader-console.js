@@ -9,6 +9,17 @@ let graderBrowseLayout = 'list';
 let graderBrowsePhase = 'browse';
 let graderDrawerOpen = false;
 
+/** Invoice-world file-tree state */
+let fileworldExpandedFolders = new Set([
+  '', 'company_invoices', 'leadership',
+  'engineering', 'engineering/team_invoices',
+  'marketing', 'marketing/team_invoices',
+  'operations', 'operations/team_invoices',
+]);
+let fileworldActiveFilePath = null;
+
+function isFilesWorld() { return Array.isArray(WORLD.files); }
+
 const ARCHETYPES = [
   { id: 'cash_basis_confusion', label: 'Cash-basis confusion' },
   { id: 'month_end_close', label: 'Month-end close' },
@@ -155,8 +166,7 @@ const MOCK_PUBLISHED_WORLDS = [
     tierLabel: 'Tier 2 — Execution',
     description:
       'Multi-level invoice approval hierarchy: process invoices across company, team, and employee levels. Navigate policy conflicts, escalation rules, and duplicate detection.',
-    kind: 'link',
-    href: '/viewer-invoice.html',
+    kind: 'fileworld',
   },
 ];
 
@@ -327,6 +337,16 @@ function getInvoiceList() {
 }
 
 function getGraderFileCatalog() {
+  if (isFilesWorld()) {
+    const typeLabels = { policy: 'PDF · Policy', invoice: 'PDF · Invoice', ledger: 'CSV · Ledger', profile: 'TXT · Profile' };
+    return WORLD.files.map((f) => ({
+      id: f.path,
+      name: f.path.split('/').pop(),
+      typeLabel: typeLabels[f.type] || 'TXT · File',
+      badges: ['core'],
+    }));
+  }
+
   const out = [];
   out.push({ id: 'bank', name: 'bank_statement.csv', typeLabel: 'CSV · Banking', badges: ['core'] });
   out.push({ id: 'coa', name: 'chart_of_accounts.xlsx', typeLabel: 'XLSX · Ledger', badges: ['core'] });
@@ -353,6 +373,10 @@ function catalogTagsHtml(entry) {
 }
 
 function rawSnippetForDrawer(fileId) {
+  if (isFilesWorld()) {
+    const f = (WORLD.files || []).find((x) => x.path === (fileworldActiveFilePath || fileId));
+    return f ? String(f.content || '').slice(0, 12000) : '';
+  }
   if (fileId === 'bank') {
     const rows = (WORLD.transactions || [])
       .map((t) => `${t.date},${t.desc},${t.amount >= 0 ? '+' : ''}${Number(t.amount).toFixed(2)}`)
@@ -487,9 +511,10 @@ function renderGraderBrowse() {
 }
 
 function renderGraderViewer() {
-  const entry = getGraderCatalogEntry(activeFile);
-  const title = entry?.name || activeFile;
-  const body = renderFileView(activeFile);
+  const fileId = isFilesWorld() ? fileworldActiveFilePath : activeFile;
+  const entry = getGraderCatalogEntry(fileId);
+  const title = entry?.name || (fileworldActiveFilePath ? fileworldActiveFilePath.split('/').pop() : activeFile);
+  const body = renderFileView(fileId);
   const drawerOpen = graderDrawerOpen ? 'open' : '';
   const backdropVis = graderDrawerOpen ? 'visible' : '';
   return `
@@ -506,7 +531,7 @@ function renderGraderViewer() {
           <span>File details</span>
           <button type="button" class="gen-btn" onclick="closeGraderDrawer()">Close</button>
         </div>
-        <div class="grader-drawer-body">${renderGraderDrawerBody(activeFile)}</div>
+        <div class="grader-drawer-body">${renderGraderDrawerBody(fileId)}</div>
       </aside>
     </div>`;
 }
@@ -532,6 +557,10 @@ function refreshGraderFileViewPanel() {
 }
 
 function openGraderFileViewer(fileId) {
+  if (isFilesWorld()) {
+    selectFileworldFile(fileId);
+    return;
+  }
   activeFile = fileId;
   graderBrowsePhase = 'viewer';
   graderDrawerOpen = false;
@@ -539,6 +568,7 @@ function openGraderFileViewer(fileId) {
 }
 
 function backToGraderDirectory() {
+  if (isFilesWorld()) fileworldActiveFilePath = null;
   graderBrowsePhase = 'browse';
   graderDrawerOpen = false;
   rebuildUI();
@@ -559,7 +589,46 @@ function closeGraderDrawer() {
   refreshGraderFileViewPanel();
 }
 
+function renderFileworldFile(filePath) {
+  if (!filePath) {
+    return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:10px;color:var(--text3)">
+      <span style="font-size:28px">◧</span>
+      <span>Select a file from the directory tree</span>
+    </div>`;
+  }
+  const f = (WORLD.files || []).find((x) => x.path === filePath);
+  if (!f) return `<div class="section-label">File not found: ${escHtml(filePath)}</div>`;
+  const name = filePath.split('/').pop();
+  const typeLabels = { policy: 'POLICY', invoice: 'INVOICE', ledger: 'LEDGER', profile: 'PROFILE' };
+  const typeLabel = typeLabels[f.type] || f.type.toUpperCase();
+  const typeClasses = { policy: 'prose-type-policy', invoice: 'invoice-doc-type', ledger: 'ledger-type', profile: 'prose-type-profile' };
+  const typeClass = typeClasses[f.type] || '';
+
+  if (f.type === 'ledger') {
+    const lines = (f.content || '').trim().split('\n');
+    const header = lines[0] ? lines[0].split(',') : [];
+    const rows = lines.slice(1).map((line) => {
+      const cells = line.split(',');
+      return '<tr>' + cells.map((c, i) => {
+        const num = parseFloat(c.replace(/[^0-9.-]/g, ''));
+        const isAmt = i > 0 && !isNaN(num) && c.trim() !== '';
+        const cls = isAmt ? (num < 0 ? 'amount-neg' : num > 0 ? 'amount-pos' : '') : '';
+        return `<td${cls ? ` class="${cls}"` : ''}>${escHtml(c.trim())}</td>`;
+      }).join('') + '</tr>';
+    }).join('');
+    const headerHtml = header.map((h) => `<th>${escHtml(h.trim())}</th>`).join('');
+    return `<div class="section-label">${escHtml(name)}</div>` +
+      `<span class="${typeClass}">${typeLabel}</span>` +
+      `<table class="data-table" style="margin-top:8px"><thead><tr>${headerHtml}</tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  const docClass = (f.type === 'invoice') ? 'invoice-doc' : 'prose-doc';
+  return `<div class="section-label">${escHtml(name)}</div>` +
+    `<div class="${docClass}"><span class="${typeClass}">${typeLabel}</span>\n${escHtml(f.content || '')}</div>`;
+}
+
 function renderFileView(fileId) {
+  if (isFilesWorld()) return renderFileworldFile(fileworldActiveFilePath);
   if (fileId === 'bank') {
     const rows = (WORLD.transactions || [])
       .map((t) => `<tr>
@@ -607,6 +676,17 @@ function renderTaskTab() {
 }
 
 function renderMetaTab() {
+  if (isFilesWorld()) {
+    const m = WORLD.meta || {};
+    return `<div class="meta-grid">
+      <div class="meta-card"><div class="mc-label">world id</div><div class="mc-val">${escHtml(m.id || '')}</div></div>
+      <div class="meta-card"><div class="mc-label">company</div><div class="mc-val">${escHtml(m.company || '')}</div></div>
+      <div class="meta-card"><div class="mc-label">industry</div><div class="mc-val">${escHtml(m.industry || '')}</div></div>
+      <div class="meta-card"><div class="mc-label">period</div><div class="mc-val">${escHtml(m.period || '')}</div></div>
+      <div class="meta-card"><div class="mc-label">files</div><div class="mc-val">${WORLD.files.length}</div></div>
+      <div class="meta-card"><div class="mc-label">archetype</div><div class="mc-val">${escHtml(m.archetype || 'invoice-approval')}</div></div>
+    </div>`;
+  }
   return `<div class="meta-grid">
     <div class="meta-card"><div class="mc-label">world id</div><div class="mc-val">${escHtml(WORLD.meta?.id || '')}</div></div>
     <div class="meta-card"><div class="mc-label">business</div><div class="mc-val">${escHtml(WORLD.meta?.name || '')}</div></div>
@@ -643,9 +723,10 @@ function buildWorldSwitcher() {
 
 function buildTopbar() {
   const switcher = graderAppPhase === 'grading' && !GRADER_PREVIEW_MODE ? buildWorldSwitcher() : '';
+  const worldName = isFilesWorld() ? (WORLD.meta?.company || WORLD.meta?.name || '') : (WORLD.meta?.name || '');
   const nameOnly =
     graderAppPhase !== 'grading'
-      ? `<span class="tb-sep">·</span><span class="tb-name">${escHtml(WORLD.meta?.name || '')}</span>`
+      ? `<span class="tb-sep">·</span><span class="tb-name">${escHtml(worldName)}</span>`
       : '';
   return `
     <span class="tb-logo"><img src="/assets/symbal-logo.png" alt="" class="tb-logo-img" width="22" height="22" />SYMBAL ACCOUNTING <span class="title-serif">apex</span></span>
@@ -657,7 +738,7 @@ function buildTopbar() {
         : `<span class="tb-world">GRADER CONSOLE</span>${nameOnly}`)
     }
     <div class="tb-meta">
-      <span><span class="dot"></span>${escHtml(WORLD.meta?.totalFiles || 0)} files</span>
+      <span><span class="dot"></span>${isFilesWorld() ? WORLD.files.length : escHtml(WORLD.meta?.totalFiles || 0)} files</span>
       <span><button type="button" class="gen-btn" onclick="openApiKeyModal()">API KEY</button></span>
       ${buildSessionActionButtons()}
     </div>`;
@@ -718,11 +799,16 @@ function showGraderLobbyView() {
 function enterPublishedWorld(worldId) {
   const entry = getLobbyWorlds().find((w) => w.id === worldId);
   if (!entry) return;
-  if (entry.kind === 'link') {
-    window.location.href = entry.href;
-    return;
-  }
-  if (entry.kind === 'default') {
+  if (entry.kind === 'fileworld') {
+    WORLD = cloneWorld(STATIC_WORLD);
+    fileworldActiveFilePath = null;
+    fileworldExpandedFolders = new Set([
+      '', 'company_invoices', 'leadership',
+      'engineering', 'engineering/team_invoices',
+      'marketing', 'marketing/team_invoices',
+      'operations', 'operations/team_invoices',
+    ]);
+  } else if (entry.kind === 'default') {
     WORLD = cloneWorld(GRADER_DEFAULT_WORLD);
   } else {
     WORLD = mergeWorldPayload(entry.payload);
@@ -790,7 +876,60 @@ function toggleWorldDropdown(ev) {
   }
 }
 
+function buildFiletreeForFilesWorld() {
+  function buildNode(files) {
+    const root = {};
+    for (const f of files) {
+      const parts = f.path.split('/');
+      let node = root;
+      for (let i = 0; i < parts.length - 1; i++) {
+        const seg = parts[i];
+        if (!node[seg]) node[seg] = { _isDir: true, _children: {} };
+        node = node[seg]._children;
+      }
+      node[parts[parts.length - 1]] = { _isDir: false, _file: f };
+    }
+    return root;
+  }
+
+  function renderNode(node, depth, prefix) {
+    let html = '';
+    const indent = depth * 14;
+    const fileIcons = { policy: '§', invoice: '▤', ledger: '▦', profile: '◉' };
+    const entries = Object.entries(node).sort(([an, av], [bn, bv]) => {
+      if (av._isDir && !bv._isDir) return -1;
+      if (!av._isDir && bv._isDir) return 1;
+      return an.localeCompare(bn);
+    });
+    for (const [name, val] of entries) {
+      const fullPath = prefix ? prefix + '/' + name : name;
+      if (val._isDir) {
+        const isOpen = fileworldExpandedFolders.has(fullPath);
+        const escapedPath = fullPath.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        html += `<div class="file-row" style="padding-left:${indent}px;color:var(--text2)" onclick="toggleFileworldFolder('${escapedPath}')">` +
+          `<span class="ficon" style="font-size:8px">${isOpen ? '▼' : '▶'}</span>` +
+          `<span style="font-size:10px;margin-right:2px">${isOpen ? '◧' : '◫'}</span>` +
+          `<span class="fname">${escHtml(name)}/</span></div>`;
+        if (isOpen) html += renderNode(val._children, depth + 1, fullPath);
+      } else {
+        const f = val._file;
+        const isActive = fileworldActiveFilePath === f.path;
+        const icon = fileIcons[f.type] || '▤';
+        const escapedPath = f.path.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        html += `<div class="file-row type-${f.type}${isActive ? ' active' : ''}" style="padding-left:${indent + 14}px" onclick="selectFileworldFile('${escapedPath}')">` +
+          `<span class="ficon">${icon}</span>` +
+          `<span class="fname">${escHtml(name)}</span></div>`;
+      }
+    }
+    return html;
+  }
+
+  const tree = buildNode(WORLD.files);
+  return renderNode(tree, 0, '');
+}
+
 function buildFiletree() {
+  if (isFilesWorld()) return buildFiletreeForFilesWorld();
   const invRows = getInvoiceList().map((inv) => `<div class="file-row ${inv.warn ? 'mislead' : ''} ${activeFile === inv.id ? 'active' : ''}" onclick="selectFile('${inv.id}',this)"><span class="ficon">▤</span><span class="fname">${escHtml(inv.invNum || inv.id)}.pdf</span>${inv.warn ? badgeHtml('warn') : ''}</div>`).join('');
   return `
     <div class="sb-section">core</div>
@@ -901,6 +1040,8 @@ async function runSampleClaudeAgent() {
 function rebuildUI() {
   document.getElementById('topbar').innerHTML = buildTopbar();
   document.getElementById('sb-files').innerHTML = buildFiletree();
+  const footer = document.getElementById('sb-footer');
+  if (footer) footer.textContent = `${isFilesWorld() ? (WORLD.meta?.id || 'INV-W01') : (WORLD.meta?.id || 'APEX')} · grader`;
   if (activeTab === 'view') refreshGraderFileViewPanel();
 }
 
@@ -917,6 +1058,20 @@ function switchTab(tab) {
   if (tab === 'meta') document.getElementById('panel').innerHTML = renderMetaTab();
   if (tab === 'generate') document.getElementById('panel').innerHTML = buildGenerateTab();
   if (tab === 'evaluate') document.getElementById('panel').innerHTML = buildEvaluateTab();
+}
+
+function toggleFileworldFolder(path) {
+  if (fileworldExpandedFolders.has(path)) fileworldExpandedFolders.delete(path);
+  else fileworldExpandedFolders.add(path);
+  document.getElementById('sb-files').innerHTML = buildFiletree();
+}
+
+function selectFileworldFile(path) {
+  fileworldActiveFilePath = path;
+  graderBrowsePhase = 'viewer';
+  graderDrawerOpen = false;
+  document.getElementById('sb-files').innerHTML = buildFiletree();
+  refreshGraderFileViewPanel();
 }
 
 function selectFile(id, el) {
@@ -1000,7 +1155,7 @@ function init() {
         </aside>
         <div id="sidebar">
           <div class="sb-files" id="sb-files">${buildFiletree()}</div>
-          <div class="sb-footer">${escHtml(WORLD.meta?.id || 'APEX')} · grader</div>
+          <div class="sb-footer" id="sb-footer">${escHtml(WORLD.meta?.id || 'APEX')} · grader</div>
         </div>
         <div id="content">
           <div id="panel"></div>

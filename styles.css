@@ -329,3 +329,13 @@ html, body {
 
 /* ── SCROLLBAR GLOBAL ── */
 * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+
+/* ── FILEWORLD FILE TREE TYPES ── */
+.type-policy .ficon  { color: var(--blue); }
+.type-invoice .ficon { color: var(--amber); }
+.type-ledger .ficon  { color: var(--pos); }
+.type-profile .ficon { color: var(--purple, #7c3aed); }
+.type-policy.active  { border-left-color: var(--blue); background: var(--blue-bg) !important; }
+.type-invoice.active { border-left-color: var(--amber); background: var(--amber-bg) !important; }
+.type-ledger.active  { border-left-color: var(--pos); background: var(--pos-bg) !important; }
+.type-profile.active { border-left-color: var(--purple, #7c3aed); background: #f5f3ff !important; }
