@@ -603,40 +603,41 @@ function closeGraderDrawer() {
 
 function renderFileworldFile(filePath) {
   if (!filePath) {
-    return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:10px;color:var(--text3)">
-      <span style="font-size:28px">◧</span>
-      <span>Select a file from the directory tree</span>
+    return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:10px;color:var(--text3);text-align:center">
+      <span style="font-size:32px">◧</span>
+      <span style="font-size:13px">Select a file from the directory tree</span>
+      <span style="font-size:11px;color:var(--text3)">Explore the company hierarchy — policies, invoices, profiles, and ledgers.</span>
     </div>`;
   }
   const f = (WORLD.files || []).find((x) => x.path === filePath);
   if (!f) return `<div class="section-label">File not found: ${escHtml(filePath)}</div>`;
   const name = filePath.split('/').pop();
-  const typeLabels = { policy: 'POLICY', invoice: 'INVOICE', ledger: 'LEDGER', profile: 'PROFILE' };
-  const typeLabel = typeLabels[f.type] || f.type.toUpperCase();
-  const typeClasses = { policy: 'prose-type-policy', invoice: 'invoice-doc-type', ledger: 'ledger-type', profile: 'prose-type-profile' };
-  const typeClass = typeClasses[f.type] || '';
+  const typeLabels = { policy: 'Policy', invoice: 'Invoice', ledger: 'Ledger', profile: 'Profile' };
+  const typeLabel = typeLabels[f.type] || f.type;
+  const typeClasses = { policy: 'fw-type-policy', invoice: 'fw-type-invoice', ledger: 'fw-type-ledger', profile: 'fw-type-profile' };
+  const typeClass = typeClasses[f.type] || 'fw-type-policy';
 
   if (f.type === 'ledger') {
     const lines = (f.content || '').trim().split('\n');
     const header = lines[0] ? lines[0].split(',') : [];
-    const rows = lines.slice(1).map((line) => {
+    const rows = lines.slice(1).filter(l => l.trim()).map((line) => {
       const cells = line.split(',');
       return '<tr>' + cells.map((c, i) => {
-        const num = parseFloat(c.replace(/[^0-9.-]/g, ''));
-        const isAmt = i > 0 && !isNaN(num) && c.trim() !== '';
+        const raw = c.trim();
+        const num = parseFloat(raw.replace(/[^0-9.-]/g, ''));
+        const isAmt = i > 0 && !isNaN(num) && raw !== '' && /[$\d]/.test(raw);
         const cls = isAmt ? (num < 0 ? 'amount-neg' : num > 0 ? 'amount-pos' : '') : '';
-        return `<td${cls ? ` class="${cls}"` : ''}>${escHtml(c.trim())}</td>`;
+        return `<td${cls ? ` class="${cls}"` : ''}>${escHtml(raw)}</td>`;
       }).join('') + '</tr>';
     }).join('');
     const headerHtml = header.map((h) => `<th>${escHtml(h.trim())}</th>`).join('');
-    return `<div class="section-label">${escHtml(name)}</div>` +
-      `<span class="${typeClass}">${typeLabel}</span>` +
-      `<table class="data-table" style="margin-top:8px"><thead><tr>${headerHtml}</tr></thead><tbody>${rows}</tbody></table>`;
+    return `<div class="section-label" style="margin-bottom:10px">${escHtml(name)}</div>` +
+      `<span class="fw-doc-type ${typeClass}">${typeLabel}</span>` +
+      `<div class="fw-table-wrap" style="margin-top:10px"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
-  const docClass = (f.type === 'invoice') ? 'invoice-doc' : 'prose-doc';
-  return `<div class="section-label">${escHtml(name)}</div>` +
-    `<div class="${docClass}"><span class="${typeClass}">${typeLabel}</span>\n${escHtml(f.content || '')}</div>`;
+  return `<div class="section-label" style="margin-bottom:10px">${escHtml(name)}</div>` +
+    `<div class="fw-doc"><span class="fw-doc-type ${typeClass}">${typeLabel}</span>\n${escHtml(f.content || '')}</div>`;
 }
 
 function renderFileView(fileId) {

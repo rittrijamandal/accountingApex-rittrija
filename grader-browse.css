@@ -547,3 +547,44 @@ table.grader-browse-table tbody tr.grader-browse-row:hover td {
 .grader-dd-item.grader-dd-return:hover {
   color: var(--text);
 }
+
+/* ── Fileworld file content renderers ── */
+.fw-doc {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  padding: 20px 24px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 860px;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+}
+
+.fw-doc-type {
+  display: inline-block;
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 0;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  font-family: var(--mono);
+}
+
+.fw-type-policy  { background: var(--blue-bg);   color: var(--blue);  border: 1px solid var(--blue-border); }
+.fw-type-invoice { background: var(--amber-bg);  color: var(--amber); border: 1px solid var(--amber-border); }
+.fw-type-ledger  { background: var(--pos-bg);    color: var(--pos);   border: 1px solid var(--pos-border); }
+.fw-type-profile { background: #f5f3ff;           color: #7c3aed;      border: 1px solid #ddd6fe; }
+
+.fw-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+  max-width: 100%;
+}
