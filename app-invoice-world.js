@@ -215,13 +215,11 @@ function renderTaskTab() {
 
 function buildTopbar() {
   return `
-    <span class="tb-logo">APEX<span>.</span>INV</span>
+    <span class="tb-logo"><img src="/assets/symbal-logo.png" alt="" class="tb-logo-img" width="22" height="22" />SYMBAL ACCOUNTING <span class="title-serif">apex</span></span>
     <span class="tb-sep">/</span>
     <span class="tb-world">${escHtml(WORLD.meta.id)}</span>
     <span class="tb-sep">·</span>
     <span class="tb-name">${escHtml(WORLD.meta.company)}</span>
-    <span class="tb-sep">·</span>
-    <span style="font-size:11px;color:var(--text3)">${escHtml(WORLD.meta.industry)}</span>
     <div class="tb-meta">
       <span><span class="dot"></span>${WORLD.files.length} files</span>
       <span>${escHtml(WORLD.meta.period)}</span>

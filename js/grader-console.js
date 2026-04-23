@@ -148,6 +148,16 @@ const MOCK_PUBLISHED_WORLDS = [
       misleadingFiles: [{ file: 'invoice_sc99201_dup.pdf', why: 'Intentional duplicate vendor bait' }],
     },
   },
+  {
+    id: 'static-invoice-approval',
+    title: 'Meridian Systems, Inc.',
+    archetypeLabel: 'Invoice Approval',
+    tierLabel: 'Tier 2 — Execution',
+    description:
+      'Multi-level invoice approval hierarchy: process invoices across company, team, and employee levels. Navigate policy conflicts, escalation rules, and duplicate detection.',
+    kind: 'link',
+    href: '/viewer-invoice.html',
+  },
 ];
 
 /** Published rows from Supabase (graders see `is_published = true` per RLS); prepended to mock cards */
@@ -708,6 +718,10 @@ function showGraderLobbyView() {
 function enterPublishedWorld(worldId) {
   const entry = getLobbyWorlds().find((w) => w.id === worldId);
   if (!entry) return;
+  if (entry.kind === 'link') {
+    window.location.href = entry.href;
+    return;
+  }
   if (entry.kind === 'default') {
     WORLD = cloneWorld(GRADER_DEFAULT_WORLD);
   } else {
