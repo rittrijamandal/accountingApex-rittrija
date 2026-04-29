@@ -1,4 +1,4 @@
 .env
 .DS_Store
 node_modules/
-./AcquiCo_DataRoom/
+AcquiCo_DataRoom
