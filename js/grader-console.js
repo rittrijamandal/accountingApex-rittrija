@@ -1048,7 +1048,7 @@ async function runSampleClaudeAgent() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': key },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 2500,
         system,
         messages: [{ role: 'user', content: user }],
@@ -1145,7 +1145,7 @@ async function generateWorld() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': key },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 2600,
         messages: [{ role: 'user', content: prompt }],
       }),
