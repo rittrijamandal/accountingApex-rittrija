@@ -33,6 +33,7 @@ let activeArchetype = ARCHETYPES[0].id;
 const FILEWORLD_MAP = {
   STATIC_WORLD: typeof STATIC_WORLD !== 'undefined' ? STATIC_WORLD : null,
   STATIC_AUDIT_WORLD: typeof STATIC_AUDIT_WORLD !== 'undefined' ? STATIC_AUDIT_WORLD : null,
+  STATIC_ACQUICO_WORLD: typeof STATIC_ACQUICO_WORLD !== 'undefined' ? STATIC_ACQUICO_WORLD : null,
 };
 
 let WORLD = {
@@ -186,6 +187,17 @@ const MOCK_PUBLISHED_WORLDS = [
     kind: 'fileworld',
     worldRef: 'STATIC_AUDIT_WORLD',
     defaultExpandedFolders: ['Audit_Workpapers', 'Audit_Workpapers/Q1_2025_Workpaper_Template', 'Finance', 'Finance/Statements', 'Finance/Statements/Q1_2025', 'HR', 'Accounts_Payable', 'Accounts_Receivable', 'Banking'],
+  },
+  {
+    id: 'static-acquico-dataroom',
+    title: 'AcquiCo Inc.',
+    archetypeLabel: 'M&A Diligence',
+    tierLabel: 'Tier 3 - Judgment',
+    description:
+      'Buy-side data room review: verify cash balances, normalize EBITDA for one-time items, evaluate personnel synergies, and reject news-context noise.',
+    kind: 'fileworld',
+    worldRef: 'STATIC_ACQUICO_WORLD',
+    defaultExpandedFolders: ['01_Financials', '02_ProForma', '03_Headcount', '04_DiligenceDocs', '05_NewsContext', '06_Legal'],
   },
 ];
 
