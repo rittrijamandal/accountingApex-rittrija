@@ -355,7 +355,51 @@ function getInvoiceList() {
   return Object.entries(WORLD.invoices || {}).map(([id, inv]) => ({ id, ...inv }));
 }
 
+function isUploadedFilesWorld() {
+  return Array.isArray(WORLD.uploadedFiles) && WORLD.uploadedFiles.length > 0;
+}
+
+function getUploadedFiles() {
+  return Array.isArray(WORLD.uploadedFiles) ? WORLD.uploadedFiles : [];
+}
+
+function getUploadedFile(fileId) {
+  return getUploadedFiles().find((f) => f.id === fileId || f.fileName === fileId || f.displayLabel === fileId) || null;
+}
+
+function uploadedFileTypeLabel(f) {
+  const byType = {
+    chart_of_accounts: 'XLSX · Ledger',
+    general_ledger: 'CSV · Ledger',
+    trial_balance: 'XLSX · Trial Balance',
+    bank_statement: 'CSV · Banking',
+    invoice: 'PDF · Invoice',
+    receipt: 'PDF · Receipt',
+    payroll_report: 'XLSX · Payroll',
+    tax_document: 'PDF · Tax',
+    expense_policy: 'PDF · Policy',
+    management_memo: 'PDF · Memo',
+  };
+  if (f.customType) return String(f.customType).replace(/_/g, ' ');
+  return byType[f.type] || String(f.type || 'File').replace(/_/g, ' ');
+}
+
+function uploadedFileBadges(f) {
+  if (f.isMisleading) return ['noise'];
+  if (['chart_of_accounts', 'general_ledger', 'trial_balance', 'bank_statement'].includes(f.type)) return ['core'];
+  return [];
+}
+
 function getGraderFileCatalog() {
+  if (isUploadedFilesWorld()) {
+    return getUploadedFiles().map((f) => ({
+      id: f.id || f.fileName || f.displayLabel,
+      name: f.displayLabel || f.fileName || 'Untitled file',
+      typeLabel: uploadedFileTypeLabel(f),
+      badges: uploadedFileBadges(f),
+    }));
+  }
+
   if (isFilesWorld()) {
     const typeLabels = { policy: 'PDF · Policy', invoice: 'PDF · Invoice', ledger: 'CSV · Ledger', profile: 'TXT · Profile' };
     return WORLD.files.map((f) => ({
@@ -392,6 +436,11 @@ function catalogTagsHtml(entry) {
 }
 
 function rawSnippetForDrawer(fileId) {
+  if (isUploadedFilesWorld()) {
+    const f = getUploadedFile(fileId);
+    return f ? String(f.extractedText || '').slice(0, 12000) : '';
+  }
+
   if (isFilesWorld()) {
     const f = (WORLD.files || []).find((x) => x.path === (fileworldActiveFilePath || fileId));
     return f ? String(f.content || '').slice(0, 12000) : '';
@@ -435,6 +484,7 @@ function renderGraderDrawerBody(fileId) {
   const entry = getGraderCatalogEntry(fileId);
   const name = entry?.name || fileId;
   const typeLabel = entry?.typeLabel || '—';
+  const uploaded = isUploadedFilesWorld() ? getUploadedFile(fileId) : null;
   const mis = WORLD.misleadingFiles;
   let misBlock =
     '<div class="grader-drawer-k">Misleading / red herring</div><div class="grader-drawer-v">None listed in world payload.</div>';
@@ -474,7 +524,9 @@ function renderGraderDrawerBody(fileId) {
     </div>
     <div class="grader-drawer-sec">
       <div class="grader-drawer-k">Expert notes</div>
-      <div class="grader-drawer-v">Per-file notes live in the world payload when authored in Expert. Use <strong>task + rubric</strong> for full agent brief.</div>
+      <div class="grader-drawer-v">${
+        uploaded ? escHtml(uploaded.notes || '—') : 'Per-file notes live in the world payload when authored in Expert. Use <strong>task + rubric</strong> for full agent brief.'
+      }</div>
     </div>
     <div class="grader-drawer-sec">${misBlock}</div>
     ${ambHtml}
@@ -661,6 +713,27 @@ function renderFileworldFile(filePath) {
 
 function renderFileView(fileId) {
   if (isFilesWorld()) return renderFileworldFile(fileworldActiveFilePath);
+  if (isUploadedFilesWorld()) {
+    const f = getUploadedFile(fileId);
+    if (!f) return `<div class="noise-view"><div class="noise-icon">▤</div></div>`;
+    const name = f.displayLabel || f.fileName || 'Untitled file';
+    const warn = f.isMisleading
+      ? `<div class="warn-banner"><span class="wicon">⚠</span>Marked as misleading / red herring.</div>`
+      : '';
+    const notes = f.notes
+      ? `<div class="kv"><span class="kk">Expert notes</span><span class="vv">${escHtml(f.notes)}</span></div>`
+      : '';
+    return `
+      ${warn}
+      <div class="section-label">${escHtml(name)}</div>
+      <div class="file-preview">
+        <div class="kv"><span class="kk">Type</span><span class="vv">${escHtml(uploadedFileTypeLabel(f))}</span></div>
+        ${notes}
+      </div>
+      <div class="section-label" style="margin-top:14px">extracted text</div>
+      <pre class="grader-drawer-pre" style="max-height:none">${escHtml(f.extractedText || '')}</pre>`;
+  }
+
   if (fileId === 'bank') {
     const rows = (WORLD.transactions || [])
       .map((t) => `<tr>
@@ -719,6 +792,16 @@ function renderMetaTab() {
       <div class="meta-card"><div class="mc-label">archetype</div><div class="mc-val">${escHtml(m.archetype || 'invoice-approval')}</div></div>
     </div>`;
   }
+  if (isUploadedFilesWorld()) {
+    return `<div class="meta-grid">
+      <div class="meta-card"><div class="mc-label">world id</div><div class="mc-val">${escHtml(WORLD.meta?.id || '')}</div></div>
+      <div class="meta-card"><div class="mc-label">business</div><div class="mc-val">${escHtml(WORLD.meta?.name || '')}</div></div>
+      <div class="meta-card"><div class="mc-label">archetype</div><div class="mc-val">${escHtml(WORLD.meta?.archetype || '')}</div></div>
+      <div class="meta-card"><div class="mc-label">period</div><div class="mc-val">${escHtml(WORLD.meta?.period || '')}</div></div>
+      <div class="meta-card"><div class="mc-label">files</div><div class="mc-val">${getUploadedFiles().length}</div></div>
+      <div class="meta-card"><div class="mc-label">noise files</div><div class="mc-val">${getUploadedFiles().filter((f) => f.isMisleading).length}</div></div>
+    </div>`;
+  }
   return `<div class="meta-grid">
     <div class="meta-card"><div class="mc-label">world id</div><div class="mc-val">${escHtml(WORLD.meta?.id || '')}</div></div>
     <div class="meta-card"><div class="mc-label">business</div><div class="mc-val">${escHtml(WORLD.meta?.name || '')}</div></div>
@@ -756,6 +839,7 @@ function buildWorldSwitcher() {
 function buildTopbar() {
   const switcher = graderAppPhase === 'grading' && !GRADER_PREVIEW_MODE ? buildWorldSwitcher() : '';
   const worldName = isFilesWorld() ? (WORLD.meta?.company || WORLD.meta?.name || '') : (WORLD.meta?.name || '');
+  const fileCount = isFilesWorld() ? WORLD.files.length : isUploadedFilesWorld() ? getUploadedFiles().length : escHtml(WORLD.meta?.totalFiles || 0);
   const nameOnly =
     graderAppPhase !== 'grading'
       ? `<span class="tb-sep">·</span><span class="tb-name">${escHtml(worldName)}</span>`
@@ -770,7 +854,7 @@ function buildTopbar() {
         : `<span class="tb-world">GRADER CONSOLE</span>${nameOnly}`)
     }
     <div class="tb-meta">
-      <span><span class="dot"></span>${isFilesWorld() ? WORLD.files.length : escHtml(WORLD.meta?.totalFiles || 0)} files</span>
+      <span><span class="dot"></span>${fileCount} files</span>
       <span><button type="button" class="gen-btn" onclick="openApiKeyModal()">API KEY</button></span>
       ${buildSessionActionButtons()}
     </div>`;
@@ -843,7 +927,7 @@ function enterPublishedWorld(worldId) {
   }
   activePublishedWorldId = worldId;
   graderAppPhase = 'grading';
-  activeFile = 'bank';
+  activeFile = isUploadedFilesWorld() ? (getUploadedFiles()[0]?.id || getUploadedFiles()[0]?.fileName || 'bank') : 'bank';
   activeTab = 'view';
   graderBrowsePhase = 'browse';
   graderDrawerOpen = false;
@@ -958,6 +1042,30 @@ function buildFiletreeForFilesWorld() {
 
 function buildFiletree() {
   if (isFilesWorld()) return buildFiletreeForFilesWorld();
+  if (isUploadedFilesWorld()) {
+    const groups = {};
+    for (const f of getUploadedFiles()) {
+      const name = f.displayLabel || f.fileName || 'Untitled file';
+      const group = name.includes('/') ? name.split('/')[0] : 'files';
+      if (!groups[group]) groups[group] = [];
+      groups[group].push(f);
+    }
+    return Object.entries(groups)
+      .map(([group, files]) => {
+        const rows = files
+          .map((f) => {
+            const id = f.id || f.fileName || f.displayLabel;
+            const name = f.displayLabel || f.fileName || 'Untitled file';
+            const base = name.includes('/') ? name.split('/').pop() : name;
+            const active = activeFile === id;
+            const noise = f.isMisleading ? ' noise' : '';
+            return `<div class="file-row${noise}${active ? ' active' : ''}" onclick='selectFile(${JSON.stringify(id)},this)'><span class="ficon">▤</span><span class="fname">${escHtml(base)}</span>${catalogTagsHtml({ badges: uploadedFileBadges(f) })}</div>`;
+          })
+          .join('');
+        return `<div class="sb-section">${escHtml(group)}</div>${rows}`;
+      })
+      .join('');
+  }
   const invRows = getInvoiceList().map((inv) => `<div class="file-row ${inv.warn ? 'mislead' : ''} ${activeFile === inv.id ? 'active' : ''}" onclick="selectFile('${inv.id}',this)"><span class="ficon">▤</span><span class="fname">${escHtml(inv.invNum || inv.id)}.pdf</span>${inv.warn ? badgeHtml('warn') : ''}</div>`).join('');
   return `
     <div class="sb-section">core</div>
@@ -985,6 +1093,20 @@ function buildGenerateTab() {
 }
 
 function packWorldForAgentPrompt() {
+  if (isUploadedFilesWorld()) {
+    const files = getUploadedFiles()
+      .map((f) => {
+        const name = f.displayLabel || f.fileName || 'Untitled file';
+        const notes = f.notes ? `\nNOTES: ${f.notes}` : '';
+        const tag = f.isMisleading ? '\nTAG: NOISE / RED HERRING' : '';
+        return `== ${name} ==${tag}${notes}\n${String(f.extractedText || '').trim()}`;
+      })
+      .join('\n\n');
+    const rubric = (WORLD.rubric || []).map((r, idx) => `${idx + 1}. [${r.type}] ${r.text}`).join('\n');
+    const task = WORLD.taskPrompt || `Complete the task for ${WORLD.meta?.name || 'this world'} using the provided data room files.`;
+    return `TASK:\n${task}\n\nFILES:\n${files}\n\nRUBRIC (for grading context):\n${rubric}`;
+  }
+
   const rows = (WORLD.transactions || [])
     .map((t) => `${t.date},${t.desc},${t.amount >= 0 ? '+' : ''}${Number(t.amount).toFixed(2)}`)
     .join('\n');
@@ -1239,4 +1361,3 @@ try {
     root.innerHTML = `<div style="padding:20px;font-family:Inter,sans-serif"><h2 style="margin:0 0 8px 0">Grader console failed to load</h2><p style="margin:0 0 10px 0">${escHtml(e.message || String(e))}</p><button onclick="window.location.reload()">Reload</button></div>`;
   }
 }
-
