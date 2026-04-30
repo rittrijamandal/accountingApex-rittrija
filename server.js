@@ -217,6 +217,10 @@ app.get('/admin', (_req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
+app.get('/review-queue', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'review-queue.html'));
+});
+
 app.use(express.static(path.join(__dirname)));
 
 // Vercel serverless entrypoint

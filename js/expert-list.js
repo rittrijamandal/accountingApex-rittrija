@@ -22,6 +22,32 @@ function isWorldPublished(w) {
   return v === true || v === 'true' || v === 't' || v === 1;
 }
 
+function reviewStatusLabel(payload) {
+  const s = String(payload?.review?.status || 'draft').toLowerCase();
+  if (s === 'in_review') return '<span class="badge badge-review-in">IN REVIEW</span>';
+  if (s === 'approved') return '<span class="badge badge-review-approved">APPROVED</span>';
+  if (s === 'needs_rework') return '<span class="badge badge-review-rework">NEEDS REWORK</span>';
+  return '<span class="badge badge-drf">DRAFT</span>';
+}
+
+const SEED_BENCHMARK_CREATOR_ID = '00000000-0000-4000-8000-000000000001';
+
+function getSeedBenchmarkRow() {
+  const payload =
+    typeof window !== 'undefined' && window.PROJECT_HORIZON_SEED_PAYLOAD
+      ? window.PROJECT_HORIZON_SEED_PAYLOAD
+      : null;
+  if (!payload) return null;
+  return {
+    id: 'seed-project-horizon',
+    title: 'Project Horizon (Summit SaaS Solutions)',
+    is_published: true,
+    updated_at: new Date().toISOString(),
+    creator_id: SEED_BENCHMARK_CREATOR_ID,
+    payload,
+  };
+}
+
 async function init() {
   const root = document.getElementById('expert-root');
   const ctx = await requireRoles(['expert', 'admin']);
@@ -53,6 +79,15 @@ async function init() {
     .order('updated_at', { ascending: false });
 
   const tbody = document.getElementById('world-rows');
+  const myWorldsWrap = document.getElementById('my-worlds-wrap');
+  const choiceCreate = document.getElementById('choice-create');
+  const newWorldBtn = document.getElementById('new-world');
+  if (newWorldBtn) newWorldBtn.style.display = 'none';
+  choiceCreate?.addEventListener('click', () => {
+    if (myWorldsWrap) myWorldsWrap.style.display = 'block';
+    if (newWorldBtn) newWorldBtn.style.display = 'inline-block';
+    choiceCreate.disabled = true;
+  });
   if (error) {
     tbody.innerHTML = `<tr><td colspan="5" class="muted" style="padding:16px">COULD NOT LOAD WORLDS: ${esc(error.message)}. RUN THE LATEST SQL MIGRATION IN SUPABASE IF YOU ADDED <code>payload</code>.</td></tr>`;
     return;
@@ -71,28 +106,39 @@ async function init() {
         })
       : [];
 
-  if (!worlds?.length) {
+  const seedRow = getSeedBenchmarkRow();
+  const tableRows = seedRow ? [seedRow, ...sorted] : sorted;
+
+  if (!tableRows.length) {
     tbody.innerHTML =
       '<tr><td colspan="5" class="muted" style="padding:16px">NO WORLDS YET. CREATE ONE TO OPEN THE EDITOR.</td></tr>';
   } else {
-    tbody.innerHTML = sorted
+    tbody.innerHTML = tableRows
       .map((w) => {
-        const pub = isWorldPublished(w)
-          ? '<span class="badge badge-pub">PUBLISHED</span>'
-          : '<span class="badge badge-drf">DRAFT</span>';
-        const canDelete = ctx.profile.role === 'admin' || w.creator_id === ctx.session.user.id;
-        const canEdit = ctx.profile.role === 'admin' || w.creator_id === ctx.session.user.id;
+        const pub = isWorldPublished(w) ? '<span class="badge badge-pub">PUBLISHED</span>' : reviewStatusLabel(w.payload || {});
+        const isSeed = w.id === 'seed-project-horizon';
+        const canDelete = !isSeed && (ctx.profile.role === 'admin' || w.creator_id === ctx.session.user.id);
+        const canEdit = !isSeed && (ctx.profile.role === 'admin' || w.creator_id === ctx.session.user.id);
         const editCell = canEdit
           ? `<a class="btn btn-ghost" style="padding:6px 10px;font-size:12px;margin-top:0;text-decoration:none" href="expert-world.html?id=${esc(w.id)}">EDIT</a>`
           : '<span class="muted" style="font-size:11px;padding:6px 10px;display:inline-block">Published · read-only</span>';
-        const titleCell = canEdit
-          ? `<a href="expert-world.html?id=${esc(w.id)}" style="color:var(--accent);font-weight:600">${esc(w.title)}</a>`
-          : `<span style="font-weight:600;color:var(--text)">${esc(w.title)}</span>`;
+        const titleCell = isSeed
+          ? `<span style="font-weight:600;color:var(--text)">${esc(w.title)} <span class="badge badge-pub" style="margin-left:6px">BENCHMARK</span></span>`
+          : canEdit
+            ? `<a href="expert-world.html?id=${esc(w.id)}" style="color:var(--accent);font-weight:600">${esc(w.title)}</a>`
+            : `<span style="font-weight:600;color:var(--text)">${esc(w.title)}</span>`;
+        const creatorHint = isSeed
+          ? 'APEX SEED'
+          : w.creator_id === ctx.session.user.id
+            ? 'YOURS'
+            : ctx.profile.role === 'admin'
+              ? esc(w.creator_id.slice(0, 8)) + '…'
+              : '—';
         return `<tr>
           <td>${titleCell}</td>
           <td>${pub}</td>
           <td class="muted" style="font-family:var(--mono);font-size:12px">${fmtDate(w.updated_at)}</td>
-          <td class="muted" style="font-size:12px">${w.creator_id === ctx.session.user.id ? 'YOURS' : ctx.profile.role === 'admin' ? esc(w.creator_id.slice(0, 8)) + '…' : '—'}</td>
+          <td class="muted" style="font-size:12px">${creatorHint}</td>
           <td style="white-space:nowrap">
             ${editCell}
             <button type="button" class="btn btn-ghost" style="padding:6px 10px;font-size:12px;margin-top:0" data-sample="${esc(w.id)}">SAMPLE VIEWER</button>
@@ -128,13 +174,14 @@ async function init() {
       taskPrompt: typeof p.taskPrompt === 'string' ? p.taskPrompt : null,
       ambiguityTypes: Array.isArray(p.ambiguityTypes) ? p.ambiguityTypes : null,
       misleadingFiles: Array.isArray(p.misleadingFiles) ? p.misleadingFiles : null,
+      uploadedFiles: Array.isArray(p.uploadedFiles) ? p.uploadedFiles : [],
     };
   };
 
   document.querySelectorAll('[data-sample]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-sample');
-      const row = sorted.find((w) => w.id === id);
+      const row = tableRows.find((w) => w.id === id);
       if (!row) return;
       try {
         sessionStorage.setItem('apex_viewer_mode', 'expert-world-preview');

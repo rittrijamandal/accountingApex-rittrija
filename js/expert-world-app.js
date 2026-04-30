@@ -58,6 +58,7 @@ const AMBIGUITY_PRESETS = [
   'Unclear Vendor',
   'Commingled Funds',
 ];
+const REVIEW_THRESHOLD_DEFAULT = 3.5;
 
 function esc(s) {
   return String(s ?? '')
@@ -188,7 +189,28 @@ function fileworldFilesToUploadedFiles(files) {
   });
 }
 
+function normalizeReviewState(payloadReview) {
+  const status = String(payloadReview?.status || 'draft').toLowerCase();
+  const normalized = ['draft', 'in_review', 'approved', 'needs_rework'].includes(status) ? status : 'draft';
+  return {
+    status: normalized,
+    threshold: Number(payloadReview?.threshold || REVIEW_THRESHOLD_DEFAULT),
+    median_score: payloadReview?.median_score == null ? null : Number(payloadReview.median_score),
+    combined_notes: String(payloadReview?.combined_notes || ''),
+    reviewer_count: Number(payloadReview?.reviewer_count || 0),
+  };
+}
+
+function reviewBadgeMeta(review) {
+  if (review.status === 'in_review') return { label: 'IN REVIEW', cls: 'badge-review-in' };
+  if (review.status === 'approved') return { label: 'APPROVED', cls: 'badge-review-approved' };
+  if (review.status === 'needs_rework') return { label: 'NEEDS REWORK', cls: 'badge-review-rework' };
+  return { label: 'DRAFT', cls: 'badge-drf' };
+}
+
 function render(app, dbRow, state, isAdmin) {
+  const reviewBadge = reviewBadgeMeta(state.review);
+  const showReviewState = state.review.status !== 'draft';
   const adminLink = isAdmin
     ? '<a href="admin.html" class="btn btn-ghost" style="text-decoration:none">Admin</a>'
     : '';
@@ -198,11 +220,13 @@ function render(app, dbRow, state, isAdmin) {
         <a href="expert.html" class="btn btn-ghost">← Worlds</a>
         ${adminLink}
         <div class="step-title">World Builder</div>
+        <button type="button" class="btn btn-ghost" data-action="open-sample-viewer">Sample Viewer</button>
         <button type="button" class="btn btn-ghost" id="btn-logout">Sign out</button>
         <span class="save-status" id="save-status"></span>
-        <span id="publish-state" class="badge ${dbRow.is_published ? 'badge-pub' : 'badge-drf'}" style="margin-left:10px">${dbRow.is_published ? 'Published' : 'Draft'}</span>
+        <span id="publish-state" class="badge ${showReviewState ? reviewBadge.cls : (dbRow.is_published ? 'badge-pub' : reviewBadge.cls)}" style="margin-left:10px">${showReviewState ? reviewBadge.label : (dbRow.is_published ? 'Published' : reviewBadge.label)}</span>
       </div>
     </div>
+    <div id="review-banner-slot"></div>
 
     <section class="section" id="sec-setup">
       <h2>Step 1: World setup</h2>
@@ -271,6 +295,11 @@ function render(app, dbRow, state, isAdmin) {
       </div>
       <div id="rubric-list"></div>
       <button type="button" class="btn btn-ghost" data-action="add-rubric">+ Add Criterion</button>
+    </section>
+
+    <section class="section" id="sec-submit-review">
+      <h2>Step 5: Submit for review</h2>
+      <div id="submit-review-panel"></div>
     </section>
 
     <div class="editor-actions">
@@ -625,8 +654,44 @@ function collectPayload(basePayload, state) {
       label: r.label || '',
       text: r.notes || '',
     })),
+    review: {
+      status: state.review.status,
+      threshold: state.review.threshold,
+      median_score: state.review.median_score,
+      combined_notes: state.review.combined_notes,
+      reviewer_count: state.review.reviewer_count,
+    },
   };
   return payload;
+}
+
+function toViewerWorld(row, payload) {
+  const p = payload || {};
+  return {
+    meta: p.meta || {
+      id: row.id,
+      name: row.title || 'Expert World',
+      method: 'Accrual',
+      period: '',
+      archetype: '',
+      totalFiles: 0,
+      coreFiles: 0,
+      noiseFiles: 0,
+      tier: 'Tier 2 — Execution',
+      tasks: 1,
+    },
+    transactions: Array.isArray(p.transactions) ? p.transactions : [],
+    chartOfAccounts: Array.isArray(p.chartOfAccounts) ? p.chartOfAccounts : [],
+    oldChartOfAccounts: Array.isArray(p.oldChartOfAccounts) ? p.oldChartOfAccounts : [],
+    expensePolicy: Array.isArray(p.expensePolicy) ? p.expensePolicy : [],
+    oldExpensePolicy: Array.isArray(p.oldExpensePolicy) ? p.oldExpensePolicy : [],
+    invoices: Array.isArray(p.invoices) || (p.invoices && typeof p.invoices === 'object') ? p.invoices : [],
+    rubric: Array.isArray(p.rubric) ? p.rubric : [],
+    taskPrompt: typeof p.taskPrompt === 'string' ? p.taskPrompt : null,
+    ambiguityTypes: Array.isArray(p.ambiguityTypes) ? p.ambiguityTypes : null,
+    misleadingFiles: Array.isArray(p.misleadingFiles) ? p.misleadingFiles : null,
+    uploadedFiles: Array.isArray(p.uploadedFiles) ? p.uploadedFiles : [],
+  };
 }
 
 async function init() {
@@ -677,6 +742,8 @@ async function init() {
     rubric: (Array.isArray(payload.rubric) && payload.rubric.length
       ? payload.rubric.map((r, i) => ({ n: r.n ?? i + 1, type: r.type || 'det', label: r.label || '', notes: r.text || '' }))
       : [emptyRubric(1)]),
+    review: normalizeReviewState(payload.review),
+    reworkUnlocked: false,
   };
   state.selectedAmbiguities.forEach((tag) => {
     if (!state.availableAmbiguityTags.includes(tag)) state.availableAmbiguityTags.push(tag);
@@ -698,34 +765,113 @@ async function init() {
 
   function syncPublishBadge() {
     if (!publishStateEl) return;
-    publishStateEl.textContent = row.is_published ? 'Published' : 'Draft';
-    publishStateEl.className = `badge ${row.is_published ? 'badge-pub' : 'badge-drf'}`;
+    const reviewBadge = reviewBadgeMeta(state.review);
+    const showReviewState = state.review.status !== 'draft';
+    publishStateEl.textContent = showReviewState ? reviewBadge.label : (row.is_published ? 'Published' : reviewBadge.label);
+    publishStateEl.className = `badge ${showReviewState ? reviewBadge.cls : (row.is_published ? 'badge-pub' : reviewBadge.cls)}`;
     publishStateEl.style.marginLeft = '10px';
+  }
+
+  function isEditorLocked() {
+    if (row.is_published) return true;
+    if (state.review.status === 'in_review' || state.review.status === 'approved') return true;
+    if (state.review.status === 'needs_rework') return !state.reworkUnlocked;
+    return false;
+  }
+
+  function renderReviewBanner() {
+    const slot = document.getElementById('review-banner-slot');
+    if (!slot) return;
+    if (state.review.status !== 'needs_rework') {
+      slot.innerHTML = '';
+      return;
+    }
+    const median = state.review.median_score == null ? '—' : Number(state.review.median_score).toFixed(1);
+    slot.innerHTML = `<div class="review-banner">
+      <div class="review-banner-title">Needs Rework</div>
+      <div class="review-banner-notes">Median: ${median} / 5 — Threshold: ${state.review.threshold.toFixed(1)}
+
+${esc(state.review.combined_notes || 'No reviewer notes provided.')}</div>
+      <button type="button" class="btn" data-action="edit-resubmit">Edit & Resubmit</button>
+    </div>`;
+  }
+
+  function renderSubmitReviewPanel() {
+    const panel = document.getElementById('submit-review-panel');
+    if (!panel) return;
+    if (row.is_published && state.review.status === 'draft') {
+      panel.innerHTML = `<p class="muted">This world is currently published. A world cannot be published and under review at the same time.</p>`;
+      return;
+    }
+    if (state.review.status === 'draft') {
+      panel.innerHTML = `<p class="muted">When the world is ready, submit it for inter-annotator review.</p>
+        <button type="button" class="btn" data-action="submit-review">Submit for Review</button>`;
+      return;
+    }
+    if (state.review.status === 'in_review') {
+      panel.innerHTML = `<p class="muted">This world is currently in review. ${Math.max(0, Math.min(3, Number(state.review.reviewer_count || 0)))} of 3 reviewers have scored.</p>`;
+      return;
+    }
+    if (state.review.status === 'approved') {
+      panel.innerHTML = `<p class="muted">Review complete. This world is approved for grading.</p>`;
+      return;
+    }
+    panel.innerHTML = `<p class="muted">Review result: needs rework. Update and resubmit when ready.</p>`;
+  }
+
+  function applyEditorLockState() {
+    const locked = isEditorLocked();
+    ['sec-setup', 'sec-data-room', 'sec-agent-rules', 'sec-rubric-builder', 'sec-submit-review'].forEach((id) => {
+      const section = document.getElementById(id);
+      if (!section) return;
+      section.classList.toggle('section-readonly', locked);
+      section.querySelectorAll('input, select, textarea, button').forEach((node) => {
+        node.disabled = locked;
+      });
+    });
+    document.querySelectorAll('.editor-actions [data-action="save-draft"], .editor-actions [data-action="publish"]').forEach((node) => {
+      node.disabled = locked;
+    });
+  }
+
+  function refreshReviewUi() {
+    renderReviewBanner();
+    renderSubmitReviewPanel();
+    applyEditorLockState();
+    syncPublishBadge();
   }
 
   /**
    * Draft saves must not clear is_published (previously every "Save draft" unpublished the world).
    * @param {'draft' | 'publish'} mode
    */
-  async function saveWorld(mode) {
+  async function saveWorld(mode, reviewOverride = null) {
     setStatus('Saving…');
     const title = document.getElementById('world-name').value.trim() || 'Untitled world';
     const worldPayload = collectPayload(isFileworldPayload ? rawPayload : payload, state);
+    if (reviewOverride && typeof reviewOverride === 'object') {
+      worldPayload.review = {
+        ...(worldPayload.review || {}),
+        ...reviewOverride,
+      };
+    }
     const updates = { title, payload: worldPayload };
+    if (reviewOverride?.status && reviewOverride.status !== 'draft') updates.is_published = false;
     if (mode === 'publish') updates.is_published = true;
     const { data: updated, error: upErr } = await sb.from('worlds').update(updates).eq('id', id).select('id,is_published').maybeSingle();
     if (upErr) {
       setStatus(upErr.message, 'err');
-      return;
+      return false;
     }
     if (!updated) {
       setStatus('Save did not apply (no row updated). Sign in as the world owner or check your Supabase RLS policies.', 'err');
-      return;
+      return false;
     }
     row.is_published = updated.is_published === true;
     setStatus(mode === 'publish' ? 'Published' : 'Draft saved', 'ok');
     syncPublishBadge();
     setTimeout(() => setStatus(''), 2200);
+    return true;
   }
 
   app.addEventListener('click', async (e) => {
@@ -736,6 +882,57 @@ async function init() {
     if (action === 'download-zip') {
       const title = document.getElementById('world-name')?.value || row.title || 'data-room';
       downloadDataRoomZip(title, rawPayload, state.uploadedFiles);
+      return;
+    }
+    if (action === 'open-sample-viewer') {
+      const snapPayload = collectPayload(payload, state);
+      const activeWorld = toViewerWorld(
+        { id, title: document.getElementById('world-name')?.value || row.title },
+        snapPayload
+      );
+      try {
+        sessionStorage.setItem('apex_viewer_mode', 'expert-world-preview');
+        sessionStorage.setItem('apex_viewer_return_href', `/expert-world.html?id=${encodeURIComponent(id)}`);
+        sessionStorage.setItem('apex_active_world', JSON.stringify(activeWorld));
+      } catch (_) {}
+      window.open('/viewer.html', '_blank');
+      return;
+    }
+
+    if (action === 'submit-review') {
+      if (state.review.status !== 'draft') {
+        setStatus('This world is already under review (or already reviewed).', 'err');
+        return;
+      }
+      const prevReview = { ...state.review };
+      state.review.status = 'in_review';
+      state.review.median_score = null;
+      state.review.combined_notes = '';
+      state.review.reviewer_count = 0;
+      const ok = await saveWorld('draft', { status: 'in_review', reviewer_count: 0 });
+      if (!ok) {
+        state.review = prevReview;
+        alert('Submit for review failed. Check the save status message.');
+      }
+      refreshReviewUi();
+      return;
+    }
+
+    if (action === 'edit-resubmit') {
+      const prevReview = { ...state.review };
+      const prevUnlocked = state.reworkUnlocked;
+      state.reworkUnlocked = true;
+      state.review.status = 'draft';
+      state.review.median_score = null;
+      state.review.combined_notes = '';
+      state.review.reviewer_count = 0;
+      const ok = await saveWorld('draft');
+      if (!ok) {
+        state.review = prevReview;
+        state.reworkUnlocked = prevUnlocked;
+        alert('Edit & resubmit failed. Check the save status message.');
+      }
+      refreshReviewUi();
       return;
     }
     if (action === 'start-upload') {
@@ -1006,6 +1203,8 @@ async function init() {
   document.getElementById('btn-logout')?.addEventListener('click', async () => {
     await signOutAndRedirect();
   });
+
+  refreshReviewUi();
 }
 
 init().catch((err) => {

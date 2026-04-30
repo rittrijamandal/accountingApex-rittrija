@@ -29,7 +29,21 @@
       Run SQL migration <code class="muted">20260413000000_worlds_payload.sql</code> once if saves fail.
     </p>
 
-    <div class="data-table-wrap" style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+    <section class="section" id="expert-choice">
+      <h2>Choose a workflow</h2>
+      <div class="review-path-grid">
+        <button type="button" class="review-path-card" id="choice-create">
+          <span class="review-path-title">Create a World</span>
+          <span class="review-path-copy muted">Open the world builder to create or edit your worlds.</span>
+        </button>
+        <a href="/review-queue" class="review-path-card" id="choice-review">
+          <span class="review-path-title">Review Worlds</span>
+          <span class="review-path-copy muted">Score worlds from other experts that are currently in review.</span>
+        </a>
+      </div>
+    </section>
+
+    <div class="data-table-wrap" id="my-worlds-wrap" style="border:1px solid var(--border);border-radius:0;overflow:hidden;display:none">
       <table class="world-table">
         <thead>
           <tr>
@@ -46,6 +60,7 @@
       </table>
     </div>
   </div>
+  <script src="seedData.js"></script>
   <script type="module" src="js/expert-list.js"></script>
 </body>
 </html>

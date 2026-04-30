@@ -34,17 +34,24 @@ function mockData() {
 async function fetchData() {
   const sb = await getSupabase();
 
-  const [{ data: profiles, error: profilesErr }, { data: worlds, error: worldsErr }] = await Promise.all([
+  const [{ data: profiles, error: profilesErr }, { data: worlds, error: worldsErr }, { data: reviewScores, error: reviewErr }] = await Promise.all([
     sb.from('profiles').select('id,email,role,created_at').order('created_at', { ascending: false }),
     sb
       .from('worlds')
       .select('id,title,creator_id,is_published,payload,created_at')
       .order('created_at', { ascending: false }),
+    sb.from('world_review_scores').select('world_id,reviewer_id,score,notes,updated_at'),
   ]);
 
-  if (profilesErr || worldsErr) throw profilesErr || worldsErr;
+  if (profilesErr || worldsErr || reviewErr) throw profilesErr || worldsErr || reviewErr;
 
   const userById = new Map((profiles || []).map((u) => [u.id, u]));
+  const expertProfiles = (profiles || []).filter((u) => u.role === 'expert');
+  const scoresByWorld = new Map();
+  (reviewScores || []).forEach((r) => {
+    if (!scoresByWorld.has(r.world_id)) scoresByWorld.set(r.world_id, []);
+    scoresByWorld.get(r.world_id).push(r);
+  });
   const publishedWorlds = (worlds || []).filter((w) => w.is_published).length;
   const apiCallsToday = Number(localStorage.getItem('apex_admin_api_calls_today') || 0);
 
@@ -56,12 +63,60 @@ async function fetchData() {
     },
     users: (profiles || []).map((u) => ({ ...u, status: 'active' })),
     worlds: (worlds || []).map((w) => ({
-      ...w,
+      ...(w),
       creator_email: userById.get(w.creator_id)?.email || w.creator_id,
       archetype: w.payload?.meta?.archetype || '—',
+      review_scores: (scoresByWorld.get(w.id) || []).map((r) => ({
+        ...r,
+        reviewer_email: userById.get(r.reviewer_id)?.email || r.reviewer_id,
+      })),
+      pending_reviewers: expertProfiles
+        .filter((u) => u.id !== w.creator_id)
+        .map((u) => u.email || u.id)
+        .filter((email) => {
+          const submitted = (scoresByWorld.get(w.id) || []).some((r) => (userById.get(r.reviewer_id)?.email || r.reviewer_id) === email);
+          return !submitted;
+        })
+        .slice(0, 3),
     })),
     isMock: false,
   };
+}
+
+function reviewStatusOf(world) {
+  return String(world?.payload?.review?.status || 'draft').toLowerCase();
+}
+
+function reviewStatusBadge(world) {
+  const s = reviewStatusOf(world);
+  if (s === 'in_review') return '<span class="inline-block border px-2 py-[1px] text-[10px] font-mono uppercase tracking-[0.08em] text-blue-700 border-blue-300 bg-blue-50">IN REVIEW</span>';
+  if (s === 'approved') return '<span class="inline-block border px-2 py-[1px] text-[10px] font-mono uppercase tracking-[0.08em] text-emerald-700 border-emerald-300 bg-emerald-50">APPROVED</span>';
+  if (s === 'needs_rework') return '<span class="inline-block border px-2 py-[1px] text-[10px] font-mono uppercase tracking-[0.08em] text-red-700 border-red-300 bg-red-50">NEEDS REWORK</span>';
+  return '<span class="inline-block border px-2 py-[1px] text-[10px] font-mono uppercase tracking-[0.08em] text-amber-700 border-amber-300 bg-amber-50">DRAFT</span>';
+}
+
+function initials(emailOrId) {
+  const txt = String(emailOrId || '');
+  if (txt.includes('@')) return txt.slice(0, 2).toUpperCase();
+  return txt.slice(0, 2).toUpperCase();
+}
+
+function reviewerDots(world) {
+  const rows = Array.isArray(world.review_scores) ? [...world.review_scores] : [];
+  const reveal = rows.length >= 3;
+  const dots = Array.from({ length: 3 }, (_, i) => {
+    const r = rows[i];
+    if (!r) return '<span class="inline-flex h-[18px] w-[18px] items-center justify-center border border-apexBorder text-[9px] font-mono" title="Pending"></span>';
+    const tip = reveal ? `${r.reviewer_email} | Score: ${r.score} | ${r.notes || 'No notes'}` : `${r.reviewer_email} submitted`;
+    return `<span class="inline-flex h-[18px] w-[18px] items-center justify-center border border-apexBorder text-[9px] font-mono uppercase" title="${esc(tip)}">${esc(initials(r.reviewer_email))}</span>`;
+  });
+  return `<span class="inline-flex gap-[6px]">${dots.join('')}</span>`;
+}
+
+function pendingReviewerText(world) {
+  const pending = Array.isArray(world.pending_reviewers) ? world.pending_reviewers : [];
+  if (!pending.length) return '—';
+  return pending.join(', ');
 }
 
 function renderShell(ctx, data) {
@@ -140,6 +195,11 @@ function renderShell(ctx, data) {
                     <th class="text-left px-3 py-2">Creator Email</th>
                     <th class="text-left px-3 py-2">Status</th>
                     <th class="text-left px-3 py-2">Task Archetype</th>
+                    <th class="text-left px-3 py-2">Review Status</th>
+                    <th class="text-left px-3 py-2">Reviewed</th>
+                    <th class="text-left px-3 py-2">Reviewers</th>
+                    <th class="text-left px-3 py-2">Pending Reviewers</th>
+                    <th class="text-left px-3 py-2">Median Score</th>
                     <th class="text-right px-3 py-2">Actions</th>
                   </tr>
                 </thead>
@@ -206,7 +266,7 @@ function userRows(users) {
 }
 
 function worldRows(worlds) {
-  if (!worlds.length) return `<tr><td colspan="5" class="px-3 py-4 text-apexMuted">No worlds found.</td></tr>`;
+  if (!worlds.length) return `<tr><td colspan="10" class="px-3 py-4 text-apexMuted">No worlds found.</td></tr>`;
   return worlds
     .map(
       (w) => `
@@ -215,6 +275,11 @@ function worldRows(worlds) {
         <td class="px-3 py-2">${esc(w.creator_email || w.creator_id)}</td>
         <td class="px-3 py-2">${w.is_published ? 'Published' : 'Draft'}</td>
         <td class="px-3 py-2">${esc(w.archetype || '—')}</td>
+        <td class="px-3 py-2">${reviewStatusBadge(w)}</td>
+        <td class="px-3 py-2">${Math.max(0, Math.min(3, Number(w.payload?.review?.reviewer_count || w.review_scores?.length || 0)))} / 3</td>
+        <td class="px-3 py-2">${reviewerDots(w)}</td>
+        <td class="px-3 py-2 text-[11px] text-apexMuted">${esc(pendingReviewerText(w))}</td>
+        <td class="px-3 py-2">${w.payload?.review?.reviewer_count >= 3 && w.payload?.review?.median_score != null ? Number(w.payload.review.median_score).toFixed(1) : ''}</td>
         <td class="px-3 py-2 text-right space-x-1">
           <button type="button" data-force-delete="${esc(
             w.id
@@ -350,17 +415,40 @@ window.addEventListener('pageshow', (ev) => {
   if (ev.persisted) window.location.reload();
 });
 
-const ctx = await requireRoles(['admin']);
-if (!ctx) throw new Error('Unauthorized');
-
-let data;
-try {
-  data = await fetchData();
-  if (!data.users.length && !data.worlds.length) data = mockData();
-} catch (_e) {
-  data = mockData();
+function renderFatal(msg) {
+  const app = document.getElementById('admin-app');
+  if (!app) return;
+  app.innerHTML = `
+    <div class="h-screen flex items-center justify-center p-6">
+      <div class="w-full max-w-2xl border border-apexBorder bg-apexCard p-5">
+        <div class="text-[11px] uppercase tracking-[0.1em] text-apexMuted font-semibold">Admin Console Error</div>
+        <div class="mt-3 text-sm text-apexText">${esc(msg || 'Unknown error')}</div>
+        <div class="mt-4">
+          <button id="admin-retry" type="button" class="rounded-none border border-apexBorder px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-apexMuted hover:bg-slate-50">Reload</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('admin-retry')?.addEventListener('click', () => window.location.reload());
 }
 
-renderShell(ctx, data);
-wireUi(ctx, data);
+try {
+  const ctx = await requireRoles(['admin']);
+  if (!ctx) {
+    // requireRoles handles redirects; avoid throwing and blanking the page.
+  } else {
+    let data;
+    try {
+      data = await fetchData();
+      if (!data.users.length && !data.worlds.length) data = mockData();
+    } catch (_e) {
+      data = mockData();
+    }
+
+    renderShell(ctx, data);
+    wireUi(ctx, data);
+  }
+} catch (e) {
+  renderFatal(e?.message || 'Failed to load admin dashboard.');
+}
 
