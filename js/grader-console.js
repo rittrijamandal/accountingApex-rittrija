@@ -167,28 +167,6 @@ const MOCK_PUBLISHED_WORLDS = [
     },
   },
   {
-    id: 'static-invoice-approval',
-    title: 'Meridian Systems, Inc.',
-    archetypeLabel: 'Invoice Approval',
-    tierLabel: 'Tier 2 — Execution',
-    description:
-      'Multi-level invoice approval hierarchy: process invoices across company, team, and employee levels. Navigate policy conflicts, escalation rules, and duplicate detection.',
-    kind: 'fileworld',
-    worldRef: 'STATIC_WORLD',
-    defaultExpandedFolders: ['', 'company_invoices', 'leadership', 'engineering', 'engineering/team_invoices', 'marketing', 'marketing/team_invoices', 'operations', 'operations/team_invoices'],
-  },
-  {
-    id: 'static-audit',
-    title: 'Crestline Consulting Group',
-    archetypeLabel: 'Financial Audit',
-    tierLabel: 'Tier 3 — Judgment',
-    description:
-      'Q1 2025 external audit engagement: verify payroll, revenue, and expenses across 78 files. Identify discrepancies, complete the four-tab work paper, and render an audit opinion.',
-    kind: 'fileworld',
-    worldRef: 'STATIC_AUDIT_WORLD',
-    defaultExpandedFolders: ['Audit_Workpapers', 'Audit_Workpapers/Q1_2025_Workpaper_Template', 'Finance', 'Finance/Statements', 'Finance/Statements/Q1_2025', 'HR', 'Accounts_Payable', 'Accounts_Receivable', 'Banking'],
-  },
-  {
     id: 'static-acqui',
     title: 'AcquiCo Inc.',
     archetypeLabel: 'Deals Advisory',
@@ -210,10 +188,13 @@ function getLobbyWorlds() {
 
 function lobbyCardDescriptionFromPayload(payload) {
   const p = payload && typeof payload === 'object' ? payload : {};
-  const task = typeof p.taskPrompt === 'string' ? p.taskPrompt.trim() : '';
-  if (task) return task.length > 220 ? `${task.slice(0, 217)}…` : task;
   const meta = p.meta && typeof p.meta === 'object' ? p.meta : {};
-  const name = meta.name || 'this business';
+  const task = typeof p.taskPrompt === 'string' ? p.taskPrompt.trim()
+    : typeof meta.taskPrompt === 'string' ? meta.taskPrompt.trim() : '';
+  if (task) return task.length > 220 ? `${task.slice(0, 217)}…` : task;
+  const desc = typeof meta.description === 'string' ? meta.description.trim() : '';
+  if (desc) return desc.length > 220 ? `${desc.slice(0, 217)}…` : desc;
+  const name = meta.company || meta.name || 'this business';
   return `Expert-authored world for ${name}. Open to review task, rubric, and files.`;
 }
 
@@ -248,15 +229,24 @@ async function fetchPublishedWorldsForLobby() {
     graderLobbyRemoteRows = rows.map((row) => {
       const p = row.payload && typeof row.payload === 'object' ? row.payload : {};
       const meta = p.meta && typeof p.meta === 'object' ? p.meta : {};
-      return {
+      const isFileworld = Array.isArray(p.files);
+      const entry = {
         id: row.id,
-        title: row.title || meta.name || 'Untitled world',
+        title: row.title || meta.company || meta.name || 'Untitled world',
         archetypeLabel: String(meta.archetype || 'Expert world'),
         tierLabel: String(meta.tier || '—'),
         description: lobbyCardDescriptionFromPayload(p),
-        kind: 'payload',
-        payload: p,
+        kind: isFileworld ? 'fileworld' : 'payload',
       };
+      if (isFileworld) {
+        entry.worldData = p;
+        entry.defaultExpandedFolders = Array.isArray(meta.defaultExpandedFolders)
+          ? meta.defaultExpandedFolders
+          : [''];
+      } else {
+        entry.payload = p;
+      }
+      return entry;
     });
     const lobbyEl = document.getElementById('grader-lobby');
     if (lobbyEl && lobbyEl.style.display !== 'none') mountLobby();
@@ -878,7 +868,7 @@ function enterPublishedWorld(worldId) {
   const entry = getLobbyWorlds().find((w) => w.id === worldId);
   if (!entry) return;
   if (entry.kind === 'fileworld') {
-    const worldData = FILEWORLD_MAP[entry.worldRef] || FILEWORLD_MAP['STATIC_WORLD'];
+    const worldData = entry.worldData || FILEWORLD_MAP[entry.worldRef] || FILEWORLD_MAP['STATIC_WORLD'];
     WORLD = cloneWorld(worldData);
     fileworldActiveFilePath = null;
     fileworldExpandedFolders = new Set(entry.defaultExpandedFolders || ['']);
