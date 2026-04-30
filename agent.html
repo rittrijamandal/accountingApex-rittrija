@@ -82,6 +82,14 @@
       text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer;
     }
     .back-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-muted); }
+    .world-select {
+      max-width: 240px; padding: 4px 28px 4px 8px;
+      border: 1px solid var(--border2); border-radius: 0;
+      background: var(--bg3); color: var(--text);
+      font-family: var(--sans); font-size: 11px; font-weight: 600;
+      cursor: pointer;
+    }
+    .world-select:hover { border-color: var(--accent); background: var(--accent-muted); }
 
     #main { display: flex; flex: 1; overflow: hidden; }
 
@@ -214,6 +222,7 @@
     <span class="tb-sep">/</span>
     <span style="color:var(--text2);font-weight:500">Agent Runner</span>
     <span class="tb-sep">·</span>
+    <select id="world-select" class="world-select" onchange="selectWorld(this.value)" aria-label="Select world"></select>
     <span id="world-name" style="color:var(--text);font-size:11px;font-weight:600">Pixel &amp; Pine Studio</span>
     <button type="button" class="back-btn" onclick="window.location.href='/'">← World Viewer</button>
   </div>
@@ -248,6 +257,9 @@
 </div>
 
 <script src="data.js"></script>
+<script src="data-invoice-world.js"></script>
+<script src="data-audit-world.js"></script>
+<script src="data-acqui-world.js"></script>
 <script>
 // ── WORLD STATE ───────────────────────────────
 // Uses the same WORLD data as main app — loaded from data.js
@@ -258,34 +270,148 @@ let WORLD = null;
 let aborted = false;
 let stepCount = 0;
 
+function cloneWorld(w) {
+  return JSON.parse(JSON.stringify(w));
+}
+
+const DEFAULT_WORLD = {
+  meta:               WORLD_META,
+  transactions:       TRANSACTIONS,
+  chartOfAccounts:    CHART_OF_ACCOUNTS,
+  oldChartOfAccounts: OLD_CHART_OF_ACCOUNTS,
+  expensePolicy:      EXPENSE_POLICY,
+  oldExpensePolicy:   OLD_EXPENSE_POLICY,
+  invoices:           INVOICES,
+  rubric:             RUBRIC,
+  taskPrompt:         null,
+  ambiguityTypes:     null,
+  misleadingFiles:    null,
+};
+
+const STATIC_AGENT_WORLDS = [
+  { id: 'pixel-pine', title: 'Pixel & Pine Studio', getWorld: () => DEFAULT_WORLD },
+  { id: 'meridian', title: 'Meridian Systems, Inc.', getWorld: () => STATIC_WORLD },
+  { id: 'crestline', title: 'Crestline Consulting Group', getWorld: () => STATIC_AUDIT_WORLD },
+  { id: 'acquico', title: 'AcquiCo Inc.', getWorld: () => STATIC_ACQUI_WORLD },
+].filter((entry) => {
+  try { return !!entry.getWorld(); } catch (_) { return false; }
+});
+
+function isFilesWorld() {
+  return Array.isArray(WORLD?.files);
+}
+
+function getWorldDisplayName(world = WORLD) {
+  return world?.meta?.name || world?.meta?.company || 'World';
+}
+
+function normalizeStoredWorld(payload) {
+  if (!payload || typeof payload !== 'object') return null;
+  if (Array.isArray(payload.files)) return payload;
+  return {
+    ...DEFAULT_WORLD,
+    ...payload,
+    meta: { ...DEFAULT_WORLD.meta, ...(payload.meta || {}) },
+    transactions: Array.isArray(payload.transactions) ? payload.transactions : DEFAULT_WORLD.transactions,
+    chartOfAccounts: Array.isArray(payload.chartOfAccounts) ? payload.chartOfAccounts : DEFAULT_WORLD.chartOfAccounts,
+    oldChartOfAccounts: Array.isArray(payload.oldChartOfAccounts) ? payload.oldChartOfAccounts : DEFAULT_WORLD.oldChartOfAccounts,
+    expensePolicy: Array.isArray(payload.expensePolicy) ? payload.expensePolicy : DEFAULT_WORLD.expensePolicy,
+    oldExpensePolicy: Array.isArray(payload.oldExpensePolicy) ? payload.oldExpensePolicy : DEFAULT_WORLD.oldExpensePolicy,
+    invoices: payload.invoices != null ? payload.invoices : DEFAULT_WORLD.invoices,
+    rubric: Array.isArray(payload.rubric) ? payload.rubric : DEFAULT_WORLD.rubric,
+    taskPrompt: payload.taskPrompt != null ? payload.taskPrompt : DEFAULT_WORLD.taskPrompt,
+    ambiguityTypes: Array.isArray(payload.ambiguityTypes) ? payload.ambiguityTypes : DEFAULT_WORLD.ambiguityTypes,
+    misleadingFiles: Array.isArray(payload.misleadingFiles) ? payload.misleadingFiles : DEFAULT_WORLD.misleadingFiles,
+  };
+}
+
 function loadWorld() {
+  const params = new URLSearchParams(window.location.search);
+  const requestedWorld = params.get('world');
+  if (requestedWorld) {
+    const staticEntry = STATIC_AGENT_WORLDS.find((entry) => entry.id === requestedWorld);
+    if (staticEntry) {
+      WORLD = cloneWorld(staticEntry.getWorld());
+      try { sessionStorage.setItem('apex_agent_world_id', requestedWorld); } catch (_) {}
+      return;
+    }
+  }
+
   try {
     const stored = sessionStorage.getItem('apex_active_world');
     if (stored) {
-      WORLD = JSON.parse(stored);
+      WORLD = normalizeStoredWorld(JSON.parse(stored));
       return;
     }
   } catch(e) {}
 
-  // Fallback to static data
-  WORLD = {
-    meta:               WORLD_META,
-    transactions:       TRANSACTIONS,
-    chartOfAccounts:    CHART_OF_ACCOUNTS,
-    oldChartOfAccounts: OLD_CHART_OF_ACCOUNTS,
-    expensePolicy:      EXPENSE_POLICY,
-    oldExpensePolicy:   OLD_EXPENSE_POLICY,
-    invoices:           INVOICES,
-    rubric:             RUBRIC,
-    taskPrompt:         null,
-    ambiguityTypes:     null,
-    misleadingFiles:    null,
-  };
+  try {
+    const remembered = sessionStorage.getItem('apex_agent_world_id');
+    const staticEntry = STATIC_AGENT_WORLDS.find((entry) => entry.id === remembered);
+    if (staticEntry) {
+      WORLD = cloneWorld(staticEntry.getWorld());
+      return;
+    }
+  } catch (_) {}
+
+  WORLD = cloneWorld(DEFAULT_WORLD);
+}
+
+function syncWorldHeader() {
+  const name = getWorldDisplayName();
+  const nameEl = document.getElementById('world-name');
+  if (nameEl) nameEl.textContent = name;
+
+  const select = document.getElementById('world-select');
+  if (!select) return;
+  select.innerHTML = STATIC_AGENT_WORLDS
+    .map((entry) => `<option value="${entry.id}">${escHtml(entry.title)}</option>`)
+    .join('');
+  const active = STATIC_AGENT_WORLDS.find((entry) => getWorldDisplayName(entry.getWorld()) === name);
+  select.value = active?.id || '';
+}
+
+function selectWorld(worldId) {
+  const entry = STATIC_AGENT_WORLDS.find((w) => w.id === worldId);
+  if (!entry) return;
+  WORLD = cloneWorld(entry.getWorld());
+  try {
+    sessionStorage.setItem('apex_agent_world_id', worldId);
+    sessionStorage.setItem('apex_active_world', JSON.stringify(WORLD));
+  } catch (_) {}
+  aborted = true;
+  stepCount = 0;
+  agentMessages = [];
+  finalSubmission = null;
+  document.getElementById('run-btn').disabled = false;
+  document.getElementById('stop-btn').style.display = 'none';
+  document.getElementById('step-counter').textContent = '';
+  document.getElementById('console-log').innerHTML = '<div class="log-entry"><span class="log-ts">--:--</span><span class="log-msg log-system">Agent ready. Press Run to start.</span></div>';
+  document.getElementById('score-content').innerHTML = '<div class="score-placeholder"><div class="big">◎</div><p style="font-size:12px;color:var(--text2)">Run the agent to see scores</p><p style="font-size:10px">Rubric criteria will be evaluated<br>automatically when the agent finishes</p></div>';
+  syncWorldHeader();
 }
 
 // ── FILE SYSTEM SIMULATION ────────────────────
 
 function getFileSystem() {
+  if (isFilesWorld()) {
+    const files = Object.fromEntries(WORLD.files.map((file) => [
+      file.path,
+      {
+        type: file.type || 'file',
+        content: () => file.content || '',
+      }
+    ]));
+    const taskPath = WORLD.files.find((file) => /(^|\/)task/i.test(file.path))?.path;
+    if (taskPath && !files['task_01.txt']) {
+      files['task_01.txt'] = {
+        type: 'core',
+        content: () => files[taskPath].content(),
+      };
+    }
+    return files;
+  }
+
   const invList = Array.isArray(WORLD.invoices)
     ? WORLD.invoices
     : Object.entries(WORLD.invoices).map(([id, v]) => ({ id, ...v }));
@@ -334,6 +460,11 @@ function getFileSystem() {
 }
 
 function getTaskPrompt() {
+  if (isFilesWorld()) {
+    return WORLD.meta?.taskPrompt ||
+      WORLD.taskPrompt ||
+      `You are working in the ${WORLD.meta?.company || WORLD.meta?.name || 'company'} data room. Review the files and complete the task.`;
+  }
   return WORLD.taskPrompt ||
     `You are working as a bookkeeper for ${WORLD.meta.name}. Review the bank statement and categorize each transaction using the current chart of accounts and expense policy. For each transaction: assign the correct account code. Flag ambiguous transactions, suspected duplicates, and personal expenses.`;
 }
@@ -370,13 +501,13 @@ const TOOLS = [
   },
   {
     name: 'submit_categorizations',
-    description: 'Submit your final work when you are done categorizing all transactions. Include your complete categorization for every transaction.',
+    description: 'Submit your final work when you are done. Include your complete answer for the assigned task.',
     input_schema: {
       type: 'object',
       properties: {
         output: {
           type: 'string',
-          description: 'Your complete categorization output. For each transaction include: date, description, amount, account code, account name, and any flags or notes. Also include a summary of findings at the end.'
+          description: 'Your complete final output. For accounting categorization tasks include every transaction; for data-room tasks include all requested answers and supporting file references.'
         }
       },
       required: ['output']
@@ -452,9 +583,9 @@ async function callClaude(messages) {
       max_tokens: 2000,
       tools:      TOOLS,
       messages,
-      system: `You are an AI accounting agent completing a bookkeeping task. You have access to a virtual file system with accounting documents.
+      system: `You are an AI accounting agent completing an accounting benchmark task. You have access to a virtual file system with accounting documents.
 
-Your goal: complete the task in task_01.txt by reading the relevant files and submitting your categorizations using the submit_categorizations tool.
+Your goal: complete the task in task_01.txt by reading the relevant files and submitting your final work using the submit_categorizations tool.
 
 Important rules:
 - Start by listing files to understand what's available
@@ -483,14 +614,14 @@ async function runAgent() {
   document.getElementById('console-log').innerHTML = '';
   document.getElementById('score-content').innerHTML = '<div class="score-placeholder"><div class="big">◎</div><p style="font-size:12px;color:var(--text2)">Agent running...</p></div>';
 
-  log(`Starting agent on world: ${WORLD.meta.name}`, 'log-system');
+  log(`Starting agent on world: ${getWorldDisplayName()}`, 'log-system');
   log(`Task: ${getTaskPrompt().slice(0, 120)}...`, 'log-system');
   log('', 'log-system');
 
   // Initial user message
   agentMessages.push({
     role: 'user',
-    content: `You are working in the accounting directory for ${WORLD.meta.name}. ${getTaskPrompt()}\n\nStart by listing the available files.`
+    content: `You are working in the accounting directory for ${getWorldDisplayName()}. ${getTaskPrompt()}\n\nStart by listing the available files.`
   });
 
   const MAX_STEPS = 20;
@@ -603,14 +734,16 @@ async function scoreSubmission() {
   log(`DEBUG output preview: ${finalSubmission.output?.slice(0,120) ?? 'undefined'}`, 'log-system');
 
   const apiKey = localStorage.getItem('apex_api_key');
-  const rubric = WORLD.rubric;
+  const rubric = Array.isArray(WORLD.rubric) ? WORLD.rubric : [];
+  const sourceContext = isFilesWorld()
+    ? `AVAILABLE FILES:\n${listFiles()}`
+    : `CHART OF ACCOUNTS (current):\n${(WORLD.chartOfAccounts || []).map(a => `${a.code} ${a.name}`).join('\n')}`;
 
   const scoringPrompt = `You are grading an AI accounting agent's output against a rubric. Respond with ONLY a JSON array, nothing else. No preamble, no markdown, no explanation. Your entire response must be valid JSON starting with [ and ending with ].
 
-WORLD: ${WORLD.meta.name} (${WORLD.meta.method}, ${WORLD.meta.period})
+WORLD: ${getWorldDisplayName()} (${WORLD.meta?.method || WORLD.meta?.industry || ''}, ${WORLD.meta?.period || ''})
 
-CHART OF ACCOUNTS (current):
-${WORLD.chartOfAccounts.map(a => `${a.code} ${a.name}`).join('\n')}
+${sourceContext}
 
 RUBRIC CRITERIA:
 ${rubric.map((r,i) => `${i+1}. [${r.type}] ${r.text}`).join('\n')}
@@ -666,7 +799,7 @@ function renderScore(scores, summary, errorMsg) {
         <div class="rs-body">
           <div class="rs-text">${escHtml(r.text)}</div>
           ${score?.reasoning ? `<div class="rs-reasoning">${escHtml(score.reasoning)}</div>` : ''}
-          <span class="rs-type rst-${r.type}">${r.label}</span>
+          <span class="rs-type rst-${r.type || 'llm'}">${escHtml(r.label || r.type || 'criterion')}</span>
         </div>
       </div>`;
   }).join('');
@@ -722,9 +855,7 @@ function renderScore(scores, summary, errorMsg) {
 
 // ── INIT ──────────────────────────────────────
 loadWorld();
-if (WORLD?.meta?.name) {
-  document.getElementById('world-name').textContent = WORLD.meta.name;
-}
+syncWorldHeader();
 </script>
 </body>
 </html>

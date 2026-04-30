@@ -33,6 +33,7 @@ let activeArchetype = ARCHETYPES[0].id;
 const FILEWORLD_MAP = {
   STATIC_WORLD: typeof STATIC_WORLD !== 'undefined' ? STATIC_WORLD : null,
   STATIC_AUDIT_WORLD: typeof STATIC_AUDIT_WORLD !== 'undefined' ? STATIC_AUDIT_WORLD : null,
+  STATIC_ACQUI_WORLD: typeof STATIC_ACQUI_WORLD !== 'undefined' ? STATIC_ACQUI_WORLD : null,
 };
 
 let WORLD = {
@@ -186,6 +187,17 @@ const MOCK_PUBLISHED_WORLDS = [
     kind: 'fileworld',
     worldRef: 'STATIC_AUDIT_WORLD',
     defaultExpandedFolders: ['Audit_Workpapers', 'Audit_Workpapers/Q1_2025_Workpaper_Template', 'Finance', 'Finance/Statements', 'Finance/Statements/Q1_2025', 'HR', 'Accounts_Payable', 'Accounts_Receivable', 'Banking'],
+  },
+  {
+    id: 'static-acqui',
+    title: 'AcquiCo Inc.',
+    archetypeLabel: 'Deals Advisory',
+    tierLabel: 'Tier 3 — Judgment',
+    description:
+      'Private-equity acquisition diligence data room: extract cash balances and adjusted EBITDA, identify one-time items, reject news-context noise, and evaluate personnel synergy.',
+    kind: 'fileworld',
+    worldRef: 'STATIC_ACQUI_WORLD',
+    defaultExpandedFolders: ['', '01_Financials', '02_ProForma', '03_Headcount', '04_DiligenceDocs', '05_NewsContext', '06_Legal'],
   },
 ];
 
@@ -702,7 +714,7 @@ function renderFileView(fileId) {
 }
 
 function renderTaskTab() {
-  const task = WORLD.taskPrompt || `You are working as a bookkeeper for ${WORLD.meta?.name || 'this business'}.`;
+  const task = WORLD.meta?.taskPrompt || WORLD.taskPrompt || `You are working as a bookkeeper for ${WORLD.meta?.name || 'this business'}.`;
   const rubricRows = (WORLD.rubric || []).map((r) => `<div class="rubric-item"><div class="rubric-n">${r.n}</div><div class="rubric-body"><div class="rubric-text">${escHtml(r.text)}</div><span class="rtype rtype-${r.type}">${escHtml(r.label || r.type)}</span></div></div>`).join('');
   return `<div class="task-box">${escHtml(task)}</div><div class="section-label">rubric</div>${rubricRows}`;
 }
@@ -985,6 +997,18 @@ function buildGenerateTab() {
 }
 
 function packWorldForAgentPrompt() {
+  if (isFilesWorld()) {
+    const files = (WORLD.files || [])
+      .map((f) => `== ${f.path} ==\n${f.content || ''}`)
+      .join('\n\n');
+    const rubric = (WORLD.rubric || []).map((r, idx) => `${idx + 1}. [${r.type}] ${r.text}`).join('\n');
+    const task =
+      WORLD.meta?.taskPrompt ||
+      WORLD.taskPrompt ||
+      `You are working in the ${WORLD.meta?.company || WORLD.meta?.name || 'company'} data room. Review the files and complete the task.`;
+    return `TASK:\n${task}\n\nFILES:\n${files}\n\nRUBRIC (for grading context):\n${rubric}`;
+  }
+
   const rows = (WORLD.transactions || [])
     .map((t) => `${t.date},${t.desc},${t.amount >= 0 ? '+' : ''}${Number(t.amount).toFixed(2)}`)
     .join('\n');
@@ -1038,9 +1062,13 @@ async function runSampleClaudeAgent() {
   const outEl = document.getElementById('sample-agent-output');
   if (outEl) outEl.textContent = 'Calling Claude…';
 
-  const system =
-    'You are an external bookkeeping agent being evaluated. Return ONLY your final categorization output as plain text. Do not call tools.';
-  const user = `${packWorldForAgentPrompt()}\n\nOUTPUT: For each transaction give date, description, amount, account code, account name, flags, notes. End with a one-paragraph summary.`;
+  const system = isFilesWorld()
+    ? 'You are an external diligence agent being evaluated. Return ONLY your final answer as plain text. Do not call tools.'
+    : 'You are an external bookkeeping agent being evaluated. Return ONLY your final categorization output as plain text. Do not call tools.';
+  const outputInstructions = isFilesWorld()
+    ? 'OUTPUT: Answer each task directly. Cite source file paths for each factual claim. End with a concise risk and quality-of-evidence summary.'
+    : 'OUTPUT: For each transaction give date, description, amount, account code, account name, flags, notes. End with a one-paragraph summary.';
+  const user = `${packWorldForAgentPrompt()}\n\n${outputInstructions}`;
 
   setLoading(true, 'Running sample Claude agent…');
   try {
@@ -1239,4 +1267,3 @@ try {
     root.innerHTML = `<div style="padding:20px;font-family:Inter,sans-serif"><h2 style="margin:0 0 8px 0">Grader console failed to load</h2><p style="margin:0 0 10px 0">${escHtml(e.message || String(e))}</p><button onclick="window.location.reload()">Reload</button></div>`;
   }
 }
-

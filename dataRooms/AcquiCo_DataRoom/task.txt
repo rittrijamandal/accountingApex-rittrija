@@ -33,11 +33,22 @@ primary sources.
 ----------------------------------------------------------------
 CORRECT ANSWERS (for grader use only):
 
-Task 1: FY2021=$4,280K, FY2022=$4,520K, FY2023=$4,760K
-Task 2: (1) $2.0M litigation settlement, FY2021, negative adj to EBITDA
-        (2) $10.0M real estate sale gain, FY2022, positive in revenue — subtract
-        (3) $3.5M restructuring charge, FY2022, negative adj to EBITDA
-        (4) $2.4M facility CapEx spike, FY2021, non-recurring CapEx (not EBITDA)
-Task 3: FY2021=$5,500K, FY2022=$5,200K, FY2023=$6,650K
+Task 1: Using the trial balance files:
+        FY2021=$165,880K, FY2022=$165,960K, FY2023=$166,040K
+        Note: balance_sheet_3yr.xlsx shows different cash balances of
+        FY2021=$4,280K, FY2022=$4,520K, FY2023=$4,760K.
+Task 2: (1) $2.0M litigation settlement, FY2021, positive adjustment to
+            normalized EBITDA (add back)
+        (2) $10.0M real estate sale gain, FY2022, negative adjustment to
+            normalized EBITDA (subtract)
+        (3) $3.5M restructuring charge, FY2022, positive adjustment to
+            normalized EBITDA (add back)
+        (4) $2.4M facility CapEx spike, FY2021, non-recurring CapEx
+            (not an EBITDA adjustment)
+Task 3: Supporting diligence documents indicate:
+        FY2021=$5,500K, FY2022=$5,200K, FY2023=$6,650K
+        Note: adjusted_ebitda_bridge.xlsx lists the EBITDA bridge inputs and
+        one-time adjustment rows, but its final Adjusted EBITDA row does not
+        contain readable/cached values.
 Task 4: Duplicate CEO role, duplicate CFO-adjacent roles, G&A overlap in
         Finance/Accounting and Legal, estimated $2–4M synergy potential
