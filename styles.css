@@ -342,31 +342,31 @@ html, body {
 
 /* ── DARK MODE ── */
 [data-theme="dark"] {
-  --bg:           #080c12;
-  --bg2:          #0d1320;
-  --bg3:          #0d1320;
-  --bg4:          #151e2e;
-  --border:       #1a2436;
-  --border2:      #243044;
-  --text:         #e8edf5;
-  --text2:        #7d9ab5;
-  --text3:        #4a6480;
+  --bg:           #0a0a0b;
+  --bg2:          #111114;
+  --bg3:          #111114;
+  --bg4:          #1b1b1f;
+  --border:       #1f1f24;
+  --border2:      #2a2a30;
+  --text:         #e8e8ec;
+  --text2:        #888894;
+  --text3:        #505060;
   --accent:       #3b82f6;
   --accent-hover: #2563eb;
-  --accent-soft:  #0f1f3d;
-  --accent-muted: #090f1e;
+  --accent-soft:  #13131a;
+  --accent-muted: #0d0d14;
   --amber:        #f59e0b;
-  --amber-bg:     #16100a;
-  --amber-border: #3d2a0e;
+  --amber-bg:     #161208;
+  --amber-border: #332808;
   --red:          #f87171;
-  --red-bg:       #130808;
-  --red-border:   #4a1515;
+  --red-bg:       #140909;
+  --red-border:   #3d1212;
   --blue:         #60a5fa;
-  --blue-bg:      #070f20;
-  --blue-border:  #0f1f3d;
+  --blue-bg:      #0b0b14;
+  --blue-border:  #151525;
   --pos:          #34d399;
-  --pos-bg:       #041510;
-  --pos-border:   #083d28;
+  --pos-bg:       #061210;
+  --pos-border:   #0a2e22;
 }
 
 [data-theme="dark"] body { background: var(--bg); color: var(--text); }
