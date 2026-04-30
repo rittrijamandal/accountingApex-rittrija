@@ -303,10 +303,44 @@ function escHtml(str) {
 }
 
 function getApiKey() {
-  return localStorage.getItem('apex_api_key') || '';
+  const provider = getAiProvider();
+  return localStorage.getItem(`apex_api_key_${provider}`) || (provider === 'anthropic' ? localStorage.getItem('apex_api_key') : '') || '';
 }
 function setApiKey(v) {
+  localStorage.setItem(`apex_api_key_${getAiProvider()}`, v);
   localStorage.setItem('apex_api_key', v);
+}
+function getAiProvider() {
+  return localStorage.getItem('apex_ai_provider') || 'anthropic';
+}
+function getAiModel() {
+  const provider = getAiProvider();
+  const fallback = provider === 'openai' ? 'gpt-4.1' : 'claude-sonnet-4-20250514';
+  return localStorage.getItem(`apex_ai_model_${provider}`) || fallback;
+}
+function setAiProvider(v) {
+  localStorage.setItem('apex_ai_provider', v);
+  updateAiModelInput();
+  const input = document.getElementById('apikey-input');
+  if (input) input.value = getApiKey();
+}
+function setAiModel(v) {
+  const model = String(v || '').trim();
+  if (model) localStorage.setItem(`apex_ai_model_${getAiProvider()}`, model);
+}
+function getAiProviderLabel() {
+  return getAiProvider() === 'openai' ? 'OpenAI' : 'Anthropic';
+}
+function getAiRequestHeaders(key) {
+  return {
+    'Content-Type': 'application/json',
+    'x-api-key': key,
+    'x-ai-provider': getAiProvider(),
+  };
+}
+function updateAiModelInput() {
+  const input = document.getElementById('ai-model-input');
+  if (input) input.value = getAiModel();
 }
 
 function hardLogout() {
@@ -987,7 +1021,7 @@ function buildFiletree() {
 function buildGenerateTab() {
   return `
     <div class="section-label">Generate world</div>
-    <div class="task-box" style="margin-bottom:16px">Pick an archetype and generate a new world with Claude.</div>
+    <div class="task-box" style="margin-bottom:16px">Pick an archetype and generate a new world with your configured AI model.</div>
     <div class="archbar">
       <div class="archbar-left">
         ${ARCHETYPES.map((a) => `<button type="button" class="arch-btn ${a.id === activeArchetype ? 'active' : ''}" onclick="pickArchetype('${a.id}')">${escHtml(a.label)}</button>`).join('')}
@@ -1036,14 +1070,14 @@ function buildEvaluateTab() {
     <div class="task-box" style="margin-bottom:16px">
       <strong>Run your own agent</strong> opens the full <span style="font-family:var(--mono)">agent.html</span> runner with this world loaded. You control the run; it uses your saved API key only inside that session (no world generation).
       <div style="margin-top:10px"></div>
-      <strong>Test with Claude agent</strong> sends one sample completion request through <span style="font-family:var(--mono)">/api/test-grader</span> so you can sanity-check the task + rubric against the current files.
+      <strong>Test with sample agent</strong> sends one sample completion request through <span style="font-family:var(--mono)">/api/test-grader</span> so you can sanity-check the task + rubric against the current files.
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
       <button type="button" class="gen-btn" onclick="launchOwnAgent()">Run your agent</button>
-      <button type="button" class="gen-btn" onclick="runSampleClaudeAgent()">Test with Claude agent</button>
+      <button type="button" class="gen-btn" onclick="runSampleClaudeAgent()">Test with sample agent</button>
     </div>
-    <div class="section-label">Sample Claude output</div>
-    <div id="sample-agent-output" class="task-box" style="min-height:120px;font-family:var(--mono);font-size:11px;white-space:pre-wrap;color:var(--text2)">Run “Test with Claude agent” to see output here.</div>`;
+    <div class="section-label">Sample agent output</div>
+    <div id="sample-agent-output" class="task-box" style="min-height:120px;font-family:var(--mono);font-size:11px;white-space:pre-wrap;color:var(--text2)">Run “Test with sample agent” to see output here.</div>`;
 }
 
 function launchOwnAgent() {
@@ -1060,7 +1094,7 @@ async function runSampleClaudeAgent() {
     return;
   }
   const outEl = document.getElementById('sample-agent-output');
-  if (outEl) outEl.textContent = 'Calling Claude…';
+  if (outEl) outEl.textContent = `Calling ${getAiProviderLabel()}…`;
 
   const system = isFilesWorld()
     ? 'You are an external diligence agent being evaluated. Return ONLY your final answer as plain text. Do not call tools.'
@@ -1070,20 +1104,20 @@ async function runSampleClaudeAgent() {
     : 'OUTPUT: For each transaction give date, description, amount, account code, account name, flags, notes. End with a one-paragraph summary.';
   const user = `${packWorldForAgentPrompt()}\n\n${outputInstructions}`;
 
-  setLoading(true, 'Running sample Claude agent…');
+  setLoading(true, `Running sample ${getAiProviderLabel()} agent…`);
   try {
     const res = await fetch('/api/test-grader', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+      headers: getAiRequestHeaders(key),
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: getAiModel(),
         max_tokens: 2500,
         system,
         messages: [{ role: 'user', content: user }],
       }),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data?.error?.message || `Claude error ${res.status}`);
+    if (!res.ok) throw new Error(data?.error?.message || data?.error || `${getAiProviderLabel()} error ${res.status}`);
     const text = String(data.content?.find((b) => b.type === 'text')?.text || '').trim();
     if (outEl) outEl.textContent = text || '(empty response)';
   } catch (e) {
@@ -1156,6 +1190,9 @@ function setLoading(show, title) {
 function openApiKeyModal() {
   document.getElementById('apikey-input').value = getApiKey();
   document.getElementById('apikey-modal')?.classList.add('visible');
+  const providerSelect = document.getElementById('ai-provider-select');
+  if (providerSelect) providerSelect.value = getAiProvider();
+  updateAiModelInput();
 }
 function closeApiKeyModal() {
   document.getElementById('apikey-modal')?.classList.remove('visible');
@@ -1171,15 +1208,15 @@ async function generateWorld() {
   try {
     const res = await fetch('/api/test-grader', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+      headers: getAiRequestHeaders(key),
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: getAiModel(),
         max_tokens: 2600,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data?.error?.message || `Claude error ${res.status}`);
+    if (!res.ok) throw new Error(data?.error?.message || data?.error || `${getAiProviderLabel()} error ${res.status}`);
     const text = String(data.content?.find((b) => b.type === 'text')?.text || '').trim();
     const m = text.match(/\{[\s\S]*\}$/);
     WORLD = { ...WORLD, ...(JSON.parse(m ? m[0] : text)) };
@@ -1225,9 +1262,14 @@ function init() {
     </div>
     <div id="apikey-modal">
       <div class="modal-box">
-        <div class="modal-title">Set Claude API key</div>
-        <div class="modal-sub">Paste your Anthropic key. Stored locally as <span style="font-family:var(--mono)">apex_api_key</span>.</div>
-        <input id="apikey-input" class="modal-input" type="password" placeholder="sk-ant-..." />
+        <div class="modal-title">Set AI provider</div>
+        <div class="modal-sub">Choose a provider and model. Keys are stored locally in this browser.</div>
+        <select id="ai-provider-select" class="modal-input" onchange="setAiProvider(this.value)">
+          <option value="anthropic">Anthropic</option>
+          <option value="openai">OpenAI</option>
+        </select>
+        <input id="ai-model-input" class="modal-input" type="text" placeholder="Model, e.g. claude-sonnet-4-20250514 or gpt-4.1" oninput="setAiModel(this.value)" />
+        <input id="apikey-input" class="modal-input" type="password" placeholder="API key" />
         <div class="modal-actions">
           <button type="button" class="modal-btn modal-btn-cancel" onclick="closeApiKeyModal()">Cancel</button>
           <button type="button" class="modal-btn modal-btn-confirm" onclick="setApiKey(document.getElementById('apikey-input').value.trim());closeApiKeyModal()">Save</button>
@@ -1244,6 +1286,8 @@ window.pickArchetype = pickArchetype;
 window.generateWorld = generateWorld;
 window.openApiKeyModal = openApiKeyModal;
 window.closeApiKeyModal = closeApiKeyModal;
+window.setAiProvider = setAiProvider;
+window.setAiModel = setAiModel;
 window.hardLogout = hardLogout;
 window.exitGraderView = exitGraderView;
 window.setApiKey = setApiKey;

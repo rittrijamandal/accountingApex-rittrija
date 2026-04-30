@@ -224,6 +224,11 @@
     <span class="tb-sep">·</span>
     <select id="world-select" class="world-select" onchange="selectWorld(this.value)" aria-label="Select world"></select>
     <span id="world-name" style="color:var(--text);font-size:11px;font-weight:600">Pixel &amp; Pine Studio</span>
+    <select id="ai-provider-select" class="world-select" onchange="setAiProvider(this.value)" aria-label="Select AI provider">
+      <option value="anthropic">Anthropic</option>
+      <option value="openai">OpenAI</option>
+    </select>
+    <input id="ai-model-input" class="world-select" type="text" oninput="setAiModel(this.value)" aria-label="Model" placeholder="model" />
     <button type="button" class="back-btn" onclick="window.location.href='/'">← World Viewer</button>
   </div>
   <div id="main">
@@ -269,6 +274,36 @@
 let WORLD = null;
 let aborted = false;
 let stepCount = 0;
+
+function getAiProvider() {
+  return localStorage.getItem('apex_ai_provider') || 'anthropic';
+}
+function getAiModel() {
+  const provider = getAiProvider();
+  const fallback = provider === 'openai' ? 'gpt-4.1' : 'claude-sonnet-4-20250514';
+  return localStorage.getItem(`apex_ai_model_${provider}`) || fallback;
+}
+function getApiKey() {
+  const provider = getAiProvider();
+  return localStorage.getItem(`apex_api_key_${provider}`) || (provider === 'anthropic' ? localStorage.getItem('apex_api_key') : '') || '';
+}
+function getAiProviderLabel() {
+  return getAiProvider() === 'openai' ? 'OpenAI' : 'Anthropic';
+}
+function updateAiModelInput() {
+  const providerSelect = document.getElementById('ai-provider-select');
+  const modelInput = document.getElementById('ai-model-input');
+  if (providerSelect) providerSelect.value = getAiProvider();
+  if (modelInput) modelInput.value = getAiModel();
+}
+function setAiProvider(v) {
+  localStorage.setItem('apex_ai_provider', v);
+  updateAiModelInput();
+}
+function setAiModel(v) {
+  const model = String(v || '').trim();
+  if (model) localStorage.setItem(`apex_ai_model_${getAiProvider()}`, model);
+}
 
 function cloneWorld(w) {
   return JSON.parse(JSON.stringify(w));
@@ -369,6 +404,7 @@ function syncWorldHeader() {
     .join('');
   const active = STATIC_AGENT_WORLDS.find((entry) => getWorldDisplayName(entry.getWorld()) === name);
   select.value = active?.id || '';
+  updateAiModelInput();
 }
 
 function selectWorld(worldId) {
@@ -571,15 +607,19 @@ function updateStepCounter() {
 let agentMessages = [];
 let finalSubmission = null;
 
-async function callClaude(messages) {
-  const apiKey = localStorage.getItem('apex_api_key');
-  if (!apiKey) throw new Error('No API key. Go back to the world viewer and enter your key first.');
+async function callModel(messages) {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error(`No ${getAiProviderLabel()} API key. Go back to the world viewer and enter your key first.`);
 
   const res = await fetch('/api/test-grader', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'x-ai-provider': getAiProvider(),
+    },
     body: JSON.stringify({
-      model:      'claude-sonnet-4-20250514',
+      model:      getAiModel(),
       max_tokens: 2000,
       tools:      TOOLS,
       messages,
@@ -596,7 +636,7 @@ Important rules:
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `API error ${res.status}`);
+    throw new Error(err.error?.message || err.error || `API error ${res.status}`);
   }
   return res.json();
 }
@@ -615,6 +655,7 @@ async function runAgent() {
   document.getElementById('score-content').innerHTML = '<div class="score-placeholder"><div class="big">◎</div><p style="font-size:12px;color:var(--text2)">Agent running...</p></div>';
 
   log(`Starting agent on world: ${getWorldDisplayName()}`, 'log-system');
+  log(`Model: ${getAiProviderLabel()} / ${getAiModel()}`, 'log-system');
   log(`Task: ${getTaskPrompt().slice(0, 120)}...`, 'log-system');
   log('', 'log-system');
 
@@ -631,7 +672,7 @@ async function runAgent() {
       stepCount++;
       updateStepCounter();
 
-      const response = await callClaude(agentMessages);
+      const response = await callModel(agentMessages);
       const content  = response.content || [];
 
       // Add assistant turn to history
@@ -733,7 +774,7 @@ async function scoreSubmission() {
   log(`DEBUG output length: ${finalSubmission.output?.length ?? 'undefined'}`, 'log-system');
   log(`DEBUG output preview: ${finalSubmission.output?.slice(0,120) ?? 'undefined'}`, 'log-system');
 
-  const apiKey = localStorage.getItem('apex_api_key');
+  const apiKey = getApiKey();
   const rubric = Array.isArray(WORLD.rubric) ? WORLD.rubric : [];
   const sourceContext = isFilesWorld()
     ? `AVAILABLE FILES:\n${listFiles()}`
@@ -757,9 +798,13 @@ Return a JSON array with one object per rubric criterion. Example format:
   try {
     const res = await fetch('/api/test-grader', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'x-ai-provider': getAiProvider(),
+      },
       body: JSON.stringify({
-        model:      'claude-sonnet-4-20250514',
+        model:      getAiModel(),
         max_tokens: 2000,
         messages:   [{ role: 'user', content: scoringPrompt }],
       }),
