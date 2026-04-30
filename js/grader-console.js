@@ -1,6 +1,24 @@
 // Grader console: same visual system as current interface (styles.css),
 // with API-key modal + Generate World flow.
 
+// Dark mode
+(function() {
+  const saved = localStorage.getItem('apex_theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+function toggleDarkMode() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('apex_theme', next);
+  document.querySelectorAll('.dark-toggle').forEach(btn => {
+    btn.textContent = next === 'dark' ? 'LIGHT MODE' : 'DARK MODE';
+  });
+}
+function getDarkLabel() {
+  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'LIGHT MODE' : 'DARK MODE';
+}
+
 let activeFile = 'bank';
 let activeTab = 'view';
 
@@ -690,18 +708,34 @@ async function generatePdfInIframe(fileContent, containerId) {
 function renderCsvTable(csvText) {
   const lines = (csvText || '').trim().split('\n').filter(l => l.trim());
   if (!lines.length) return '<div class="empty-note">Empty file.</div>';
-  const parse = line => line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+  const parse = line => {
+    const cells = []; let cur = ''; let inQ = false;
+    for (const ch of line + ',') {
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { cells.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    return cells;
+  };
+  const colLetters = n => { let s='',r=n; while(r>=0){s=String.fromCharCode(65+r%26)+s;r=Math.floor(r/26)-1;} return s; };
   const header = parse(lines[0]);
-  const rows = lines.slice(1).map(line => {
+  const colCount = header.length;
+  const colHeaderRow = '<tr class="xl-col-header"><th class="xl-row-num"></th>' +
+    Array.from({length: colCount}, (_,i) => `<th class="xl-col-letter">${colLetters(i)}</th>`).join('') + '</tr>';
+  const fieldHeaderRow = '<tr class="xl-field-header"><td class="xl-row-num">1</td>' +
+    header.map(h => `<th class="xl-field-th">${escHtml(h)}</th>`).join('') + '</tr>';
+  const dataRows = lines.slice(1).map((line, ri) => {
     const cells = parse(line);
-    return '<tr>' + cells.map((c, i) => {
-      const num = parseFloat(c.replace(/[^0-9.-]/g, ''));
-      const isAmt = i > 0 && !isNaN(num) && c !== '' && /[$\d]/.test(c);
-      const cls = isAmt ? (num < 0 ? 'amount-neg' : num > 0 ? 'amount-pos' : '') : '';
-      return `<td${cls ? ` class="${cls}"` : ''}>${escHtml(c)}</td>`;
-    }).join('') + '</tr>';
+    return '<tr class="xl-row">' +
+      `<td class="xl-row-num">${ri + 2}</td>` +
+      cells.map((c, ci) => {
+        const num = parseFloat(c.replace(/[^0-9.-]/g, ''));
+        const isAmt = ci > 0 && !isNaN(num) && c !== '' && /[$\d(]/.test(c);
+        const cls = isAmt ? (num < 0 ? 'xl-neg' : num > 0 ? 'xl-pos' : '') : '';
+        return `<td class="xl-cell${cls ? ' '+cls : ''}">${escHtml(c)}</td>`;
+      }).join('') + '</tr>';
   }).join('');
-  return `<div class="fw-table-wrap"><table class="data-table"><thead><tr>${header.map(h => `<th>${escHtml(h)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  return `<div class="xl-wrap"><table class="xl-table">${colHeaderRow}${fieldHeaderRow}${dataRows}</table></div>`;
 }
 
 function renderFileworldFile(filePath) {
@@ -844,6 +878,7 @@ function buildTopbar() {
     <div class="tb-meta">
       <span><span class="dot"></span>${isFilesWorld() ? WORLD.files.length : escHtml(WORLD.meta?.totalFiles || 0)} files</span>
       <span><button type="button" class="gen-btn" onclick="openApiKeyModal()">API KEY</button></span>
+      <span><button type="button" class="gen-btn dark-toggle" onclick="toggleDarkMode()">${getDarkLabel()}</button></span>
       ${buildSessionActionButtons()}
     </div>`;
 }
@@ -865,6 +900,7 @@ function renderGraderLobby() {
       <span class="tb-logo"><img src="/assets/symbal-logo.png" alt="" class="tb-logo-img" width="22" height="22" />SYMBAL ACCOUNTING <span class="title-serif">apex</span></span>
       <span class="grader-lobby-spacer"></span>
       <button type="button" class="gen-btn" onclick="openApiKeyModal()">API KEY</button>
+      <button type="button" class="gen-btn dark-toggle" onclick="toggleDarkMode()">${getDarkLabel()}</button>
       ${GRADER_PREVIEW_MODE ? '' : '<button type="button" class="gen-btn" onclick="hardLogout()">SIGN OUT</button>'}
     </div>
     <div class="grader-lobby-inner">

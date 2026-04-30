@@ -588,3 +588,88 @@ table.grader-browse-table tbody tr.grader-browse-row:hover td {
   box-shadow: 0 1px 3px rgba(15,23,42,0.05);
   max-width: 100%;
 }
+
+/* ── Excel-style CSV viewer ── */
+.xl-wrap {
+  overflow: auto;
+  max-height: 640px;
+  border: 1px solid #bfdbfe;
+  border-radius: 2px;
+  background: #fff;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 12px;
+}
+.xl-table {
+  border-collapse: collapse;
+  min-width: 100%;
+  white-space: nowrap;
+}
+/* Column-letter header row (A B C …) */
+.xl-col-header th {
+  background: #e9edf0;
+  color: #666;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  padding: 2px 8px;
+  border-right: 1px solid #d0d7de;
+  border-bottom: 2px solid #bfdbfe;
+  letter-spacing: 0;
+  text-transform: none;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+/* Field-name header row */
+.xl-field-header { position: sticky; top: 22px; z-index: 2; }
+.xl-field-th {
+  background: #e8f0fe;
+  color: #1a56db;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-right: 1px solid #c7d7f5;
+  border-bottom: 2px solid #93c5fd;
+  text-align: left;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+/* Row number column */
+.xl-row-num {
+  background: #e9edf0;
+  color: #888;
+  font-size: 10px;
+  text-align: center;
+  padding: 3px 7px;
+  border-right: 2px solid #bfdbfe;
+  border-bottom: 1px solid #e0e0e0;
+  min-width: 32px;
+  user-select: none;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+.xl-col-header .xl-row-num { z-index: 4; }
+.xl-field-header .xl-row-num { z-index: 3; }
+/* Data cells */
+.xl-cell {
+  padding: 3px 10px;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  color: #111;
+  min-width: 80px;
+}
+.xl-row:nth-child(even) .xl-cell { background: #f8faff; }
+.xl-row:hover .xl-cell { background: #e8f0fe; }
+.xl-neg { color: #dc2626; }
+.xl-pos { color: #059669; }
+
+/* Dark mode overrides for Excel viewer */
+[data-theme="dark"] .xl-wrap { background: #1e293b; border-color: #334155; }
+[data-theme="dark"] .xl-col-header th { background: #1e293b; color: #94a3b8; border-color: #334155; }
+[data-theme="dark"] .xl-field-th { background: #1e3a5f; color: #93c5fd; border-color: #1e3a5f; }
+[data-theme="dark"] .xl-row-num { background: #1e293b; color: #64748b; border-color: #334155; }
+[data-theme="dark"] .xl-cell { color: #e2e8f0; border-color: #334155; }
+[data-theme="dark"] .xl-row:nth-child(even) .xl-cell { background: #253347; }
+[data-theme="dark"] .xl-row:hover .xl-cell { background: #1e3a5f; }
