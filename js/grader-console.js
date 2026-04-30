@@ -656,6 +656,54 @@ function closeGraderDrawer() {
   refreshGraderFileViewPanel();
 }
 
+let _pdfBlobUrl = null;
+
+async function generatePdfInIframe(fileContent, containerId) {
+  try {
+    const mod = await import('https://esm.sh/jspdf@2.5.1');
+    const jsPDF = mod.jsPDF || mod.default?.jsPDF || mod.default;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 14;
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(9.5);
+    let y = 18;
+    for (const rawLine of (fileContent || '').split('\n')) {
+      const wrapped = doc.splitTextToSize(rawLine.length ? rawLine : ' ', pageW - margin * 2);
+      for (const line of wrapped) {
+        if (y > pageH - 12) { doc.addPage(); y = 18; }
+        doc.text(line, margin, y);
+        y += 4.8;
+      }
+    }
+    if (_pdfBlobUrl) URL.revokeObjectURL(_pdfBlobUrl);
+    _pdfBlobUrl = URL.createObjectURL(doc.output('blob'));
+    const el = document.getElementById(containerId);
+    if (el) el.innerHTML = `<iframe src="${_pdfBlobUrl}" style="width:100%;height:680px;border:none;border-radius:4px;background:#fff"></iframe>`;
+  } catch (e) {
+    const el = document.getElementById(containerId);
+    if (el) el.innerHTML = `<pre style="color:var(--text3);padding:16px;font-size:11px">PDF preview unavailable\n${e.message}</pre>`;
+  }
+}
+
+function renderCsvTable(csvText) {
+  const lines = (csvText || '').trim().split('\n').filter(l => l.trim());
+  if (!lines.length) return '<div class="empty-note">Empty file.</div>';
+  const parse = line => line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+  const header = parse(lines[0]);
+  const rows = lines.slice(1).map(line => {
+    const cells = parse(line);
+    return '<tr>' + cells.map((c, i) => {
+      const num = parseFloat(c.replace(/[^0-9.-]/g, ''));
+      const isAmt = i > 0 && !isNaN(num) && c !== '' && /[$\d]/.test(c);
+      const cls = isAmt ? (num < 0 ? 'amount-neg' : num > 0 ? 'amount-pos' : '') : '';
+      return `<td${cls ? ` class="${cls}"` : ''}>${escHtml(c)}</td>`;
+    }).join('') + '</tr>';
+  }).join('');
+  return `<div class="fw-table-wrap"><table class="data-table"><thead><tr>${header.map(h => `<th>${escHtml(h)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
 function renderFileworldFile(filePath) {
   if (!filePath) {
     return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:10px;color:var(--text3);text-align:center">
@@ -667,32 +715,20 @@ function renderFileworldFile(filePath) {
   const f = (WORLD.files || []).find((x) => x.path === filePath);
   if (!f) return `<div class="section-label">File not found: ${escHtml(filePath)}</div>`;
   const name = filePath.split('/').pop();
-  const typeLabels = { policy: 'Policy', invoice: 'Invoice', ledger: 'Ledger', profile: 'Profile' };
-  const typeLabel = typeLabels[f.type] || f.type;
-  const typeClasses = { policy: 'fw-type-policy', invoice: 'fw-type-invoice', ledger: 'fw-type-ledger', profile: 'fw-type-profile' };
-  const typeClass = typeClasses[f.type] || 'fw-type-policy';
+  const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
+  const header = `<div class="section-label" style="margin-bottom:10px">${escHtml(name)}</div>`;
 
-  if (f.type === 'ledger') {
-    const lines = (f.content || '').trim().split('\n');
-    const header = lines[0] ? lines[0].split(',') : [];
-    const rows = lines.slice(1).filter(l => l.trim()).map((line) => {
-      const cells = line.split(',');
-      return '<tr>' + cells.map((c, i) => {
-        const raw = c.trim();
-        const num = parseFloat(raw.replace(/[^0-9.-]/g, ''));
-        const isAmt = i > 0 && !isNaN(num) && raw !== '' && /[$\d]/.test(raw);
-        const cls = isAmt ? (num < 0 ? 'amount-neg' : num > 0 ? 'amount-pos' : '') : '';
-        return `<td${cls ? ` class="${cls}"` : ''}>${escHtml(raw)}</td>`;
-      }).join('') + '</tr>';
-    }).join('');
-    const headerHtml = header.map((h) => `<th>${escHtml(h.trim())}</th>`).join('');
-    return `<div class="section-label" style="margin-bottom:10px">${escHtml(name)}</div>` +
-      `<span class="fw-doc-type ${typeClass}">${typeLabel}</span>` +
-      `<div class="fw-table-wrap" style="margin-top:10px"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  if (ext === 'pdf') {
+    const cid = 'fw-pdf-' + Date.now();
+    setTimeout(() => generatePdfInIframe(f.content, cid), 0);
+    return header + `<div id="${cid}" style="min-height:120px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px">Rendering PDF…</div>`;
   }
 
-  return `<div class="section-label" style="margin-bottom:10px">${escHtml(name)}</div>` +
-    `<div class="fw-doc"><span class="fw-doc-type ${typeClass}">${typeLabel}</span>\n${escHtml(f.content || '')}</div>`;
+  if (ext === 'csv' || f.type === 'ledger') {
+    return header + renderCsvTable(f.content);
+  }
+
+  return header + `<div class="fw-doc" style="white-space:pre-wrap;font-family:var(--mono);font-size:11px;line-height:1.6">${escHtml(f.content || '')}</div>`;
 }
 
 function renderFileView(fileId) {
