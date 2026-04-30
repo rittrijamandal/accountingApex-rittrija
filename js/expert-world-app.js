@@ -152,6 +152,42 @@ function normalizeUploadedFiles(list) {
   }));
 }
 
+const FILEWORLD_TYPE_MAP = {
+  policy: 'expense_policy', invoice: 'invoice', ledger: 'general_ledger',
+  bank: 'bank_statement', payroll: 'payroll_report',
+};
+const FILEWORLD_CUSTOM_LABEL = {
+  workpaper: 'Work Paper', email: 'Email', contract: 'Contract',
+  spreadsheet: 'Spreadsheet', report: 'Report',
+};
+function mimeFromPath(p) {
+  const ext = String(p).split('.').pop().toLowerCase();
+  if (ext === 'pdf') return 'application/pdf';
+  if (ext === 'csv') return 'text/csv';
+  if (ext === 'xlsx' || ext === 'xls') return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  return 'text/plain';
+}
+function fileworldFilesToUploadedFiles(files) {
+  if (!Array.isArray(files)) return [];
+  return files.map((f) => {
+    const fwType = String(f.type || '');
+    const mappedType = FILEWORLD_TYPE_MAP[fwType] || '__custom__';
+    return {
+      id: uid(),
+      type: mappedType,
+      customType: mappedType === '__custom__' ? (FILEWORLD_CUSTOM_LABEL[fwType] || fwType || 'Document') : '',
+      displayLabel: f.path || f.name || '',
+      notes: '',
+      extractedText: f.content || '',
+      fileName: String(f.path || '').split('/').pop(),
+      mimeType: mimeFromPath(f.path || ''),
+      sizeBytes: typeof f.content === 'string' ? f.content.length : 0,
+      isMisleading: Boolean(f.isMisleading),
+      gridRows: [],
+    };
+  });
+}
+
 function render(app, dbRow, state, isAdmin) {
   const adminLink = isAdmin
     ? '<a href="admin.html" class="btn btn-ghost" style="text-decoration:none">Admin</a>'
@@ -601,17 +637,21 @@ async function init() {
 
   row.is_published = row.is_published === true;
 
-  const payload = normalizePayload(row.payload);
+  const rawPayload = row.payload && typeof row.payload === 'object' ? row.payload : {};
+  const payload = normalizePayload(rawPayload);
+  const isFileworldPayload = Array.isArray(rawPayload.files);
   const state = {
     meta: { ...(payload.meta || {}) },
-    uploadedFiles: normalizeUploadedFiles(payload.uploadedFiles),
+    uploadedFiles: isFileworldPayload
+      ? fileworldFilesToUploadedFiles(rawPayload.files)
+      : normalizeUploadedFiles(payload.uploadedFiles),
     activeFileId: null,
     uploadMode: false,
     browseLayout: 'list',
     dataRoomPhase: 'browse',
     drawerOpen: false,
     pendingUpload: makePendingUpload(),
-    taskPrompt: payload.taskPrompt || '',
+    taskPrompt: payload.taskPrompt || (isFileworldPayload && typeof rawPayload.meta?.taskPrompt === 'string' ? rawPayload.meta.taskPrompt : '') || '',
     availableAmbiguityTags: [...AMBIGUITY_PRESETS],
     selectedAmbiguities: Array.isArray(payload.ambiguityTypes) ? [...payload.ambiguityTypes] : [],
     customAmbiguityInput: '',
@@ -651,7 +691,7 @@ async function init() {
   async function saveWorld(mode) {
     setStatus('Saving…');
     const title = document.getElementById('world-name').value.trim() || 'Untitled world';
-    const worldPayload = collectPayload(payload, state);
+    const worldPayload = collectPayload(isFileworldPayload ? rawPayload : payload, state);
     const updates = { title, payload: worldPayload };
     if (mode === 'publish') updates.is_published = true;
     const { data: updated, error: upErr } = await sb.from('worlds').update(updates).eq('id', id).select('id,is_published').maybeSingle();
