@@ -291,12 +291,31 @@ function renderAmbiguityControls(state) {
   </div>`;
 }
 
+async function downloadDataRoomZip(worldTitle, rawPayload, uploadedFiles) {
+  const JSZip = (await import('https://esm.sh/jszip@3.10.1')).default;
+  const zip = new JSZip();
+  const isFileworld = Array.isArray(rawPayload.files);
+  const entries = isFileworld
+    ? rawPayload.files.map((f) => ({ path: f.path || f.name || 'file.txt', content: f.content || '' }))
+    : uploadedFiles.map((f) => ({ path: f.displayLabel || f.fileName || 'file.txt', content: f.extractedText || '' }));
+  for (const { path, content } of entries) {
+    if (path) zip.file(path, content);
+  }
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${(worldTitle || 'data-room').replace(/[^a-zA-Z0-9_-]/g, '_')}.zip`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 function renderBrowseDashboard(state) {
   const listActive = state.browseLayout === 'list' ? 'active' : '';
   const gridActive = state.browseLayout === 'grid' ? 'active' : '';
   const toolbar = `
     <div class="data-room-toolbar">
       <button type="button" class="btn" data-action="start-upload">Upload Document</button>
+      ${state.uploadedFiles.length ? '<button type="button" class="btn btn-ghost" data-action="download-zip">Download ZIP</button>' : ''}
       <div class="view-toggle-spacer"></div>
       <div class="view-toggle-group" role="group" aria-label="Directory view mode">
         <button type="button" class="view-toggle-btn ${listActive}" data-action="set-browse-layout" data-layout="list">List</button>
@@ -714,6 +733,11 @@ async function init() {
     if (!el) return;
     const action = el.getAttribute('data-action');
 
+    if (action === 'download-zip') {
+      const title = document.getElementById('world-name')?.value || row.title || 'data-room';
+      downloadDataRoomZip(title, rawPayload, state.uploadedFiles);
+      return;
+    }
     if (action === 'start-upload') {
       state.uploadMode = true;
       state.activeFileId = null;
