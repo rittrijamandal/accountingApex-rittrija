@@ -1,189 +1,185 @@
 // ─────────────────────────────────────────────
-//  APP.JS  —  UI logic + AI generation
+//  APP.JS  —  Invoice Approval World Viewer
 // ─────────────────────────────────────────────
 
-let activeFile      = 'bank';
-let activeTab       = 'view';
+let activeFilePath  = null;
 let activeArchetype = ARCHETYPES[0];
 let apiKey          = localStorage.getItem('apex_api_key') || '';
 let isGenerating    = false;
 
-// ── ACTIVE WORLD DATA (starts with static fallback) ──
-let WORLD = {
-  meta:               WORLD_META,
-  transactions:       TRANSACTIONS,
-  chartOfAccounts:    CHART_OF_ACCOUNTS,
-  oldChartOfAccounts: OLD_CHART_OF_ACCOUNTS,
-  expensePolicy:      EXPENSE_POLICY,
-  oldExpensePolicy:   OLD_EXPENSE_POLICY,
-  invoices:           INVOICES,
-  rubric:             RUBRIC,
-  taskPrompt:         null,
-  ambiguityTypes:     null,
-  misleadingFiles:    null,
-};
+// Folders expanded by default
+let expandedFolders = new Set([
+  '', 'company_invoices', 'leadership',
+  'engineering', 'engineering/team_invoices',
+  'marketing', 'marketing/team_invoices',
+  'operations', 'operations/team_invoices',
+]);
+
+// ── ACTIVE WORLD ─────────────────────────────
+
+let WORLD = STATIC_WORLD;
+
+// Build a path → file map for O(1) lookup
+function getFileMap() {
+  const map = {};
+  for (const f of WORLD.files) map[f.path] = f;
+  return map;
+}
 
 // ── HELPERS ──────────────────────────────────
 
-function fmt(n) {
-  const abs = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return n >= 0 ? `+${abs}` : `-${abs}`;
-}
-
-function tagHtml(flag) {
-  const map = {
-    ambig:    ['tag-ambig',    'ambiguous'],
-    personal: ['tag-personal', 'likely personal'],
-    recur:    ['tag-recur',    'recurring'],
-    clear:    ['tag-clear',    'clear'],
-    dupe:     ['tag-dupe',     'possible dupe'],
-  };
-  const [cls, label] = map[flag] || ['tag-clear', flag];
-  return `<span class="tag ${cls}">${label}</span>`;
-}
-
-function badgeHtml(type) {
-  if (!type) return '';
-  const map    = { core: 'badge-core', warn: 'badge-warn', noise: 'badge-noise' };
-  const labels = { core: 'CORE', warn: '⚠ OLD', noise: 'NOISE' };
-  return `<span class="badge ${map[type]}">${labels[type]}</span>`;
-}
-
 function escHtml(str) {
   return String(str || '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// ── RENDERS ──────────────────────────────────
+function fileIcon(type) {
+  const icons = { policy: '§', invoice: '▤', ledger: '▦', profile: '◉' };
+  return icons[type] || '▤';
+}
 
-function renderBank() {
-  const rows = WORLD.transactions.map(t => `
-    <tr>
-      <td style="color:var(--text3);white-space:nowrap">${t.date}</td>
-      <td style="font-family:var(--mono)">${escHtml(t.desc)}</td>
-      <td style="white-space:nowrap;text-align:right" class="${t.amount >= 0 ? 'amount-pos' : 'amount-neg'}">${fmt(t.amount)}</td>
-      <td>${tagHtml(t.flag)}</td>
-      <td style="color:var(--text3);font-size:10px;line-height:1.4">${escHtml(t.note)}</td>
-    </tr>`).join('');
+// ── TREE BUILDER ─────────────────────────────
+
+function buildTreeData(files) {
+  // Returns a nested { name, isDir, children, file } structure
+  const root = {};
+  for (const f of files) {
+    const parts = f.path.split('/');
+    let node = root;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const seg = parts[i];
+      if (!node[seg]) node[seg] = { _isDir: true, _children: {} };
+      node = node[seg]._children;
+    }
+    const fname = parts[parts.length - 1];
+    node[fname] = { _isDir: false, _file: f };
+  }
+  return root;
+}
+
+function renderTreeNode(node, depth, prefix) {
+  let html = '';
+  const indent = depth * 14;
+
+  // Sort: folders first, then files
+  const entries = Object.entries(node).sort(([an, av], [bn, bv]) => {
+    const aDir = !!av._isDir;
+    const bDir = !!bv._isDir;
+    if (aDir && !bDir) return -1;
+    if (!aDir && bDir) return 1;
+    return an.localeCompare(bn);
+  });
+
+  for (const [name, val] of entries) {
+    const fullPath = prefix ? prefix + '/' + name : name;
+
+    if (val._isDir) {
+      const isOpen = expandedFolders.has(fullPath);
+      html += `<div class="tree-folder${isOpen ? ' expanded' : ''}"
+        style="padding-left:${indent}px"
+        onclick="toggleFolder('${fullPath}')">
+        <span class="tree-toggle">${isOpen ? '▼' : '▶'}</span>
+        <span class="tree-folder-icon">${isOpen ? '◧' : '◫'}</span>
+        <span class="tree-folder-name">${escHtml(name)}/</span>
+      </div>`;
+      if (isOpen) {
+        html += renderTreeNode(val._children, depth + 1, fullPath);
+      }
+    } else {
+      const f = val._file;
+      const isActive = activeFilePath === f.path;
+      html += `<div class="tree-file type-${f.type}${isActive ? ' active' : ''}"
+        style="padding-left:${indent + 14}px"
+        onclick="selectFilePath('${escHtml(f.path)}')">
+        <span class="tree-file-icon">${fileIcon(f.type)}</span>
+        <span class="tree-file-name">${escHtml(name)}</span>
+      </div>`;
+    }
+  }
+  return html;
+}
+
+function buildSidebar() {
+  const tree = buildTreeData(WORLD.files);
+  return renderTreeNode(tree, 0, '');
+}
+
+// ── FILE RENDERERS ────────────────────────────
+
+function renderPolicy(f) {
+  return `
+    <div>
+      <span class="prose-doc-type prose-type-policy">POLICY DOCUMENT</span>
+      <div class="section-label">${escHtml(f.path)}</div>
+    </div>
+    <div class="prose-doc">${escHtml(f.content)}</div>`;
+}
+
+function renderProfile(f) {
+  return `
+    <div>
+      <span class="prose-doc-type prose-type-profile">EMPLOYEE PROFILE</span>
+      <div class="section-label">${escHtml(f.path)}</div>
+    </div>
+    <div class="prose-doc">${escHtml(f.content)}</div>`;
+}
+
+function renderInvoice(f) {
+  return `
+    <div>
+      <span class="invoice-doc-type">INVOICE — ${escHtml(f.invoiceNum || '')}</span>
+      <div class="section-label">${escHtml(f.path)}</div>
+    </div>
+    <div class="invoice-doc">${escHtml(f.content)}</div>`;
+}
+
+function renderLedger(f) {
+  const lines = (f.content || '').trim().split('\n').filter(Boolean);
+  if (lines.length <= 1) {
+    return `
+      <div>
+        <span class="ledger-type">LEDGER</span>
+        <div class="section-label">${escHtml(f.path)}</div>
+      </div>
+      <div class="ledger-empty">
+        <div class="le-icon">▦</div>
+        <p style="font-size:12px;color:var(--text2)">Ledger is empty</p>
+        <p style="font-size:10px;color:var(--text3)">The agent must fill this in using write_file.<br>Header: ${escHtml(lines[0] || 'Date,Description,Amount,Category,Invoice Ref,Approved By,Status')}</p>
+      </div>`;
+  }
+
+  const headers = lines[0].split(',').map(h => h.trim());
+  const rows = lines.slice(1).map(line => {
+    const cells = line.split(',').map(c => c.trim());
+    return '<tr>' + cells.map((c, i) => `<td>${escHtml(c)}</td>`).join('') + '</tr>';
+  }).join('');
 
   return `
-    <div class="section-label">bank_statement.csv — ${WORLD.transactions.length} transactions</div>
+    <div>
+      <span class="ledger-type">LEDGER</span>
+      <div class="section-label">${escHtml(f.path)} — ${lines.length - 1} entries</div>
+    </div>
     <div style="overflow-x:auto">
     <table class="data-table">
-      <thead><tr>
-        <th>Date</th><th>Description</th><th style="text-align:right">Amount ($)</th>
-        <th>Flag</th><th>Notes</th>
-      </tr></thead>
+      <thead><tr>${headers.map(h => `<th>${escHtml(h)}</th>`).join('')}</tr></thead>
       <tbody>${rows}</tbody>
     </table>
     </div>`;
 }
 
-function renderCOA() {
-  const rows = WORLD.chartOfAccounts.map(r => `
-    <tr>
-      <td style="color:var(--text3)">${r.code}</td>
-      <td>${escHtml(r.name)}</td>
-      <td style="color:var(--text3)">${r.type}</td>
-    </tr>`).join('');
-  return `
-    <div class="section-label">chart_of_accounts.xlsx — current (2026)</div>
-    <table class="data-table">
-      <thead><tr><th>Code</th><th>Account name</th><th>Type</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+function renderFile(path) {
+  const map = getFileMap();
+  const f = map[path];
+  if (!f) return `<div class="error-banner">File not found: ${escHtml(path)}</div>`;
+  if (f.type === 'policy')  return renderPolicy(f);
+  if (f.type === 'profile') return renderProfile(f);
+  if (f.type === 'invoice') return renderInvoice(f);
+  if (f.type === 'ledger')  return renderLedger(f);
+  return `<div class="prose-doc">${escHtml(f.content || '')}</div>`;
 }
 
-function renderOldCOA() {
-  const rows = WORLD.oldChartOfAccounts.map(r => `
-    <tr>
-      <td style="color:var(--text3)">${r.code}</td>
-      <td style="text-decoration:line-through;color:var(--text3)">${escHtml(r.name)}</td>
-      <td style="color:var(--text3)">${r.type}</td>
-    </tr>`).join('');
-  return `
-    <div class="warn-banner"><span class="wicon">⚠</span>
-      Outdated — account names differ from current version. An agent using this file will miscategorize transactions.
-    </div>
-    <div class="section-label">chart_of_accounts_prev.xlsx — OUTDATED</div>
-    <table class="data-table">
-      <thead><tr><th>Code</th><th>Account name (old)</th><th>Type</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-}
-
-function renderPolicy() {
-  const rows = WORLD.expensePolicy.map(r => `
-    <div class="kv"><span class="kk">${escHtml(r.key)}</span><span class="vv">${escHtml(r.val)}</span></div>`).join('');
-  return `
-    <div class="section-label">expense_policy.pdf — current</div>
-    <div class="file-preview">${rows}</div>`;
-}
-
-function renderOldPolicy() {
-  const rows = WORLD.oldExpensePolicy.map(r => `
-    <div class="kv">
-      <span class="kk">${escHtml(r.key)}</span>
-      <span class="vv" style="color:var(--red)">${escHtml(r.val)}</span>
-    </div>`).join('');
-  return `
-    <div class="warn-banner"><span class="wicon">⚠</span>
-      Outdated — key policy values differ from current version. Using this file will cause compliance errors.
-    </div>
-    <div class="section-label">expense_policy_prev.pdf — OUTDATED</div>
-    <div class="file-preview">${rows}</div>`;
-}
-
-function renderInvoice(inv) {
-  if (!inv) return renderNoise();
-  return `
-    ${inv.warn ? `<div class="warn-banner"><span class="wicon">⚠</span>${escHtml(inv.warn)}</div>` : ''}
-    <div class="section-label">${escHtml(inv.invNum || inv.id)}.pdf</div>
-    <div class="file-preview">
-      <div class="kv"><span class="kk">Vendor</span><span class="vv">${escHtml(inv.vendor)}</span></div>
-      <div class="kv"><span class="kk">Invoice #</span><span class="vv">${escHtml(inv.invNum)}</span></div>
-      <div class="kv"><span class="kk">Date</span><span class="vv">${escHtml(inv.date)}</span></div>
-      <div class="kv"><span class="kk">Description</span><span class="vv">${escHtml(inv.desc)}</span></div>
-      <div class="kv"><span class="kk">Amount</span><span class="vv">${escHtml(inv.amount)}</span></div>
-    </div>`;
-}
-
-function renderNoise() {
-  return `
-    <div class="noise-view">
-      <div class="noise-icon">▤</div>
-      <p style="color:var(--text2);font-size:13px">This file is noise.</p>
-      <p>It exists to simulate a realistic working directory.<br>
-      An agent that opens this file is wasting steps.</p>
-    </div>`;
-}
-
-function renderTask() {
-  const prompt = WORLD.taskPrompt ||
-    `You are working as a bookkeeper for ${WORLD.meta.name}. Review the bank statement and categorize each transaction using the current chart of accounts and expense policy. Flag ambiguous transactions, suspected duplicates, and personal expenses.`;
-  return `
-    <div class="section-label">task_01.txt</div>
-    <div class="task-box">${escHtml(prompt)}</div>`;
-}
-
-// ── FILE VIEW ─────────────────────────────────
-
-function renderFileView(fileId) {
-  if (fileId === 'bank')       return renderBank();
-  if (fileId === 'coa')        return renderCOA();
-  if (fileId === 'old_coa')    return renderOldCOA();
-  if (fileId === 'policy')     return renderPolicy();
-  if (fileId === 'old_policy') return renderOldPolicy();
-  if (fileId === 'task')       return renderTask();
-  if (fileId === 'noise')      return renderNoise();
-  const invs = getInvoiceList();
-  const inv  = invs.find(i => i.id === fileId);
-  if (inv) return renderInvoice(inv);
-  return renderNoise();
-}
-
-// ── TASK + RUBRIC TAB ─────────────────────────
+// ── TASK + RUBRIC ─────────────────────────────
 
 function renderTaskTab() {
   const rubricRows = WORLD.rubric.map(r => `
@@ -195,145 +191,54 @@ function renderTaskTab() {
       </div>
     </div>`).join('');
 
-  const detCount = WORLD.rubric.filter(r => r.type === 'det').length;
-  const detPct   = Math.round((detCount / WORLD.rubric.length) * 100);
+  const taskPrompt = WORLD.meta.taskPrompt || 'You have been assigned to process outstanding invoices for this company. Review the directory and handle them appropriately.';
 
   return `
     <div class="metrics-row">
       <div class="metric-card">
-        <div class="metric-label">difficulty</div>
-        <div class="metric-value amber">${WORLD.meta.tier.split(' — ')[0]}</div>
+        <div class="metric-label">company</div>
+        <div class="metric-value" style="font-size:14px">${escHtml(WORLD.meta.company)}</div>
       </div>
       <div class="metric-card">
-        <div class="metric-label">transactions</div>
-        <div class="metric-value">${WORLD.transactions.length}</div>
+        <div class="metric-label">employees</div>
+        <div class="metric-value">${WORLD.meta.employees}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">files</div>
+        <div class="metric-value">${WORLD.files.length}</div>
       </div>
       <div class="metric-card">
         <div class="metric-label">rubric criteria</div>
         <div class="metric-value">${WORLD.rubric.length}</div>
       </div>
-      <div class="metric-card">
-        <div class="metric-label">det. grading</div>
-        <div class="metric-value green">${detPct}%</div>
-      </div>
     </div>
-    ${renderTask()}
+    <div class="section-label">agent task prompt</div>
+    <div class="task-box">${escHtml(taskPrompt)}</div>
     <div class="section-label" style="margin-top:4px">rubric</div>
     ${rubricRows}`;
-}
-
-// ── WORLD META TAB ────────────────────────────
-
-function renderWorldMeta() {
-  const ambiguityTypes = WORLD.ambiguityTypes || [
-    'ambiguous vendor names', 'recurring pattern recognition',
-    'personal vs. business', 'capitalization threshold boundary',
-    'duplicate invoice detection',
-  ];
-  const tagClasses = ['tag-ambig','tag-recur','tag-personal','tag-ambig','tag-dupe','tag-clear'];
-
-  const misleadingFiles = WORLD.misleadingFiles || [
-    { file: 'chart_of_accounts_prev.xlsx', why: 'Account names differ from current version' },
-    { file: 'expense_policy_prev.pdf',     why: 'Key thresholds differ from current policy' },
-  ];
-
-  return `
-    <div class="meta-grid">
-      <div class="meta-card"><div class="mc-label">world id</div><div class="mc-val">${WORLD.meta.id}</div></div>
-      <div class="meta-card"><div class="mc-label">archetype</div><div class="mc-val">${escHtml(WORLD.meta.archetype)}</div></div>
-      <div class="meta-card"><div class="mc-label">business</div><div class="mc-val">${escHtml(WORLD.meta.name)}</div></div>
-      <div class="meta-card"><div class="mc-label">business type</div><div class="mc-val">${escHtml(WORLD.meta.type)}</div></div>
-      <div class="meta-card"><div class="mc-label">accounting method</div><div class="mc-val">${WORLD.meta.method}</div></div>
-      <div class="meta-card"><div class="mc-label">period</div><div class="mc-val">${WORLD.meta.period}</div></div>
-      <div class="meta-card"><div class="mc-label">total files</div><div class="mc-val">${WORLD.meta.totalFiles} (${WORLD.meta.coreFiles} core, ${WORLD.meta.noiseFiles} noise)</div></div>
-      <div class="meta-card"><div class="mc-label">difficulty tier</div><div class="mc-val">${WORLD.meta.tier}</div></div>
-    </div>
-    <div class="section-label">embedded ambiguity types</div>
-    <div class="meta-tags" style="margin-bottom:20px">
-      ${ambiguityTypes.map((label, i) => `<span class="tag ${tagClasses[i % tagClasses.length]}">${escHtml(label)}</span>`).join('')}
-    </div>
-    <div class="section-label">misleading files</div>
-    <div class="file-preview">
-      ${misleadingFiles.map(f => `
-        <div class="kv" style="margin-bottom:8px">
-          <span class="kk" style="color:var(--amber)">${escHtml(f.file)}</span>
-          <span class="vv" style="color:var(--text2)">${escHtml(f.why)}</span>
-        </div>`).join('')}
-    </div>`;
-}
-
-// ── INVOICE LIST ──────────────────────────────
-
-function getInvoiceList() {
-  if (Array.isArray(WORLD.invoices)) return WORLD.invoices;
-  return Object.entries(WORLD.invoices).map(([id, inv]) => ({ id, ...inv }));
-}
-
-// ── SIDEBAR ───────────────────────────────────
-
-function buildFiletree() {
-  const invs    = getInvoiceList();
-  const invRows = invs.map(inv => `
-    <div class="file-row ${inv.warn ? 'mislead' : ''} ${activeFile === inv.id ? 'active' : ''}"
-         onclick="selectFile('${inv.id}', this)">
-      <span class="ficon">▤</span>
-      <span class="fname">${escHtml(inv.invNum || inv.id)}.pdf</span>
-      ${inv.warn ? badgeHtml('warn') : ''}
-    </div>`).join('');
-
-  const noiseFiles = ['logo_final_v3.png','meeting_notes.docx','vendor_contract.pdf','w9_form.pdf','photos.zip'];
-
-  return `
-    <div class="sb-section">core</div>
-    <div class="file-row ${activeFile==='bank'?'active':''}" onclick="selectFile('bank',this)">
-      <span class="ficon">▤</span><span class="fname">bank_statement.csv</span>${badgeHtml('core')}
-    </div>
-    <div class="file-row ${activeFile==='coa'?'active':''}" onclick="selectFile('coa',this)">
-      <span class="ficon">▤</span><span class="fname">chart_of_accounts.xlsx</span>${badgeHtml('core')}
-    </div>
-    <div class="file-row ${activeFile==='policy'?'active':''}" onclick="selectFile('policy',this)">
-      <span class="ficon">▤</span><span class="fname">expense_policy.pdf</span>${badgeHtml('core')}
-    </div>
-    <div class="sb-section">invoices</div>
-    ${invRows}
-    <div class="sb-section">old / misleading</div>
-    <div class="file-row mislead ${activeFile==='old_coa'?'active':''}" onclick="selectFile('old_coa',this)">
-      <span class="ficon">▤</span><span class="fname">chart_of_accounts_prev.xlsx</span>${badgeHtml('warn')}
-    </div>
-    <div class="file-row mislead ${activeFile==='old_policy'?'active':''}" onclick="selectFile('old_policy',this)">
-      <span class="ficon">▤</span><span class="fname">expense_policy_prev.pdf</span>${badgeHtml('warn')}
-    </div>
-    <div class="sb-section">noise</div>
-    ${noiseFiles.map(f => `
-      <div class="file-row noise" onclick="selectFile('noise',this)">
-        <span class="ficon">▤</span><span class="fname">${f}</span>${badgeHtml('noise')}
-      </div>`).join('')}
-    <div style="padding:4px 14px;font-size:10px;color:var(--text3);font-style:italic">
-      + ${Math.max(0, WORLD.meta.noiseFiles - 5)} more noise files...
-    </div>
-    <div class="sb-section">task</div>
-    <div class="file-row ${activeFile==='task'?'active':''}" onclick="selectFile('task',this)">
-      <span class="ficon">▤</span><span class="fname">task_01.txt</span>${badgeHtml('core')}
-    </div>`;
 }
 
 // ── TOPBAR ────────────────────────────────────
 
 function buildTopbar() {
   return `
-    <span class="tb-logo">APEX<span>.</span>ACCT</span>
+    <span class="tb-logo">APEX<span>.</span>INV</span>
     <span class="tb-sep">/</span>
-    <span class="tb-world">${WORLD.meta.id}</span>
+    <span class="tb-world">${escHtml(WORLD.meta.id)}</span>
     <span class="tb-sep">·</span>
-    <span class="tb-name">${escHtml(WORLD.meta.name)}</span>
+    <span class="tb-name">${escHtml(WORLD.meta.company)}</span>
     <span class="tb-sep">·</span>
-    <span style="font-size:11px;color:var(--text3)">${WORLD.meta.method} · ${WORLD.meta.period}</span>
+    <span style="font-size:11px;color:var(--text3)">${escHtml(WORLD.meta.industry)}</span>
     <div class="tb-meta">
-      <span><span class="dot"></span>${WORLD.meta.totalFiles} files</span>
-      <span>1 task</span>
-      <span>${WORLD.meta.tier}</span>
+      <span><span class="dot"></span>${WORLD.files.length} files</span>
+      <span>${escHtml(WORLD.meta.period)}</span>
       <span>
-        <button onclick="launchAgent()" style="padding:3px 10px;border:1px solid var(--green);border-radius:3px;background:var(--green-bg);color:var(--green);font-family:var(--mono);font-size:10px;cursor:pointer;font-weight:600">▶ Run Agent</button>
+        <button onclick="launchAgent()"
+          style="padding:3px 10px;border:1px solid var(--green);border-radius:3px;
+                 background:var(--green-bg);color:var(--green);
+                 font-family:var(--mono);font-size:10px;cursor:pointer;font-weight:600">
+          ▶ Run Agent
+        </button>
       </span>
     </div>`;
 }
@@ -352,26 +257,76 @@ function buildArchetypeBar() {
 
 // ── INTERACTIONS ──────────────────────────────
 
-function selectFile(id, el) {
-  activeFile = id;
-  document.querySelectorAll('.file-row').forEach(r => r.classList.remove('active'));
-  if (el) el.classList.add('active');
-  if (activeTab === 'view') document.getElementById('panel').innerHTML = renderFileView(id);
+function toggleFolder(path) {
+  if (expandedFolders.has(path)) {
+    expandedFolders.delete(path);
+  } else {
+    expandedFolders.add(path);
+  }
+  document.getElementById('sb-files').innerHTML = buildSidebar();
+}
+
+function selectFilePath(path) {
+  activeFilePath = path;
+  document.getElementById('sb-files').innerHTML = buildSidebar();
+  document.getElementById('panel').innerHTML = renderFile(path);
+  // Switch to view tab
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-view').classList.add('active');
 }
 
 function switchTab(tab) {
-  activeTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  if (tab === 'view') document.getElementById('panel').innerHTML = renderFileView(activeFile);
+  if (tab === 'view') {
+    document.getElementById('panel').innerHTML = activeFilePath
+      ? renderFile(activeFilePath)
+      : renderWelcome();
+  }
   if (tab === 'task') document.getElementById('panel').innerHTML = renderTaskTab();
-  if (tab === 'meta') document.getElementById('panel').innerHTML = renderWorldMeta();
+}
+
+function renderWelcome() {
+  return `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:260px;gap:12px;color:var(--text3);text-align:center">
+      <div style="font-size:28px;margin-bottom:8px">◫</div>
+      <p style="font-size:12px;color:var(--text2)">Select a file from the directory tree</p>
+      <p style="font-size:10px;line-height:1.8">
+        Explore the company hierarchy — policies, invoices, profiles, and ledgers.<br>
+        Then run the agent to process invoices.
+      </p>
+    </div>`;
 }
 
 function selectArchetype(id) {
   activeArchetype = ARCHETYPES.find(a => a.id === id) || ARCHETYPES[0];
   document.querySelectorAll('.arch-btn').forEach(b => b.classList.remove('active'));
   event.currentTarget.classList.add('active');
+
+  if (id === 'invoice-approval') {
+    WORLD = STATIC_WORLD;
+    expandedFolders = new Set([
+      '', 'company_invoices', 'leadership',
+      'engineering', 'engineering/team_invoices',
+      'marketing', 'marketing/team_invoices',
+      'operations', 'operations/team_invoices',
+    ]);
+  } else if (id === 'real-estate-audit') {
+    WORLD = STATIC_AUDIT_WORLD;
+    expandedFolders = new Set([
+      'Audit_Workpapers', 'Audit_Workpapers/Q1_2025_Workpaper_Template',
+      'HR', 'HR/Employees', 'HR/Compliance', 'HR/Policies',
+      'Finance', 'Finance/Statements', 'Finance/Statements/Q1_2025', 'Finance/Payroll',
+      'Finance/General_Ledger', 'Finance/Budget',
+      'Accounts_Receivable', 'Accounts_Receivable/Clients', 'Accounts_Receivable/Aging',
+      'Accounts_Payable', 'Accounts_Payable/Aging', 'Accounts_Payable/Vendors',
+      'Banking', 'Banking/Statements', 'Banking/Reconciliation',
+      'Contracts', 'Internal_Memos',
+    ]);
+  }
+
+  activeFilePath = null;
+  rebuildUI();
 }
 
 // ── API KEY MODAL ─────────────────────────────
@@ -394,29 +349,31 @@ function showApiKeyModal(onConfirm) {
 // ── LOADING ───────────────────────────────────
 
 const LOAD_STEPS = [
-  'Inventing a fictional business...',
-  'Seeding transaction history...',
-  'Planting misleading files...',
+  'Inventing a fictional company...',
+  'Writing policy documents...',
+  'Generating employee profiles...',
+  'Creating invoices...',
+  'Planting policy conflicts...',
   'Writing rubric criteria...',
   'Finalising world...',
 ];
 
 function showLoading() {
-  document.getElementById('loading-title').textContent = `Generating world — ${activeArchetype.label}`;
+  document.getElementById('loading-title').textContent = 'Generating invoice approval world...';
   const overlay = document.getElementById('loading-overlay');
   overlay.classList.add('visible');
-  const bar      = document.getElementById('loading-bar');
-  const stepsEl  = document.getElementById('loading-steps');
+  const bar     = document.getElementById('loading-bar');
+  const stepsEl = document.getElementById('loading-steps');
   stepsEl.innerHTML = LOAD_STEPS.map(s => `<div>${s}</div>`).join('');
   bar.style.width = '0%';
   let step = 0;
   const interval = setInterval(() => {
     step++;
-    bar.style.width = Math.min((step / LOAD_STEPS.length) * 82, 82) + '%';
+    bar.style.width = Math.min((step / LOAD_STEPS.length) * 80, 80) + '%';
     const divs = stepsEl.querySelectorAll('div');
     if (divs[step - 1]) divs[step - 1].classList.add('done');
     if (step >= LOAD_STEPS.length) clearInterval(interval);
-  }, 900);
+  }, 1100);
   return { interval, bar };
 }
 
@@ -441,14 +398,11 @@ async function generateWorld() {
   try {
     const res = await fetch('/generate', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key':    apiKey,
-      },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
       body: JSON.stringify({
-        model:      'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        messages:   [{ role: 'user', content: buildGenerationPrompt(activeArchetype) }],
+        model:      'claude-sonnet-4-6',
+        max_tokens: 16000,
+        messages:   [{ role: 'user', content: buildGenerationPrompt() }],
       }),
     });
 
@@ -459,35 +413,19 @@ async function generateWorld() {
 
     const data    = await res.json();
     const raw     = data.content.find(b => b.type === 'text')?.text || '';
-    const cleaned = raw.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```$/,'').trim();
+    const cleaned = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
     const world   = JSON.parse(cleaned);
 
-    WORLD = {
-      meta:               world.meta,
-      transactions:       world.transactions,
-      chartOfAccounts:    world.chartOfAccounts,
-      oldChartOfAccounts: world.oldChartOfAccounts,
-      expensePolicy:      world.expensePolicy,
-      oldExpensePolicy:   world.oldExpensePolicy,
-      invoices:           world.invoices,
-      rubric:             world.rubric,
-      taskPrompt:         world.taskPrompt,
-      ambiguityTypes:     world.ambiguityTypes,
-      misleadingFiles:    world.misleadingFiles,
-    };
+    WORLD = world;
+    activeFilePath = null;
 
-    activeFile = 'bank';
-    activeTab  = 'view';
     hideLoading(loadCtx);
     rebuildUI();
 
   } catch (err) {
     hideLoading(loadCtx);
     const isAuth = err.message.includes('401') || err.message.toLowerCase().includes('auth');
-    if (isAuth) {
-      apiKey = '';
-      localStorage.removeItem('apex_api_key');
-    }
+    if (isAuth) { apiKey = ''; localStorage.removeItem('apex_api_key'); }
     document.getElementById('panel').innerHTML = `
       <div class="error-banner">
         ${isAuth ? 'API key invalid. ' : 'Generation failed: ' + escHtml(err.message) + '. '}
@@ -495,7 +433,7 @@ async function generateWorld() {
       </div>`;
   } finally {
     isGenerating = false;
-    document.getElementById('gen-btn').disabled  = false;
+    document.getElementById('gen-btn').disabled = false;
     document.querySelectorAll('.arch-btn').forEach(b => b.disabled = false);
   }
 }
@@ -514,11 +452,10 @@ function launchAgent() {
 function rebuildUI() {
   document.getElementById('topbar').innerHTML        = buildTopbar();
   document.getElementById('archetype-bar').innerHTML = buildArchetypeBar();
-  document.getElementById('sb-files').innerHTML      = buildFiletree();
-  activeTab = 'view';
+  document.getElementById('sb-files').innerHTML      = buildSidebar();
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-view').classList.add('active');
-  document.getElementById('panel').innerHTML = renderFileView('bank');
+  document.getElementById('panel').innerHTML = renderWelcome();
 }
 
 // ── INIT ──────────────────────────────────────
@@ -545,28 +482,25 @@ function init() {
       <div class="loading-title" id="loading-title">Generating world...</div>
       <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
       <div class="loading-steps" id="loading-steps"></div>
-      <div class="loading-sub">This takes about 10–15 seconds</div>
+      <div class="loading-sub">This takes about 20–30 seconds</div>
     </div>
 
     <div id="topbar">${buildTopbar()}</div>
     <div id="archetype-bar">${buildArchetypeBar()}</div>
 
-    <div id="main" style="position:relative">
+    <div id="main">
       <div id="sidebar">
-        <div class="sb-files" id="sb-files">${buildFiletree()}</div>
-        <div class="sb-footer">${WORLD.meta.id} · v0.2</div>
+        <div class="sb-files" id="sb-files">${buildSidebar()}</div>
+        <div class="sb-footer">${WORLD.meta.id} · ${WORLD.meta.period}</div>
       </div>
       <div id="content">
         <div id="tabbar">
           <div class="tab active" id="tab-view" onclick="switchTab('view')">file view</div>
           <div class="tab"        id="tab-task" onclick="switchTab('task')">task + rubric</div>
-          <div class="tab"        id="tab-meta" onclick="switchTab('meta')">world meta</div>
         </div>
-        <div id="panel"></div>
+        <div id="panel">${renderWelcome()}</div>
       </div>
     </div>`;
-
-  document.getElementById('panel').innerHTML = renderFileView(activeFile);
 }
 
 init();

@@ -16,14 +16,14 @@
       --amber: #d4a84b; --amber-bg: #1e1600;
       --red: #e05252; --red-bg: #1f0d0d;
       --blue: #5b9cf6; --blue-bg: #0d1525;
+      --purple: #a78bfa; --purple-bg: #130e1f;
       --mono: 'IBM Plex Mono', monospace;
     }
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 12px; overflow: hidden; }
 
-    /* ── LAYOUT ── */
     #root { display: flex; flex-direction: column; height: 100vh; }
 
-    /* ── TOPBAR ── */
+    /* TOPBAR */
     #topbar {
       display: flex; align-items: center; gap: 12px;
       padding: 0 20px; height: 44px; min-height: 44px;
@@ -41,12 +41,12 @@
     }
     .back-btn:hover { border-color: var(--text2); color: var(--text); }
 
-    /* ── MAIN SPLIT ── */
+    /* MAIN SPLIT */
     #main { display: flex; flex: 1; overflow: hidden; }
 
-    /* ── LEFT: AGENT CONSOLE ── */
+    /* LEFT: AGENT CONSOLE */
     #console-pane {
-      width: 55%; border-right: 1px solid var(--border);
+      width: 56%; border-right: 1px solid var(--border);
       display: flex; flex-direction: column; overflow: hidden;
     }
     #console-header {
@@ -59,7 +59,7 @@
       padding: 5px 16px; border: 1px solid var(--green);
       border-radius: 3px; background: var(--green-bg); color: var(--green);
       font-family: var(--mono); font-size: 11px; font-weight: 600;
-      cursor: pointer; letter-spacing: 0.04em; transition: all 0.15s;
+      cursor: pointer; letter-spacing: 0.04em;
     }
     .run-btn:hover { background: #132e1e; }
     .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -71,54 +71,129 @@
     }
     .step-counter { font-size: 10px; color: var(--text3); }
 
-    #console-log {
-      flex: 1; overflow-y: auto; padding: 12px 16px;
-      display: flex; flex-direction: column; gap: 4px;
-    }
+    #console-log { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 3px; }
     #console-log::-webkit-scrollbar { width: 4px; }
     #console-log::-webkit-scrollbar-thumb { background: var(--border2); }
 
     .log-entry { display: flex; gap: 10px; align-items: flex-start; line-height: 1.6; }
-    .log-ts { color: var(--text3); font-size: 10px; min-width: 52px; padding-top: 1px; flex-shrink: 0; }
+    .log-ts  { color: var(--text3); font-size: 10px; min-width: 52px; padding-top: 1px; flex-shrink: 0; }
     .log-msg { flex: 1; font-size: 11px; }
-    .log-system  { color: var(--text3); font-style: italic; }
-    .log-think   { color: var(--blue); }
-    .log-tool    { color: var(--amber); }
-    .log-result  { color: var(--text2); }
-    .log-output  { color: var(--green); }
-    .log-error   { color: var(--red); }
+    .log-system { color: var(--text3); font-style: italic; }
+    .log-think  { color: var(--blue); }
+    .log-output { color: var(--green); }
+    .log-error  { color: var(--red); }
 
     .tool-call {
       background: var(--amber-bg); border: 1px solid #3d2e00;
-      border-radius: 3px; padding: 6px 10px; margin: 2px 0;
+      border-radius: 3px; padding: 5px 10px; margin: 2px 0;
       font-size: 10px; color: var(--amber);
     }
+    .tool-call.write { background: var(--green-bg); border-color: #1a3d28; color: var(--green); }
     .tool-result {
       background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 3px; padding: 6px 10px; margin: 2px 0;
+      border-radius: 3px; padding: 5px 10px; margin: 2px 0;
       font-size: 10px; color: var(--text2); max-height: 120px;
       overflow-y: auto; white-space: pre-wrap; word-break: break-all;
     }
 
-    /* ── RIGHT: SCORE PANEL ── */
-    #score-pane {
-      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    /* RIGHT PANE */
+    #right-pane { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #right-tabbar {
+      display: flex; align-items: center;
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      flex-shrink: 0; padding: 0 16px; gap: 2px;
     }
-    #score-header {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 16px; border-bottom: 1px solid var(--border);
-      background: var(--bg2); flex-shrink: 0;
+    .r-tab {
+      padding: 10px 14px; font-size: 10px; cursor: pointer;
+      color: var(--text3); border-bottom: 2px solid transparent;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-bottom: -1px; transition: color 0.1s;
     }
-    #score-content { flex: 1; overflow-y: auto; padding: 16px; }
+    .r-tab:hover { color: var(--text2); }
+    .r-tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+    #score-content { flex: 1; overflow-y: auto; padding: 16px; display: none; }
+    #score-content.visible { display: block; }
     #score-content::-webkit-scrollbar { width: 4px; }
     #score-content::-webkit-scrollbar-thumb { background: var(--border2); }
+
+    /* FILES TAB */
+    #files-view { flex: 1; display: none; overflow: hidden; }
+    #files-view.visible { display: flex; }
+    #dir-tree {
+      width: 200px; min-width: 200px; border-right: 1px solid var(--border);
+      overflow-y: auto; background: var(--bg2); padding: 6px 0;
+    }
+    #dir-tree::-webkit-scrollbar { width: 3px; }
+    #dir-tree::-webkit-scrollbar-thumb { background: var(--border2); }
+    #dir-viewer { flex: 1; overflow-y: auto; padding: 16px; }
+    #dir-viewer::-webkit-scrollbar { width: 4px; }
+    #dir-viewer::-webkit-scrollbar-thumb { background: var(--border2); }
+
+    /* TREE NODES */
+    .dt-folder {
+      display: flex; align-items: center; gap: 5px;
+      padding: 3px 12px; cursor: pointer; font-size: 10px;
+      color: var(--text3); user-select: none;
+    }
+    .dt-folder:hover { color: var(--text2); }
+    .dt-toggle { font-size: 7px; min-width: 8px; }
+    .dt-folder-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dt-file {
+      display: flex; align-items: center; gap: 5px;
+      padding: 3px 12px 3px 0; cursor: pointer; font-size: 10px;
+      color: var(--text3); border-left: 2px solid transparent;
+      user-select: none; transition: all 0.1s;
+    }
+    .dt-file:hover { background: var(--bg3); color: var(--text2); }
+    .dt-file.active { background: var(--bg3); color: var(--text); border-left-color: var(--green); }
+    .dt-file.type-ledger.active  { border-left-color: var(--green); }
+    .dt-file.type-invoice.active { border-left-color: var(--amber); }
+    .dt-file.type-policy.active  { border-left-color: var(--blue); }
+    .dt-file.type-profile.active { border-left-color: var(--purple); }
+    .dt-file-icon { font-size: 9px; min-width: 12px; text-align: center; }
+    .dt-file.type-policy  .dt-file-icon { color: var(--blue); }
+    .dt-file.type-invoice .dt-file-icon { color: var(--amber); }
+    .dt-file.type-ledger  .dt-file-icon { color: var(--green); }
+    .dt-file.type-profile .dt-file-icon { color: var(--purple); }
+    .dt-file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* FILE VIEWER CONTENT */
+    .fv-label { font-size: 10px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+    .fv-type {
+      display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 2px;
+      font-weight: 600; letter-spacing: 0.05em; margin-bottom: 8px;
+    }
+    .fv-policy  { background: var(--blue-bg);   color: var(--blue);   border: 1px solid #152240; }
+    .fv-profile { background: var(--purple-bg);  color: var(--purple); border: 1px solid #2a1f40; }
+    .fv-invoice { background: var(--amber-bg);   color: var(--amber);  border: 1px solid #3d2e00; }
+    .fv-ledger  { background: var(--green-bg);   color: var(--green);  border: 1px solid #1a3d28; }
+    .fv-prose {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 4px; padding: 14px 18px; font-size: 11px;
+      line-height: 1.8; color: var(--text2); white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .fv-empty {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 160px; gap: 8px;
+      color: var(--text3); text-align: center;
+    }
+    .fv-data-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+    .fv-data-table th {
+      text-align: left; padding: 5px 8px; color: var(--text3); font-weight: 500;
+      font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    .fv-data-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); color: var(--text2); }
+    .fv-data-table tr:last-child td { border-bottom: none; }
+    .fv-data-table tr:hover td { background: var(--bg3); }
 
     .score-placeholder {
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; height: 100%; gap: 10px;
       color: var(--text3); text-align: center;
     }
-    .score-placeholder .big { font-size: 32px; margin-bottom: 8px; }
 
     .metrics-row { display: flex; gap: 8px; margin-bottom: 16px; }
     .metric-card {
@@ -142,8 +217,8 @@
     .rs-reasoning { font-size: 10px; color: var(--text3); line-height: 1.5; font-style: italic; }
     .rs-type { font-size: 9px; padding: 1px 5px; border-radius: 2px; font-weight: 600; }
     .rst-det { background: var(--green-bg); color: var(--green); border: 1px solid #1a3d28; }
-    .rst-llm { background: var(--blue-bg); color: var(--blue); border: 1px solid #152240; }
-    .rst-neg { background: var(--red-bg); color: var(--red); border: 1px solid #3d1515; }
+    .rst-llm { background: var(--blue-bg);  color: var(--blue);  border: 1px solid #152240; }
+    .rst-neg { background: var(--red-bg);   color: var(--red);   border: 1px solid #3d1515; }
 
     .section-label { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
 
@@ -153,16 +228,51 @@
       line-height: 1.7; color: var(--text2); margin-bottom: 16px;
       max-height: 300px; overflow-y: auto; white-space: pre-wrap;
     }
+
+    /* WORLD CRITIQUE */
+    .critique-btn {
+      display: block; width: 100%; margin-top: 20px;
+      padding: 9px 0; border: 1px solid var(--blue); border-radius: 3px;
+      background: var(--blue-bg); color: var(--blue);
+      font-family: var(--mono); font-size: 11px; font-weight: 600;
+      letter-spacing: 0.06em; cursor: pointer; transition: all 0.15s;
+    }
+    .critique-btn:hover { background: #0d1f3d; }
+    .critique-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .critique-box {
+      margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;
+    }
+    .critique-item {
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      font-size: 11px; line-height: 1.6; color: var(--text2);
+    }
+    .critique-item:last-child { border-bottom: none; }
+    .critique-tag {
+      display: inline-block; font-size: 9px; padding: 1px 6px;
+      border-radius: 2px; font-weight: 600; letter-spacing: 0.04em;
+      margin-bottom: 5px; text-transform: uppercase;
+    }
+    .ctag-easy    { background: var(--amber-bg); color: var(--amber); border: 1px solid #3d2e00; }
+    .ctag-broken  { background: var(--red-bg);   color: var(--red);   border: 1px solid #3d1515; }
+    .ctag-gap     { background: var(--purple-bg);color: var(--purple);border: 1px solid #2a1f40; }
+    .ctag-change  { background: var(--green-bg); color: var(--green); border: 1px solid #1a3d28; }
+
+    /* LEDGER DIFF */
+    .ledger-writes {
+      background: var(--green-bg); border: 1px solid #1a3d28;
+      border-radius: 4px; padding: 10px 12px; margin-bottom: 16px;
+      font-size: 10px; color: var(--green); line-height: 1.8;
+    }
   </style>
 </head>
 <body>
 <div id="root">
   <div id="topbar">
-    <span class="tb-logo">APEX<span>.</span>ACCT</span>
+    <span class="tb-logo">APEX<span>.</span>INV</span>
     <span class="tb-sep">/</span>
     <span style="color:var(--text2)">Agent Runner</span>
     <span class="tb-sep">·</span>
-    <span id="world-name" style="color:var(--text);font-size:11px">Pixel &amp; Pine Studio</span>
+    <span id="world-name" style="color:var(--text);font-size:11px">Meridian Systems</span>
     <button class="back-btn" onclick="window.location.href='/'">← World Viewer</button>
   </div>
   <div id="main">
@@ -180,13 +290,23 @@
         </div>
       </div>
     </div>
-    <div id="score-pane">
-      <div id="score-header">
-        <span class="pane-title">rubric score</span>
+    <div id="right-pane">
+      <div id="right-tabbar">
+        <div class="r-tab" id="rtab-files" onclick="switchRightTab('files')">files</div>
+        <div class="r-tab active" id="rtab-rubric" onclick="switchRightTab('rubric')">rubric</div>
       </div>
-      <div id="score-content">
+      <div id="files-view">
+        <div id="dir-tree"></div>
+        <div id="dir-viewer">
+          <div class="fv-empty">
+            <div style="font-size:24px;margin-bottom:6px">◫</div>
+            <p style="font-size:11px;color:var(--text2)">Select a file to view</p>
+          </div>
+        </div>
+      </div>
+      <div id="score-content" class="visible">
         <div class="score-placeholder">
-          <div class="big">◎</div>
+          <div style="font-size:32px;margin-bottom:8px">◎</div>
           <p style="font-size:12px;color:var(--text2)">Run the agent to see scores</p>
           <p style="font-size:10px">Rubric criteria will be evaluated<br>automatically when the agent finishes</p>
         </div>
@@ -198,103 +318,81 @@
 <script src="data.js"></script>
 <script>
 // ── WORLD STATE ───────────────────────────────
-// Uses the same WORLD data as main app — loaded from data.js
-// On page load, try to read active world from sessionStorage (set by main app)
-// Otherwise fall back to static Pixel & Pine data
 
 let WORLD = null;
 let aborted = false;
 let stepCount = 0;
 
+// Track writes so we can show them in scoring
+let ledgerWrites = [];
+
 function loadWorld() {
   try {
     const stored = sessionStorage.getItem('apex_active_world');
-    if (stored) {
-      WORLD = JSON.parse(stored);
-      return;
-    }
+    if (stored) { WORLD = JSON.parse(stored); return; }
   } catch(e) {}
-
-  // Fallback to static data
-  WORLD = {
-    meta:               WORLD_META,
-    transactions:       TRANSACTIONS,
-    chartOfAccounts:    CHART_OF_ACCOUNTS,
-    oldChartOfAccounts: OLD_CHART_OF_ACCOUNTS,
-    expensePolicy:      EXPENSE_POLICY,
-    oldExpensePolicy:   OLD_EXPENSE_POLICY,
-    invoices:           INVOICES,
-    rubric:             RUBRIC,
-    taskPrompt:         null,
-    ambiguityTypes:     null,
-    misleadingFiles:    null,
-  };
+  WORLD = STATIC_WORLD;
 }
 
-// ── FILE SYSTEM SIMULATION ────────────────────
+// ── VIRTUAL FILE SYSTEM ───────────────────────
 
-function getFileSystem() {
-  const invList = Array.isArray(WORLD.invoices)
-    ? WORLD.invoices
-    : Object.entries(WORLD.invoices).map(([id, v]) => ({ id, ...v }));
+// Returns the mutable files array (agent writes mutate this in-memory)
+function getFS() {
+  const map = {};
+  for (const f of WORLD.files) map[f.path] = f;
+  return map;
+}
 
-  return {
-    'bank_statement.csv': {
-      type: 'core',
-      content: () => {
-        const rows = WORLD.transactions.map(t =>
-          `${t.date},${t.desc},${t.amount >= 0 ? '+' : ''}${t.amount.toFixed(2)}`
-        ).join('\n');
-        return `date,description,amount\n${rows}`;
+// List files/dirs at a given path (empty string = root)
+function vfsListFiles(dirPath) {
+  const prefix = dirPath ? dirPath.replace(/\/?$/, '/') : '';
+  const entries = new Set();
+  for (const f of WORLD.files) {
+    if (!prefix || f.path.startsWith(prefix)) {
+      const rest = prefix ? f.path.slice(prefix.length) : f.path;
+      const firstSeg = rest.split('/')[0];
+      if (firstSeg) {
+        // Is there more depth?
+        const isDir = rest.includes('/') && rest.split('/').length > 1;
+        entries.add(isDir ? firstSeg + '/' : firstSeg);
       }
-    },
-    'chart_of_accounts.xlsx': {
-      type: 'core',
-      content: () => WORLD.chartOfAccounts.map(a => `${a.code} | ${a.name} | ${a.type}`).join('\n')
-    },
-    'expense_policy.pdf': {
-      type: 'core',
-      content: () => WORLD.expensePolicy.map(p => `${p.key}: ${p.val}`).join('\n')
-    },
-    'chart_of_accounts_prev.xlsx': {
-      type: 'misleading',
-      content: () => '[OUTDATED 2024]\n' + WORLD.oldChartOfAccounts.map(a => `${a.code} | ${a.name} | ${a.type}`).join('\n')
-    },
-    'expense_policy_prev.pdf': {
-      type: 'misleading',
-      content: () => '[OUTDATED POLICY v1]\n' + WORLD.oldExpensePolicy.map(p => `${p.key}: ${p.val}`).join('\n')
-    },
-    ...Object.fromEntries(invList.map(inv => [
-      `${inv.invNum || inv.id}.pdf`,
-      {
-        type: inv.warn ? 'warning' : 'invoice',
-        content: () => `Vendor: ${inv.vendor}\nInvoice #: ${inv.invNum}\nDate: ${inv.date}\nDescription: ${inv.desc}\nAmount: ${inv.amount}${inv.warn ? '\n\nNOTE: ' + inv.warn : ''}`
-      }
-    ])),
-    'logo_final_v3.png':      { type: 'noise', content: () => '[binary image file — not useful for accounting]' },
-    'meeting_notes.docx':     { type: 'noise', content: () => '[internal meeting notes — not relevant to accounting task]' },
-    'vendor_contract.pdf':    { type: 'noise', content: () => '[vendor contract from 2022 — predates current period]' },
-    'w9_form.pdf':            { type: 'noise', content: () => '[blank W-9 form template]' },
-    'photos.zip':             { type: 'noise', content: () => '[archive of studio photos — not relevant]' },
-    'proposal_draft_v2.docx': { type: 'noise', content: () => '[client proposal draft — not relevant to accounting]' },
-    'task_01.txt':            { type: 'core',  content: () => getTaskPrompt() },
-  };
+    }
+  }
+  if (entries.size === 0) return `No files found at path: "${dirPath || '/'}"`;
+  return [...entries].sort().join('\n');
 }
 
-function getTaskPrompt() {
-  return WORLD.taskPrompt ||
-    `You are working as a bookkeeper for ${WORLD.meta.name}. Review the bank statement and categorize each transaction using the current chart of accounts and expense policy. For each transaction: assign the correct account code. Flag ambiguous transactions, suspected duplicates, and personal expenses.`;
+// Read a file by path
+function vfsReadFile(filePath) {
+  const cleanPath = filePath.trim().replace(/^\//, '');
+  const fs = getFS();
+  const f = fs[cleanPath];
+  if (!f) {
+    // Try to give a helpful listing if it looks like a directory
+    const asDir = vfsListFiles(cleanPath);
+    if (asDir && !asDir.startsWith('No files')) {
+      return `"${cleanPath}" is a directory. Contents:\n${asDir}`;
+    }
+    return `ERROR: File not found: "${cleanPath}"\n\nTry list_files to see available paths.`;
+  }
+  return f.content || '(empty)';
 }
 
-function listFiles() {
-  return Object.keys(getFileSystem()).join('\n');
-}
-
-function readFile(filename) {
-  const fs   = getFileSystem();
-  const file = fs[filename.trim()];
-  if (!file) return `ERROR: File "${filename}" not found. Available files:\n${listFiles()}`;
-  return file.content();
+// Write to a ledger file
+function vfsWriteFile(filePath, content) {
+  const cleanPath = filePath.trim().replace(/^\//, '');
+  const fs = getFS();
+  const f = fs[cleanPath];
+  if (!f) return `ERROR: File not found: "${cleanPath}"`;
+  if (f.type !== 'ledger') return `ERROR: write_file can only write to ledger files. "${cleanPath}" is type "${f.type}".`;
+  f.content = content;
+  ledgerWrites.push({ path: cleanPath, content });
+  // Refresh tree dot indicators; if this file is open, re-render it live
+  refreshDirTree();
+  if (dirActivePath === cleanPath) {
+    document.getElementById('dir-viewer').innerHTML = renderDirFileContent(f);
+  }
+  return `OK: Written to ${cleanPath} (${content.split('\n').length} lines)`;
 }
 
 // ── TOOLS ─────────────────────────────────────
@@ -302,32 +400,48 @@ function readFile(filename) {
 const TOOLS = [
   {
     name: 'list_files',
-    description: 'List all files available in the working directory',
-    input_schema: { type: 'object', properties: {}, required: [] }
-  },
-  {
-    name: 'read_file',
-    description: 'Read the contents of a file',
+    description: 'List files and directories at a given path in the company directory. Returns direct children only. Use an empty path or "/" to list the root.',
     input_schema: {
       type: 'object',
       properties: {
-        filename: { type: 'string', description: 'The filename to read' }
+        path: {
+          type: 'string',
+          description: 'Directory path to list. Use empty string or "/" for root. Examples: "engineering/", "marketing/tom_walsh/"'
+        }
       },
-      required: ['filename']
+      required: []
     }
   },
   {
-    name: 'submit_categorizations',
-    description: 'Submit your final work when you are done categorizing all transactions. Include your complete categorization for every transaction.',
+    name: 'read_file',
+    description: 'Read the full contents of a file at the given path.',
     input_schema: {
       type: 'object',
       properties: {
-        output: {
+        path: {
           type: 'string',
-          description: 'Your complete categorization output. For each transaction include: date, description, amount, account code, account name, and any flags or notes. Also include a summary of findings at the end.'
+          description: 'Full file path. Examples: "company_policy.pdf", "engineering/jordan_kim/profile.txt", "operations/team_invoices/INV-OPS-401.pdf"'
         }
       },
-      required: ['output']
+      required: ['path']
+    }
+  },
+  {
+    name: 'write_file',
+    description: 'Write content to a ledger file (CSV format). Ledgers track invoice processing decisions. This is how you record your work — approved, rejected, and held invoices must be logged in the appropriate ledger.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: 'Path to the ledger file. Examples: "company_ledger.csv", "engineering/team_ledger.csv", "marketing/tom_walsh/user_ledger.csv"'
+        },
+        content: {
+          type: 'string',
+          description: 'Full CSV content to write. Must include header row: Date,Description,Amount,Category,Invoice Ref,Approved By,Status'
+        }
+      },
+      required: ['path', 'content']
     }
   }
 ];
@@ -352,18 +466,22 @@ function logToolCall(name, input) {
   const el = document.getElementById('console-log');
   const entry = document.createElement('div');
   entry.className = 'log-entry';
+  const isWrite = name === 'write_file';
+  const detail = input.path ? ` — <em>${escHtml(input.path)}</em>` : '';
   entry.innerHTML = `
     <span class="log-ts">${ts()}</span>
     <div style="flex:1">
-      <div class="tool-call">⟳ tool call: <strong>${name}</strong>${input.filename ? ` — "${input.filename}"` : ''}</div>
+      <div class="tool-call${isWrite ? ' write' : ''}">
+        ${isWrite ? '✎' : '⟳'} tool: <strong>${name}</strong>${detail}
+      </div>
     </div>`;
   el.appendChild(entry);
   el.scrollTop = el.scrollHeight;
 }
 
-function logToolResult(name, result) {
+function logToolResult(result) {
   const el = document.getElementById('console-log');
-  const preview = result.length > 400 ? result.slice(0, 400) + '\n...[truncated]' : result;
+  const preview = result.length > 500 ? result.slice(0, 500) + '\n...[truncated]' : result;
   const entry = document.createElement('div');
   entry.className = 'log-entry';
   entry.innerHTML = `
@@ -376,7 +494,7 @@ function logToolResult(name, result) {
 }
 
 function escHtml(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function updateStepCounter() {
@@ -386,30 +504,99 @@ function updateStepCounter() {
 // ── AGENT LOOP ────────────────────────────────
 
 let agentMessages = [];
-let finalSubmission = null;
+let finalOutput   = null;
 
-async function callClaude(messages) {
-  const apiKey = localStorage.getItem('apex_api_key');
-  if (!apiKey) throw new Error('No API key. Go back to the world viewer and enter your key first.');
+// Trim tool_result content in older messages to keep history small.
+// The agent has already processed the content — we just need to preserve
+// that it made the call, not re-send every file verbatim each turn.
+function trimHistoryForAPI(messages) {
+  const KEEP_FULL_LAST_N = 2; // keep last N user turns untruncated
+  const MAX_RESULT_CHARS = 300;
+
+  let userTurnsSeen = 0;
+  // Count user turns from the end
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === 'user') userTurnsSeen++;
+  }
+
+  let userTurnIdx = 0;
+  return messages.map(m => {
+    if (m.role === 'user') {
+      userTurnIdx++;
+      const isRecent = userTurnIdx > userTurnsSeen - KEEP_FULL_LAST_N;
+      if (!isRecent && Array.isArray(m.content)) {
+        return {
+          ...m,
+          content: m.content.map(block => {
+            if (block.type === 'tool_result' && typeof block.content === 'string'
+                && block.content.length > MAX_RESULT_CHARS) {
+              return {
+                ...block,
+                content: block.content.slice(0, MAX_RESULT_CHARS) + '\n...[truncated]',
+              };
+            }
+            return block;
+          }),
+        };
+      }
+    }
+    return m;
+  });
+}
+
+function getSystemPrompt() {
+  const isAudit = WORLD && WORLD.meta.id && WORLD.meta.id.startsWith('APEX-AUD');
+  if (isAudit) {
+    return `You are an AI auditor working inside a virtual company file system. You have access to financial records, HR documents, contracts, and audit workpapers.
+
+Your tools:
+- list_files(path): list directory contents. Call with empty path for root.
+- read_file(path): read any file by its full path.
+- write_file(path, content): write CSV content to audit workpaper tabs.
+
+Approach:
+- Explore the full directory before drawing conclusions.
+- Cross-reference all relevant source documents (financial statements, bank statements, payroll records, invoices, contracts).
+- Document your findings and conclusions in the provided workpaper template.
+- Flag any discrepancies with the file name and specific row or section where found.
+- When all workpaper tabs are complete, end your turn with a brief summary and your audit opinion.`;
+  }
+  return `You are an AI agent working inside a company's invoice processing system. You have access to a virtual file directory containing policy documents, employee profiles, invoices, and ledgers.
+
+Your tools:
+- list_files(path): list directory contents. Call with empty path for root.
+- read_file(path): read any file by its full path.
+- write_file(path, content): write CSV content to ledger files to log your decisions.
+
+Approach:
+- Explore the full directory before making decisions.
+- Read all relevant policy documents and apply them carefully.
+- Log every invoice decision (approved, rejected, or held) in the appropriate ledger at the company, team, and user level.
+- When you have processed all invoices and filled all ledgers, end your turn with a brief final summary.`;
+}
+
+async function callClaude(messages, attempt = 0) {
+  const key = localStorage.getItem('apex_api_key');
+  if (!key) throw new Error('No API key. Go back to the world viewer and enter your key first.');
 
   const res = await fetch('/agent', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+    headers: { 'Content-Type': 'application/json', 'x-api-key': key },
     body: JSON.stringify({
-      model:      'claude-sonnet-4-20250514',
-      max_tokens: 2000,
+      model:      'claude-sonnet-4-6',
+      max_tokens: 4096,
       tools:      TOOLS,
-      messages,
-      system: `You are an AI accounting agent completing a bookkeeping task. You have access to a virtual file system with accounting documents.
-
-Your goal: complete the task in task_01.txt by reading the relevant files and submitting your categorizations using the submit_categorizations tool.
-
-Important rules:
-- Start by listing files to understand what's available
-- Read the task file first, then gather the files you need
-- When done, call submit_categorizations with your complete output`,
+      messages:   trimHistoryForAPI(messages),
+      system: getSystemPrompt(),
     }),
   });
+
+  if (res.status === 429 && attempt < 5) {
+    const waitSecs = 65;
+    log(`Rate limit hit — waiting ${waitSecs}s before retry (attempt ${attempt + 1}/5)...`, 'log-system');
+    await new Promise(r => setTimeout(r, waitSecs * 1000));
+    return callClaude(messages, attempt + 1);
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -423,25 +610,24 @@ async function runAgent() {
 
   aborted    = false;
   stepCount  = 0;
-  finalSubmission = null;
-  agentMessages   = [];
+  finalOutput = null;
+  agentMessages = [];
+  ledgerWrites  = [];
 
-  document.getElementById('run-btn').disabled  = true;
+  document.getElementById('run-btn').style.display = 'none';
   document.getElementById('stop-btn').style.display = 'inline-block';
   document.getElementById('console-log').innerHTML = '';
-  document.getElementById('score-content').innerHTML = '<div class="score-placeholder"><div class="big">◎</div><p style="font-size:12px;color:var(--text2)">Agent running...</p></div>';
+  document.getElementById('score-content').innerHTML =
+    '<div class="score-placeholder"><div style="font-size:32px;margin-bottom:8px">◎</div><p style="font-size:12px;color:var(--text2)">Agent running...</p></div>';
 
-  log(`Starting agent on world: ${WORLD.meta.name}`, 'log-system');
-  log(`Task: ${getTaskPrompt().slice(0, 120)}...`, 'log-system');
+  log(`World: ${WORLD.meta.company} — ${WORLD.meta.period}`, 'log-system');
   log('', 'log-system');
 
-  // Initial user message
-  agentMessages.push({
-    role: 'user',
-    content: `You are working in the accounting directory for ${WORLD.meta.name}. ${getTaskPrompt()}\n\nStart by listing the available files.`
-  });
+  const TASK = WORLD.meta.taskPrompt || 'You have been assigned to process outstanding invoices for this company. Review the directory and handle them appropriately.';
 
-  const MAX_STEPS = 20;
+  agentMessages.push({ role: 'user', content: TASK });
+
+  const MAX_STEPS = 40;
 
   try {
     while (stepCount < MAX_STEPS && !aborted) {
@@ -451,16 +637,18 @@ async function runAgent() {
       const response = await callClaude(agentMessages);
       const content  = response.content || [];
 
-      // Add assistant turn to history
       agentMessages.push({ role: 'assistant', content });
 
-      // Process each content block
       const toolResults = [];
-      let hasToolUse    = false;
+      let hasToolUse = false;
+      let lastText = '';
 
       for (const block of content) {
         if (block.type === 'text' && block.text.trim()) {
-          log(block.text.trim(), 'log-think');
+          lastText = block.text.trim();
+          // Show first 300 chars of thinking
+          const preview = lastText.length > 300 ? lastText.slice(0, 300) + '...' : lastText;
+          log(escHtml(preview), 'log-think');
         }
 
         if (block.type === 'tool_use') {
@@ -470,137 +658,229 @@ async function runAgent() {
           let result = '';
 
           if (block.name === 'list_files') {
-            result = listFiles();
-            logToolResult('list_files', result);
+            result = vfsListFiles(block.input.path || '');
 
           } else if (block.name === 'read_file') {
-            result = readFile(block.input.filename || '');
-            const fileType = getFileSystem()[block.input.filename?.trim()]?.type || 'unknown';
-            if (fileType === 'noise') {
-              log(`Agent opened a noise file: ${block.input.filename}`, 'log-error');
-            } else if (fileType === 'misleading') {
-              log(`⚠ Agent opened misleading file: ${block.input.filename}`, 'log-error');
-            }
-            logToolResult('read_file', result);
+            result = vfsReadFile(block.input.path || '');
 
-          } else if (block.name === 'submit_categorizations') {
-            finalSubmission = block.input;
-            result = 'Categorizations submitted successfully.';
-            log('Agent submitted final categorizations.', 'log-output');
-            toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: result });
-            agentMessages.push({ role: 'user', content: toolResults });
-            break;
+          } else if (block.name === 'write_file') {
+            result = vfsWriteFile(block.input.path || '', block.input.content || '');
+            if (result.startsWith('OK:')) {
+              log(`Wrote to ledger: ${escHtml(block.input.path)}`, 'log-output');
+            }
           }
 
+          logToolResult(result);
           toolResults.push({ type: 'tool_result', tool_use_id: block.id, content: result });
         }
       }
 
-      // If agent submitted, we're done
-      if (finalSubmission) break;
-
-      // If stop_reason is end_turn with no tool use, agent is done thinking
-      if (response.stop_reason === 'end_turn' && !hasToolUse) {
-        log('Agent stopped without submitting. Forcing score...', 'log-error');
-        break;
+      // Capture last text block as final output if agent ends without tools
+      if (!hasToolUse) {
+        finalOutput = lastText;
       }
 
-      // Add tool results to next turn
+      if (response.stop_reason === 'end_turn' && !hasToolUse) break;
+
       if (toolResults.length > 0) {
         agentMessages.push({ role: 'user', content: toolResults });
       }
 
-      // Small delay so UI can breathe
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 200));
     }
 
     if (aborted) {
       log('Agent stopped by user.', 'log-error');
-    } else if (stepCount >= MAX_STEPS) {
-      log(`Max steps (${MAX_STEPS}) reached.`, 'log-error');
     } else {
+      if (!finalOutput) {
+        // Extract last text block from history
+        for (let i = agentMessages.length - 1; i >= 0; i--) {
+          const m = agentMessages[i];
+          if (m.role === 'assistant' && Array.isArray(m.content)) {
+            const txt = m.content.find(b => b.type === 'text');
+            if (txt) { finalOutput = txt.text; break; }
+          }
+        }
+      }
       log('', 'log-system');
-      log('Agent finished. Evaluating against rubric...', 'log-system');
+      log('Agent finished. Evaluating rubric...', 'log-system');
       await scoreSubmission();
     }
 
   } catch (err) {
     log(`Error: ${err.message}`, 'log-error');
   } finally {
-    document.getElementById('run-btn').disabled  = false;
+    document.getElementById('run-btn').style.display = 'inline-block';
     document.getElementById('stop-btn').style.display = 'none';
     document.getElementById('step-counter').textContent = `${stepCount} steps`;
   }
 }
 
-function stopAgent() {
-  aborted = true;
-}
+function stopAgent() { aborted = true; }
 
 // ── SCORING ───────────────────────────────────
 
 async function scoreSubmission() {
-  if (!finalSubmission) {
-    renderScore([], null, 'Agent did not submit categorizations.');
-    return;
-  }
-
-  // Debug: log what we actually got
-  log(`DEBUG submission keys: ${Object.keys(finalSubmission).join(', ')}`, 'log-system');
-  log(`DEBUG output length: ${finalSubmission.output?.length ?? 'undefined'}`, 'log-system');
-  log(`DEBUG output preview: ${finalSubmission.output?.slice(0,120) ?? 'undefined'}`, 'log-system');
-
-  const apiKey = localStorage.getItem('apex_api_key');
+  const key    = localStorage.getItem('apex_api_key');
   const rubric = WORLD.rubric;
 
-  const scoringPrompt = `You are grading an AI accounting agent's output against a rubric. Respond with ONLY a JSON array, nothing else. No preamble, no markdown, no explanation. Your entire response must be valid JSON starting with [ and ending with ].
+  // Reconstruct full agent output from message history
+  const allText = agentMessages
+    .filter(m => m.role === 'assistant')
+    .flatMap(m => Array.isArray(m.content) ? m.content : [])
+    .filter(b => b.type === 'text')
+    .map(b => b.text)
+    .join('\n---\n');
 
-WORLD: ${WORLD.meta.name} (${WORLD.meta.method}, ${WORLD.meta.period})
+  const allToolCalls = agentMessages
+    .flatMap(m => Array.isArray(m.content) ? m.content : [])
+    .filter(b => b.type === 'tool_use')
+    .map(b => `${b.name}(${JSON.stringify(b.input)})`)
+    .join('\n');
 
-CHART OF ACCOUNTS (current):
-${WORLD.chartOfAccounts.map(a => `${a.code} ${a.name}`).join('\n')}
+  const ledgerSummary = ledgerWrites.length > 0
+    ? ledgerWrites.map(w => `WROTE TO ${w.path}:\n${w.content}`).join('\n\n')
+    : '(no ledger writes)';
 
-RUBRIC CRITERIA:
+  const isAudit = WORLD.meta.id && WORLD.meta.id.startsWith('APEX-AUD');
+  const taskLabel = isAudit ? 'audit' : 'invoice processing';
+  const writesLabel = isAudit ? 'WORKPAPER WRITES' : 'LEDGER WRITES';
+
+  const scoringPrompt = `You are grading an AI agent's ${taskLabel} work. Respond with ONLY a JSON array — no preamble, no markdown.
+
+WORLD: ${WORLD.meta.company} (${WORLD.meta.period})
+
+RUBRIC:
 ${rubric.map((r,i) => `${i+1}. [${r.type}] ${r.text}`).join('\n')}
 
-AGENT SUBMISSION:
-${finalSubmission.output || '(empty)'}
+AGENT TOOL CALLS (all):
+${allToolCalls}
 
-Return a JSON array with one object per rubric criterion. Example format:
-[{"n":1,"met":true,"reasoning":"explanation"},{"n":2,"met":false,"reasoning":"explanation"}]`;
+${writesLabel}:
+${ledgerSummary}
+
+AGENT TEXT OUTPUT (all turns):
+${allText.slice(0, 30000)}
+
+Return a JSON array with one object per rubric criterion:
+[{"n":1,"met":true,"reasoning":"..."},{"n":2,"met":false,"reasoning":"..."}]`;
 
   try {
     const res = await fetch('/agent', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key },
       body: JSON.stringify({
-        model:      'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        model:      'claude-sonnet-4-6',
+        max_tokens: 4096,
         messages:   [{ role: 'user', content: scoringPrompt }],
       }),
     });
 
     const data    = await res.json();
     const raw     = data.content?.find(b => b.type === 'text')?.text || '[]';
-    // Extract JSON array even if there's surrounding text
     const match   = raw.match(/\[[\s\S]*\]/);
-    const cleaned = match ? match[0] : '[]';
-    const scores  = JSON.parse(cleaned);
+    const scores  = JSON.parse(match ? match[0] : '[]');
 
-    renderScore(scores, finalSubmission.output?.slice(0, 800));
+    renderScore(scores);
 
   } catch (err) {
     log(`Scoring error: ${err.message}`, 'log-error');
-    renderScore([], finalSubmission?.summary, err.message);
+    renderScore([]);
   }
 }
 
-function renderScore(scores, summary, errorMsg) {
+async function generateWorldCritique() {
+  const btn = document.getElementById('critique-btn');
+  const box = document.getElementById('critique-box');
+  if (!btn || !box) return;
+
+  btn.disabled = true;
+  btn.textContent = '◈ thinking...';
+  box.innerHTML = '';
+
+  const key = localStorage.getItem('apex_api_key');
+  const isAudit = WORLD.meta.id && WORLD.meta.id.startsWith('APEX-AUD');
+  const taskLabel = isAudit ? 'audit' : 'invoice processing';
+  const scores  = window._lastScores || [];
   const rubric  = WORLD.rubric;
+
+  const rubricWithResults = rubric.map(r => {
+    const s = scores.find(x => x.n === r.n);
+    const status = s ? (s.met ? 'PASSED' : 'FAILED') : 'UNKNOWN';
+    return `[${status}] ${r.text}${s?.reasoning ? '\n  Judge reasoning: ' + s.reasoning : ''}`;
+  }).join('\n\n');
+
+  const fileList = WORLD.files.map(f => `${f.type.toUpperCase().padEnd(8)} ${f.path}`).join('\n');
+
+  const critiquePrompt = `You are a benchmark designer reviewing an AI agent's performance on a ${taskLabel} world. Your job is to identify weaknesses in the world design and suggest concrete improvements to make it harder for future agents.
+
+WORLD: ${WORLD.meta.company} (${WORLD.meta.period})
+
+RUBRIC RESULTS (what the agent was graded on and how it did):
+${rubricWithResults}
+
+FILES IN THE WORLD:
+${fileList}
+
+AGENT WORKPAPER/LEDGER WRITES:
+${window._lastLedgerSummary || '(none)'}
+
+AGENT TEXT OUTPUT (excerpt):
+${(window._lastAllText || '').slice(0, 8000)}
+
+Based on the agent's performance, produce a critique structured as a JSON array. Each item should be one of four types:
+- "easy": a task the agent passed too easily — what made it trivial and how to obfuscate it
+- "broken": a task the agent failed for the wrong reason (bad world design, not genuine difficulty)
+- "gap": something the world should test but currently doesn't
+- "change": a specific, concrete change to an existing file or rubric item to increase difficulty
+
+Return ONLY a JSON array, no preamble:
+[{"type":"easy"|"broken"|"gap"|"change","criterion":N_or_null,"title":"short title","detail":"specific actionable suggestion"}]`;
+
+  try {
+    const res = await fetch('/agent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+      body: JSON.stringify({
+        model:      'claude-sonnet-4-6',
+        max_tokens: 4096,
+        messages:   [{ role: 'user', content: critiquePrompt }],
+      }),
+    });
+    const data  = await res.json();
+    const raw   = data.content?.find(b => b.type === 'text')?.text || '[]';
+    const match = raw.match(/\[[\s\S]*\]/);
+    const items = JSON.parse(match ? match[0] : '[]');
+
+    if (!items.length) {
+      box.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-top:12px">No critique generated.</div>';
+    } else {
+      const tagClass = { easy: 'ctag-easy', broken: 'ctag-broken', gap: 'ctag-gap', change: 'ctag-change' };
+      const rows = items.map(item => `
+        <div class="critique-item">
+          <div><span class="critique-tag ${tagClass[item.type] || 'ctag-gap'}">${escHtml(item.type)}</span>${item.criterion != null ? ` <span style="font-size:9px;color:var(--text3)">criterion ${item.criterion}</span>` : ''}</div>
+          <div style="font-weight:600;margin-bottom:3px">${escHtml(item.title)}</div>
+          <div style="color:var(--text3)">${escHtml(item.detail)}</div>
+        </div>`).join('');
+
+      box.innerHTML = `<div class="critique-box">
+        <div class="section-label" style="margin-top:4px">world critique</div>
+        ${rows}
+      </div>`;
+    }
+  } catch(err) {
+    box.innerHTML = `<div style="font-size:11px;color:var(--red);margin-top:12px">Critique error: ${escHtml(err.message)}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '◈ critique world difficulty';
+}
+
+function renderScore(scores) {
+  const rubric   = WORLD.rubric;
   const metCount = scores.filter(s => s.met).length;
   const total    = rubric.length;
   const pct      = total > 0 ? Math.round((metCount / total) * 100) : 0;
-
   const pctColor = pct >= 80 ? 'mv-green' : pct >= 50 ? 'mv-amber' : 'mv-red';
 
   const rubricRows = rubric.map(r => {
@@ -619,23 +899,16 @@ function renderScore(scores, summary, errorMsg) {
       </div>`;
   }).join('');
 
-  // Count noise files opened
-  const fs = getFileSystem();
-  const noiseOpened = agentMessages
-    .flatMap(m => Array.isArray(m.content) ? m.content : [])
-    .filter(b => b.type === 'tool_use' && b.name === 'read_file')
-    .filter(b => fs[b.input?.filename?.trim()]?.type === 'noise')
-    .length;
-
-  const misleadOpened = agentMessages
-    .flatMap(m => Array.isArray(m.content) ? m.content : [])
-    .filter(b => b.type === 'tool_use' && b.name === 'read_file')
-    .filter(b => fs[b.input?.filename?.trim()]?.type === 'misleading')
-    .length;
+  const ledgerInfo = ledgerWrites.length > 0
+    ? `<div class="ledger-writes">
+         ✎ Agent wrote to ${ledgerWrites.length} ledger${ledgerWrites.length > 1 ? 's' : ''}:<br>
+         ${ledgerWrites.map(w => `  ${escHtml(w.path)}`).join('<br>')}
+       </div>`
+    : `<div style="background:var(--amber-bg);border:1px solid #3d2e00;border-radius:4px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:var(--amber)">
+         ⚠ Agent did not write to any ledgers
+       </div>`;
 
   document.getElementById('score-content').innerHTML = `
-    ${errorMsg ? `<div style="background:var(--red-bg);border:1px solid #3d1515;border-radius:4px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:var(--red)">${escHtml(errorMsg)}</div>` : ''}
-
     <div class="metrics-row">
       <div class="metric-card">
         <div class="metric-label">score</div>
@@ -646,33 +919,163 @@ function renderScore(scores, summary, errorMsg) {
         <div class="metric-value">${metCount}/${total}</div>
       </div>
       <div class="metric-card">
-        <div class="metric-label">steps taken</div>
+        <div class="metric-label">steps</div>
         <div class="metric-value">${stepCount}</div>
       </div>
       <div class="metric-card">
-        <div class="metric-label">noise opened</div>
-        <div class="metric-value ${noiseOpened > 0 ? 'mv-amber' : 'mv-green'}">${noiseOpened}</div>
+        <div class="metric-label">ledger writes</div>
+        <div class="metric-value ${ledgerWrites.length > 0 ? 'mv-green' : 'mv-amber'}">${ledgerWrites.length}</div>
       </div>
     </div>
 
-    ${misleadOpened > 0 ? `
-      <div style="background:var(--amber-bg);border:1px solid #3d2e00;border-radius:4px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:var(--amber)">
-        ⚠ Agent opened ${misleadOpened} misleading file${misleadOpened > 1 ? 's' : ''} — may have used outdated data
-      </div>` : ''}
+    ${ledgerInfo}
 
-    ${summary ? `
+    ${finalOutput ? `
       <div class="section-label">agent summary</div>
-      <div class="agent-output-box">${escHtml(summary)}</div>` : ''}
+      <div class="agent-output-box">${escHtml(finalOutput.slice(0, 1200))}</div>` : ''}
 
     <div class="section-label">rubric breakdown</div>
-    ${rubricRows}`;
+    ${rubricRows}
+
+    <button class="critique-btn" id="critique-btn" onclick="generateWorldCritique()">◈ critique world difficulty</button>
+    <div id="critique-box"></div>`;
+
+  // Store scored data for critique
+  window._lastScores      = scores;
+  window._lastAllText     = allText;
+  window._lastAllToolCalls = allToolCalls;
+  window._lastLedgerSummary = ledgerSummary;
+}
+
+// ── FILE EXPLORER ─────────────────────────────
+
+let dirExpanded = new Set(['', 'company_invoices', 'leadership',
+  'engineering', 'engineering/team_invoices',
+  'marketing', 'marketing/team_invoices',
+  'operations', 'operations/team_invoices']);
+let dirActivePath = null;
+
+function fileIcon(type) {
+  return { policy: '§', invoice: '▤', ledger: '▦', profile: '◉' }[type] || '▤';
+}
+
+function buildDirTreeData() {
+  const root = {};
+  for (const f of WORLD.files) {
+    const parts = f.path.split('/');
+    let node = root;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const seg = parts[i];
+      if (!node[seg]) node[seg] = { _isDir: true, _children: {} };
+      node = node[seg]._children;
+    }
+    node[parts[parts.length - 1]] = { _isDir: false, _file: f };
+  }
+  return root;
+}
+
+function renderDirNode(node, depth, prefix) {
+  let html = '';
+  const indent = depth * 12;
+  const entries = Object.entries(node).sort(([an, av], [bn, bv]) => {
+    const aDir = !!av._isDir, bDir = !!bv._isDir;
+    if (aDir && !bDir) return -1;
+    if (!aDir && bDir) return 1;
+    return an.localeCompare(bn);
+  });
+  for (const [name, val] of entries) {
+    const fullPath = prefix ? prefix + '/' + name : name;
+    if (val._isDir) {
+      const open = dirExpanded.has(fullPath);
+      html += `<div class="dt-folder" style="padding-left:${indent + 8}px" onclick="toggleDirFolder('${fullPath}')">
+        <span class="dt-toggle">${open ? '▼' : '▶'}</span>
+        <span>${open ? '◧' : '◫'}</span>
+        <span class="dt-folder-name">${escHtml(name)}/</span>
+      </div>`;
+      if (open) html += renderDirNode(val._children, depth + 1, fullPath);
+    } else {
+      const f = val._file;
+      const active = dirActivePath === f.path;
+      // highlight ledger files that have been written to
+      const written = ledgerWrites.some(w => w.path === f.path);
+      html += `<div class="dt-file type-${f.type}${active ? ' active' : ''}"
+        style="padding-left:${indent + 20}px"
+        onclick="selectDirFile('${escHtml(f.path)}')">
+        <span class="dt-file-icon">${fileIcon(f.type)}</span>
+        <span class="dt-file-name">${escHtml(name)}${written && !active ? ' <span style="color:var(--green);font-size:8px">●</span>' : ''}</span>
+      </div>`;
+    }
+  }
+  return html;
+}
+
+function refreshDirTree() {
+  if (!WORLD) return;
+  document.getElementById('dir-tree').innerHTML = renderDirNode(buildDirTreeData(), 0, '');
+}
+
+function toggleDirFolder(path) {
+  if (dirExpanded.has(path)) dirExpanded.delete(path);
+  else dirExpanded.add(path);
+  refreshDirTree();
+}
+
+function selectDirFile(path) {
+  dirActivePath = path;
+  refreshDirTree();
+  const fs = getFS();
+  const f = fs[path];
+  if (!f) return;
+  document.getElementById('dir-viewer').innerHTML = renderDirFileContent(f);
+}
+
+function renderDirFileContent(f) {
+  const label = `<div class="fv-label">${escHtml(f.path)}</div>`;
+  if (f.type === 'policy' || f.type === 'profile') {
+    const cls = f.type === 'policy' ? 'fv-policy' : 'fv-profile';
+    const tag = f.type === 'policy' ? 'POLICY' : 'PROFILE';
+    return `${label}<span class="fv-type ${cls}">${tag}</span><div class="fv-prose">${escHtml(f.content || '')}</div>`;
+  }
+  if (f.type === 'invoice') {
+    return `${label}<span class="fv-type fv-invoice">INVOICE</span><div class="fv-prose">${escHtml(f.content || '')}</div>`;
+  }
+  if (f.type === 'ledger') {
+    const lines = (f.content || '').trim().split('\n').filter(Boolean);
+    if (lines.length <= 1) {
+      return `${label}<span class="fv-type fv-ledger">LEDGER</span>
+        <div class="fv-empty">
+          <div style="font-size:22px;margin-bottom:6px">▦</div>
+          <p style="font-size:11px;color:var(--text2)">Empty — agent has not written here yet</p>
+          <p style="font-size:10px;margin-top:4px;color:var(--text3)">${escHtml(lines[0] || '')}</p>
+        </div>`;
+    }
+    const headers = lines[0].split(',').map(h => `<th>${escHtml(h.trim())}</th>`).join('');
+    const rows = lines.slice(1).map(l =>
+      '<tr>' + l.split(',').map(c => `<td>${escHtml(c.trim())}</td>`).join('') + '</tr>'
+    ).join('');
+    return `${label}<span class="fv-type fv-ledger">LEDGER — ${lines.length - 1} entries</span>
+      <div style="overflow-x:auto"><table class="fv-data-table">
+        <thead><tr>${headers}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>`;
+  }
+  return `${label}<div class="fv-prose">${escHtml(f.content || '')}</div>`;
+}
+
+function switchRightTab(tab) {
+  document.getElementById('rtab-files').classList.toggle('active', tab === 'files');
+  document.getElementById('rtab-rubric').classList.toggle('active', tab === 'rubric');
+  document.getElementById('files-view').classList.toggle('visible', tab === 'files');
+  document.getElementById('score-content').classList.toggle('visible', tab === 'rubric');
+  if (tab === 'files') refreshDirTree();
 }
 
 // ── INIT ──────────────────────────────────────
 loadWorld();
-if (WORLD?.meta?.name) {
-  document.getElementById('world-name').textContent = WORLD.meta.name;
+if (WORLD?.meta?.company) {
+  document.getElementById('world-name').textContent = WORLD.meta.company;
 }
+refreshDirTree();
 </script>
 </body>
 </html>
