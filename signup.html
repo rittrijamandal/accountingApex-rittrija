@@ -12,17 +12,17 @@
       <img src="/assets/symbal-logo.png" alt="SYMBAL" class="login-brand-logo" width="56" height="56" />
       <h1 class="login-brand-title">SYMBAL ACCOUNTING <span class="title-serif">apex</span></h1>
     </header>
-    <p class="auth-sub">CREATE AN ACCOUNT — DEFAULT ROLE IS GRADER. AN ADMIN CAN PROMOTE YOU TO EXPERT.</p>
+    <p class="auth-sub">Create an account. New users start as graders; an admin can promote experts.</p>
     <div class="err" id="err"></div>
     <form id="form">
       <label for="email">EMAIL</label>
       <input id="email" name="email" type="email" autocomplete="email" required />
       <label for="password">PASSWORD</label>
       <input id="password" name="password" type="password" autocomplete="new-password" minlength="6" required />
-      <button type="submit" class="btn" id="submit">CREATE ACCOUNT</button>
+      <button type="submit" class="btn" id="submit">Create account</button>
     </form>
     <div class="auth-footer">
-      ALREADY HAVE AN ACCOUNT? <a href="login.html">SIGN IN</a>.
+      Already have an account? <a href="login.html">Sign in</a>.
     </div>
   </div>
   <script type="module">
@@ -68,7 +68,7 @@
           window.location.replace(roleHomePath(profile.role));
           return;
         }
-        showErr('CHECK YOUR EMAIL TO CONFIRM, THEN SIGN IN.');
+        showErr('Check your email to confirm, then sign in.');
       } catch (err) {
         showErr(err.message || 'SIGN UP FAILED');
       } finally {

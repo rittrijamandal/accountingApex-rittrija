@@ -12,11 +12,11 @@ function toggleDarkMode() {
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('apex_theme', next);
   document.querySelectorAll('.dark-toggle').forEach(btn => {
-    btn.textContent = next === 'dark' ? 'LIGHT MODE' : 'DARK MODE';
+    btn.textContent = next === 'dark' ? 'Light mode' : 'Dark mode';
   });
 }
 function getDarkLabel() {
-  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'LIGHT MODE' : 'DARK MODE';
+  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'Light mode' : 'Dark mode';
 }
 
 let activeFile = 'bank';
@@ -377,7 +377,7 @@ function buildSessionActionButtons() {
   if (GRADER_PREVIEW_MODE) {
     return `<span><button type="button" class="gen-btn" onclick="exitGraderView()">EXIT GRADER VIEW</button></span>`;
   }
-  return `<span><button type="button" class="gen-btn" onclick="hardLogout()">SIGN OUT</button></span>`;
+  return `<span><button type="button" class="gen-btn" onclick="hardLogout()">Sign out</button></span>`;
 }
 
 function fmt(n) {
@@ -844,7 +844,7 @@ function buildWorldSwitcher() {
     <span class="tb-sep">/</span>
     <div class="grader-dd-wrap">
       <button type="button" class="grader-breadcrumb-dd" aria-expanded="false" onclick="event.stopPropagation(); toggleWorldDropdown(event)">
-        <span class="tb-world">GRADER CONSOLE</span>
+        <span class="tb-world">Grader console</span>
         <span class="tb-sep">/</span>
         <span class="grader-dd-label">${escHtml(label)} <span class="grader-dd-caret">▼</span></span>
       </button>
@@ -873,11 +873,11 @@ function buildTopbar() {
       switcher ||
       (GRADER_PREVIEW_MODE && graderAppPhase === 'grading'
         ? `<span class="tb-world">GRADER VIEW</span><span class="tb-sep">/</span><span class="tb-name">${escHtml(WORLD.meta?.name || '')}</span>`
-        : `<span class="tb-world">GRADER CONSOLE</span>${nameOnly}`)
+        : `<span class="tb-world">Grader console</span>${nameOnly}`)
     }
     <div class="tb-meta">
       <span><span class="dot"></span>${isFilesWorld() ? WORLD.files.length : escHtml(WORLD.meta?.totalFiles || 0)} files</span>
-      <span><button type="button" class="gen-btn" onclick="openApiKeyModal()">API KEY</button></span>
+      <span><button type="button" class="gen-btn" onclick="openApiKeyModal()">API key</button></span>
       <span><button type="button" class="gen-btn dark-toggle" onclick="toggleDarkMode()">${getDarkLabel()}</button></span>
       ${buildSessionActionButtons()}
     </div>`;
@@ -899,9 +899,9 @@ function renderGraderLobby() {
     <div class="grader-lobby-topbar">
       <span class="tb-logo"><img src="/assets/symbal-logo.png" alt="" class="tb-logo-img" width="22" height="22" />SYMBAL ACCOUNTING <span class="title-serif">apex</span></span>
       <span class="grader-lobby-spacer"></span>
-      <button type="button" class="gen-btn" onclick="openApiKeyModal()">API KEY</button>
+      <button type="button" class="gen-btn" onclick="openApiKeyModal()">API key</button>
       <button type="button" class="gen-btn dark-toggle" onclick="toggleDarkMode()">${getDarkLabel()}</button>
-      ${GRADER_PREVIEW_MODE ? '' : '<button type="button" class="gen-btn" onclick="hardLogout()">SIGN OUT</button>'}
+      ${GRADER_PREVIEW_MODE ? '' : '<button type="button" class="gen-btn" onclick="hardLogout()">Sign out</button>'}
     </div>
     <div class="grader-lobby-inner">
       <h1 class="grader-lobby-h1">Grader Lobby</h1>

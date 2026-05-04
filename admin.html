@@ -11,26 +11,26 @@
         extend: {
           borderRadius: {
             none: '0',
-            sm: '0',
-            DEFAULT: '0',
-            md: '0',
-            lg: '0',
-            xl: '0',
-            '2xl': '0',
-            '3xl': '0',
-            full: '0',
+            sm: '6px',
+            DEFAULT: '7px',
+            md: '8px',
+            lg: '8px',
+            xl: '8px',
+            '2xl': '8px',
+            '3xl': '8px',
+            full: '999px',
           },
           colors: {
-            apexBg: '#f1f5f9',
+            apexBg: '#eef2f5',
             apexCard: '#ffffff',
-            apexBorder: '#e2e8f0',
-            apexText: '#0f172a',
-            apexMuted: '#64748b',
-            apexAccent: '#2563eb',
-            apexAccentSoft: '#dbeafe',
-            apexPos: '#059669',
-            apexWarn: '#b45309',
-            apexDanger: '#dc2626',
+            apexBorder: '#dce3ea',
+            apexText: '#16202a',
+            apexMuted: '#5f6f7f',
+            apexAccent: '#2364aa',
+            apexAccentSoft: '#e6f0fb',
+            apexPos: '#0f766e',
+            apexWarn: '#a15c16',
+            apexDanger: '#c2413d',
           },
           fontFamily: {
             sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -44,8 +44,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .rounded-none { border-radius: 7px !important; }
+    aside, header, section[id^="section-"], .admin-section > div, table { box-shadow: 0 1px 2px rgba(17,24,39,.04); }
+    .admin-nav { text-transform: none; letter-spacing: 0; }
+    button, input, select { min-height: 34px; }
+    input:focus, select:focus, button:focus { box-shadow: 0 0 0 3px rgba(35,100,170,.14); }
+  </style>
 </head>
-<body class="m-0 min-h-screen bg-apexBg text-apexText font-sans">
+<body class="m-0 min-h-screen bg-apexBg text-apexText font-sans" style="background:radial-gradient(circle at 16% 0%, rgba(35,100,170,.10), transparent 30%),linear-gradient(180deg,#f8fafb 0%,#edf2f6 100%)">
   <div id="admin-app" class="h-screen"></div>
   <script type="module" src="/js/admin-dashboard.js"></script>
 </body>

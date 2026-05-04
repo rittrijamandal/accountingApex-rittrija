@@ -619,6 +619,136 @@
   color: var(--muted);
 }
 
+/* Frontend refresh: expert workflow */
+:root {
+  --bg: #eef2f5;
+  --bg2: #f7f8fa;
+  --card: #ffffff;
+  --border: #dce3ea;
+  --text: #16202a;
+  --muted: #5f6f7f;
+  --accent: #2364aa;
+  --accent-hover: #174f8c;
+  --accent-soft: #e6f0fb;
+  --accent-muted: #f1f6fc;
+  --input-bg: #f8fafb;
+  --amber: #a15c16;
+  --amber-soft: #fff7ed;
+  --amber-border: #fed7aa;
+  --red: #c2413d;
+}
+
+.expert-shell {
+  background:
+    radial-gradient(circle at 16% 0%, rgba(35, 100, 170, 0.10), transparent 30%),
+    linear-gradient(180deg, #f8fafb 0%, #edf2f6 100%);
+  letter-spacing: 0;
+}
+
+.expert-shell .wrap {
+  max-width: 1180px;
+  padding-top: 24px;
+}
+
+.expert-top {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+}
+
+.expert-top h1,
+.step-title,
+.section h2,
+.review-path-title,
+.view-toggle-btn,
+.file-tile-type,
+.doc-viewer-title,
+.doc-preview-label,
+.doc-meta-details summary,
+.review-banner-title,
+.badge,
+.file-tag {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.btn,
+.btn-icon,
+.editor-title,
+.section,
+.review-path-card,
+.field input,
+.field select,
+.field textarea,
+.data-table input,
+.data-table select,
+.data-table textarea,
+.upload-card,
+.anchor-nav a,
+.err-banner,
+.review-banner,
+.data-room-root,
+.view-toggle-group,
+.browse-table-wrap,
+.file-tile,
+.doc-viewer-body,
+.doc-meta-details {
+  border-radius: 7px;
+}
+
+.section {
+  padding: 22px 24px;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+}
+
+.editor-sticky {
+  background: rgba(248, 250, 251, 0.90);
+  backdrop-filter: blur(14px);
+}
+
+.btn {
+  min-height: 36px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.btn-ghost,
+.btn-icon {
+  background: #fff;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.data-table input:focus,
+.data-table select:focus,
+.data-table textarea:focus {
+  box-shadow: 0 0 0 3px rgba(35, 100, 170, 0.14);
+}
+
+.review-path-card,
+.file-tile {
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.review-path-card:hover,
+.file-tile:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 720px) {
+  .expert-shell .wrap { padding: 14px 14px 32px; }
+  .expert-top,
+  .editor-sticky .inner,
+  .data-room-toolbar,
+  .doc-viewer-toolbar { align-items: stretch; flex-direction: column; }
+  .expert-actions,
+  .inline-actions { width: 100%; }
+  .btn { width: 100%; text-align: center; }
+}
+
 .drawer-backdrop {
   position: fixed;
   inset: 0;

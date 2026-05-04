@@ -210,6 +210,156 @@
       max-height: 300px; overflow-y: auto; white-space: pre-wrap;
       font-family: var(--mono);
     }
+
+    /* Frontend refresh: runner shell */
+    :root {
+      --bg: #eef2f5;
+      --bg2: #ffffff;
+      --bg3: #f7f8fa;
+      --bg4: #edf1f4;
+      --border: #dce3ea;
+      --border2: #c4ced8;
+      --text: #16202a;
+      --text2: #5f6f7f;
+      --text3: #8a98a7;
+      --accent: #2364aa;
+      --accent-hover: #174f8c;
+      --accent-soft: #e6f0fb;
+      --accent-muted: #f1f6fc;
+      --amber: #a15c16;
+      --amber-bg: #fff7ed;
+      --amber-border: #fed7aa;
+      --red: #c2413d;
+      --red-bg: #fff1f0;
+      --red-border: #fecaca;
+      --pos: #0f766e;
+      --pos-bg: #e9f7f4;
+      --pos-border: #a7ded5;
+    }
+
+    html, body {
+      background:
+        radial-gradient(circle at 16% 0%, rgba(35, 100, 170, 0.10), transparent 30%),
+        linear-gradient(180deg, #f8fafb 0%, #edf2f6 100%);
+      letter-spacing: 0;
+    }
+
+    #topbar {
+      height: auto;
+      min-height: 58px;
+      padding: 10px 24px;
+      flex-wrap: wrap;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(14px);
+    }
+
+    .tb-logo {
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: none;
+    }
+
+    .tb-logo-img { width: 28px; height: 28px; }
+    .tb-logo .title-serif { font-size: 15px; }
+
+    #main {
+      padding: 14px;
+      gap: 14px;
+      background: rgba(255,255,255,0.36);
+    }
+
+    #console-pane,
+    #score-pane {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+    }
+
+    #console-pane { width: min(58%, 900px); }
+    #console-header,
+    #score-header {
+      min-height: 52px;
+      background: rgba(255,255,255,0.72);
+    }
+
+    .pane-title,
+    .metric-label,
+    .section-label,
+    .rs-type {
+      letter-spacing: 0.02em;
+      text-transform: none;
+      font-family: var(--sans);
+    }
+
+    .world-select,
+    .back-btn,
+    .run-btn,
+    .stop-btn,
+    .tool-call,
+    .tool-result,
+    .metric-card,
+    .agent-output-box {
+      border-radius: 7px;
+    }
+
+    .world-select,
+    .back-btn {
+      min-height: 34px;
+      background: #fff;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .world-select:focus,
+    .back-btn:focus,
+    .run-btn:focus,
+    .stop-btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(35, 100, 170, 0.14);
+    }
+
+    .run-btn {
+      min-height: 34px;
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .run-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .stop-btn {
+      min-height: 34px;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    #console-log,
+    #score-content {
+      background: var(--bg3);
+    }
+
+    .log-entry { padding: 1px 0; }
+    .log-msg { font-size: 12px; }
+    .tool-result { word-break: break-word; }
+
+    .metric-card { padding: 14px; }
+    .metric-value { font-family: var(--sans); font-size: 23px; }
+
+    @media (max-width: 900px) {
+      html, body { overflow: auto; }
+      #root { min-height: 100vh; height: auto; }
+      #main { flex-direction: column; overflow: visible; }
+      #console-pane,
+      #score-pane {
+        width: 100%;
+        min-height: 420px;
+      }
+    }
   </style>
 </head>
 <body>
