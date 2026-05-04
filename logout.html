@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signing out — Symbal Accounting Apex</title>
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <link rel="stylesheet" href="auth-ui.css" />
+</head>
+<body class="page-login">
+  <aside class="auth-brand-panel">
+    <div class="auth-brand-mark">
+      <img src="/assets/symbal-logo.png" alt="Symbal" />
+      <span>Symbal Accounting <span class="title-serif">Apex</span></span>
+    </div>
+    <div class="auth-brand-hero">
+      <h2>See you next time.</h2>
+      <p>You're being signed out securely. Hang tight while we clear your session.</p>
+    </div>
+    <div class="auth-brand-foot">© Symbal Accounting Apex</div>
+  </aside>
+  <main class="auth-form-panel">
+    <div class="auth-card" style="text-align:left">
+      <h1>Signing you out…</h1>
+      <p class="auth-sub">If nothing happens in a few seconds, <a href="/login.html">go to sign in</a>.</p>
+    </div>
+  </main>
+  <script>
+    (function () {
+      function wipe(store) {
+        try {
+          var keys = Object.keys(store);
+          for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            if (k.indexOf('sb-') === 0 || k.indexOf('supabase.auth') !== -1 || k === 'supabase.auth.token') {
+              store.removeItem(k);
+            }
+          }
+        } catch (e) {}
+      }
+      wipe(localStorage);
+      wipe(sessionStorage);
+      window.location.replace('/login.html');
+    })();
+  </script>
+</body>
+</html>

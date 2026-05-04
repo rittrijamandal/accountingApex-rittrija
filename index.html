@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<<<<<<< Updated upstream
   <title>Accounting APEX — World Viewer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -12,5 +13,37 @@
   <div id="root"></div>
   <script src="data.js"></script>
   <script src="app.js"></script>
+=======
+  <title>Symbal Accounting Apex</title>
+  <link rel="stylesheet" href="auth-ui.css" />
+</head>
+<body class="page-login">
+  <aside class="auth-brand-panel">
+    <div class="auth-brand-mark">
+      <img src="/assets/symbal-logo.png" alt="Symbal" />
+      <span>Symbal Accounting <span class="title-serif">Apex</span></span>
+    </div>
+    <div class="auth-brand-hero">
+      <h2>A sandbox for benchmarking RL agents on real accounting work.</h2>
+      <p>Build worlds, run agents, and grade their output against expert rubrics.</p>
+    </div>
+    <div class="auth-brand-foot">© Symbal Accounting Apex</div>
+  </aside>
+  <main class="auth-form-panel">
+    <div class="auth-card">
+      <header class="login-brand">
+        <img src="/assets/symbal-logo.png" alt="Symbal" class="login-brand-logo" width="40" height="40" />
+        <h1 class="login-brand-title">Symbal Accounting <span class="title-serif">Apex</span></h1>
+      </header>
+      <h1>Loading your workspace</h1>
+      <p class="auth-sub" id="status">Checking your session…</p>
+      <div id="fallback" hidden>
+        <p class="auth-sub" id="msg"></p>
+        <a href="login.html" class="btn btn-block">Go to sign in</a>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="js/index-redirect.js"></script>
+>>>>>>> Stashed changes
 </body>
 </html>

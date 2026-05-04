@@ -1,5 +1,9 @@
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ==========================================================================
+   Grader workspace — used by grader.html, viewer.html, and admin.html.
+   Builds on theme.css; only adds workspace-specific layout.
+   ========================================================================== */
 
+<<<<<<< Updated upstream
 :root {
   --bg: #0f0f0f;
   --bg2: #161616;
@@ -27,11 +31,26 @@
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; overflow: hidden; }
 
 /* ── LAYOUT ── */
+=======
+@import url('./theme.css');
+
+html, body {
+  height: 100%;
+  background: var(--surface-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
+  overflow: hidden;
+}
+
+/* ── Layout shell ── */
+>>>>>>> Stashed changes
 #root { display: flex; flex-direction: column; height: 100vh; position: relative; }
 #loading-overlay, #apikey-modal { position: fixed; }
 
-/* ── TOPBAR ── */
+/* ── Topbar ── */
 #topbar {
+<<<<<<< Updated upstream
   display: flex; align-items: center; gap: 12px;
   padding: 0 20px; height: 44px; min-height: 44px;
   background: var(--bg2); border-bottom: 1px solid var(--border);
@@ -45,12 +64,47 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .tb-meta { margin-left: auto; color: var(--text3); font-size: 11px; display: flex; gap: 16px; }
 .tb-meta span { display: flex; align-items: center; gap: 5px; }
 .tb-meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; }
+=======
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  height: 52px;
+  min-height: 52px;
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--border-default);
+  font-size: var(--fs-sm);
+  flex-shrink: 0;
+}
 
-/* ── MAIN ── */
+.tb-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  font-size: 14px;
+  text-transform: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tb-logo-img { display: block; width: 22px; height: 22px; object-fit: contain; }
+.tb-logo .title-serif { font-size: 14px; margin-left: 0; color: var(--text-secondary); font-weight: 400; }
+.tb-sep { color: var(--border-strong); font-weight: 300; }
+.tb-world { color: var(--text-secondary); font-size: 13px; font-weight: 500; }
+.tb-name { color: var(--text-primary); font-weight: 500; }
+.tb-meta { margin-left: auto; color: var(--text-tertiary); font-size: 12px; display: flex; gap: 12px; align-items: center; }
+.tb-meta span { display: inline-flex; align-items: center; gap: 6px; }
+.tb-meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); display: inline-block; }
+>>>>>>> Stashed changes
+
+/* ── Main row ── */
 #main { display: flex; flex: 1; overflow: hidden; }
 
-/* ── SIDEBAR ── */
+/* ── Sidebar (file list) ── */
 #sidebar {
+<<<<<<< Updated upstream
   width: 260px; min-width: 260px;
   border-right: 1px solid var(--border);
   background: var(--bg2);
@@ -62,6 +116,25 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .sb-files::-webkit-scrollbar-track { background: transparent; }
 .sb-files::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 .sb-footer { padding: 10px 14px; border-top: 1px solid var(--border); font-size: 10px; color: var(--text3); }
+=======
+  width: 250px;
+  min-width: 250px;
+  border-right: 1px solid var(--border-default);
+  background: var(--surface-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sb-section {
+  padding: 14px 16px 6px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.sb-files { flex: 1; overflow-y: auto; padding-bottom: 8px; }
+>>>>>>> Stashed changes
 
 /* ── TREE ── */
 .tree-folder {
@@ -101,32 +174,84 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* legacy file-row for compatibility */
 .file-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 5px 14px; cursor: pointer;
-  font-size: 11px; color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
   border-left: 2px solid transparent;
+<<<<<<< Updated upstream
   transition: all 0.1s;
   user-select: none;
 }
 .file-row:hover { background: var(--bg3); color: var(--text); }
 .file-row.active { background: var(--bg3); color: var(--text); border-left-color: var(--green); }
+=======
+  transition: background 100ms ease, color 100ms ease;
+  user-select: none;
+}
+.file-row:hover { background: var(--surface-hover); color: var(--text-primary); }
+.file-row.active { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); }
+.file-row.noise { color: var(--text-tertiary); font-style: italic; }
+.file-row.mislead { color: var(--warning); }
+>>>>>>> Stashed changes
 .file-row .fname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-row .ficon { font-size: 10px; min-width: 12px; color: var(--text3); }
+.file-row .ficon { font-size: 11px; min-width: 14px; color: var(--text-tertiary); }
+.file-row.active .ficon { color: var(--accent); }
 
+<<<<<<< Updated upstream
 /* ── CONTENT AREA ── */
 #content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
 /* ── TABS ── */
+=======
+.sb-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+/* ── Content area ── */
+#content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface-app);
+}
+
+/* ── Tabs (used by some pages) ── */
+>>>>>>> Stashed changes
 #tabbar {
-  display: flex; border-bottom: 1px solid var(--border);
-  background: var(--bg2); padding: 0 20px; gap: 2px;
+  display: flex;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--surface-card);
+  padding: 0 20px;
+  gap: 0;
 }
 .tab {
+<<<<<<< Updated upstream
   padding: 10px 16px; font-size: 11px; cursor: pointer;
   color: var(--text3); border-bottom: 2px solid transparent;
   transition: all 0.15s; letter-spacing: 0.03em;
+=======
+  padding: 12px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  border-bottom: 2px solid transparent;
+  transition: color 120ms ease;
+  letter-spacing: 0;
+  text-transform: none;
+>>>>>>> Stashed changes
   margin-bottom: -1px;
+  font-weight: 500;
 }
+<<<<<<< Updated upstream
 .tab:hover { color: var(--text2); }
 .tab.active { color: var(--green); border-bottom-color: var(--green); }
 
@@ -144,12 +269,39 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* ── TABLE ── */
 .data-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-.data-table th {
-  text-align: left; padding: 6px 10px;
-  color: var(--text3); font-weight: 500; font-size: 10px;
-  letter-spacing: 0.06em; text-transform: uppercase;
-  border-bottom: 1px solid var(--border); white-space: nowrap;
+=======
+.tab:hover { color: var(--text-secondary); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Panel ── */
+#panel { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* ── Tables in panel (data) ── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
 }
+>>>>>>> Stashed changes
+.data-table th {
+  text-align: left;
+  padding: 8px 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--surface-sunken);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+  color: var(--text-primary);
+}
+<<<<<<< Updated upstream
 .data-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .data-table tr:last-child td { border-bottom: none; }
 .data-table tr:hover td { background: var(--bg3); }
@@ -232,12 +384,24 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .badge-noise { background: var(--bg4);       color: var(--text3);  border: 1px solid var(--border); }
 
 /* ── RUBRIC ── */
+=======
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover td { background: var(--surface-hover); }
+
+.amount-neg { color: var(--danger); }
+.amount-pos { color: var(--success); }
+
+/* ── Rubric ── */
+>>>>>>> Stashed changes
 .rubric-item {
-  display: flex; gap: 14px; padding: 12px 0;
-  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-subtle);
   align-items: flex-start;
 }
 .rubric-item:last-child { border-bottom: none; }
+<<<<<<< Updated upstream
 .rubric-n { min-width: 22px; font-size: 11px; color: var(--text3); padding-top: 1px; }
 .rubric-body { flex: 1; }
 .rubric-text { font-size: 12px; line-height: 1.65; color: var(--text); margin-bottom: 6px; }
@@ -245,17 +409,51 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .rtype-det { background: var(--green-bg); color: var(--green); border: 1px solid #1a3d28; }
 .rtype-llm { background: var(--blue-bg);  color: var(--blue);  border: 1px solid #152240; }
 .rtype-neg { background: var(--red-bg);   color: var(--red);   border: 1px solid #3d1515; }
+=======
+.rubric-n { min-width: 24px; font-size: 12px; color: var(--text-tertiary); padding-top: 1px; font-family: var(--font-mono); }
+.rubric-body { flex: 1; }
+.rubric-text { font-size: 14px; line-height: 1.6; color: var(--text-primary); margin-bottom: 8px; }
+>>>>>>> Stashed changes
 
-/* ── TASK BOX ── */
+.rtype {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  font-family: var(--font-sans);
+}
+.rtype-det { background: var(--success-soft); color: var(--success); border: 1px solid var(--success-border); }
+.rtype-llm { background: var(--info-soft); color: var(--info); border: 1px solid var(--info-border); }
+.rtype-neg { background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger-border); }
+
+/* ── Task box (the prompt card) ── */
 .task-box {
+<<<<<<< Updated upstream
   background: var(--bg3); border: 1px solid var(--border2);
   border-radius: 4px; padding: 16px; font-size: 12px;
   line-height: 1.75; color: var(--text2); margin-bottom: 20px;
 }
+=======
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  padding: 16px 18px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+.task-box strong { color: var(--text-primary); font-weight: 600; }
+>>>>>>> Stashed changes
 
-/* ── METRICS ROW ── */
-.metrics-row { display: flex; gap: 10px; margin-bottom: 20px; }
+/* ── Metric cards ── */
+.metrics-row { display: flex; gap: 12px; margin-bottom: 24px; }
 .metric-card {
+<<<<<<< Updated upstream
   flex: 1; background: var(--bg3); border: 1px solid var(--border);
   border-radius: 4px; padding: 12px 14px;
 }
@@ -275,21 +473,87 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .meta-card {
   background: var(--bg3); border: 1px solid var(--border);
   border-radius: 4px; padding: 12px 14px;
+=======
+  flex: 1;
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
 }
-.meta-card .mc-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
-.meta-card .mc-val { font-size: 12px; color: var(--text); }
+.metric-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.metric-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+}
+.metric-value.green { color: var(--success); }
+.metric-value.amber { color: var(--warning); }
 
-/* ── ARCHETYPE SELECTOR ── */
-#archetype-bar {
-  display: flex; align-items: center; gap: 10px;
-  padding: 0 20px; height: 44px; min-height: 44px;
-  background: var(--bg2); border-bottom: 1px solid var(--border);
-  font-size: 11px; overflow-x: auto;
+/* ── File preview key/value pairs ── */
+.file-preview { display: flex; flex-direction: column; gap: 10px; }
+.kv { display: flex; gap: 0; align-items: baseline; }
+.kk { color: var(--text-tertiary); min-width: 200px; font-size: 13px; }
+.vv { color: var(--text-primary); font-size: 13px; }
+
+/* ── Noise view ── */
+.noise-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 280px;
+  gap: 10px;
+  color: var(--text-tertiary);
+  text-align: center;
 }
-#archetype-bar::-webkit-scrollbar { height: 3px; }
-#archetype-bar::-webkit-scrollbar-thumb { background: var(--border2); }
-.arch-label { color: var(--text3); white-space: nowrap; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+.noise-view .noise-icon { font-size: 36px; margin-bottom: 8px; opacity: 0.55; }
+.noise-view p { font-size: 13px; line-height: 1.6; }
+
+/* ── Meta tags ── */
+.meta-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+
+/* ── World meta grid ── */
+.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.meta-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+>>>>>>> Stashed changes
+}
+.meta-card .mc-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.meta-card .mc-val { font-size: 14px; color: var(--text-primary); font-weight: 500; }
+
+/* ── Archetype selector / generation toolbar ── */
+#archetype-bar, .archbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.archbar-left { display: flex; gap: 8px; flex-wrap: wrap; }
+.arch-label { color: var(--text-tertiary); white-space: nowrap; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; }
+
 .arch-btn {
+<<<<<<< Updated upstream
   padding: 4px 10px; border: 1px solid var(--border2);
   border-radius: 3px; background: transparent; color: var(--text2);
   font-family: var(--mono); font-size: 10px; cursor: pointer;
@@ -308,15 +572,52 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 }
 .gen-btn:hover { background: #132e1e; }
 .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+=======
+  padding: 6px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 120ms ease;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+.arch-btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.arch-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.arch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+>>>>>>> Stashed changes
 
-/* ── LOADING STATE ── */
+/* ── Loading overlay ── */
 #loading-overlay {
+<<<<<<< Updated upstream
   display: none; position: absolute; inset: 0;
   background: var(--bg); z-index: 10;
   flex-direction: column; align-items: center; justify-content: center;
   gap: 20px;
+=======
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(247, 248, 250, 0.92);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+>>>>>>> Stashed changes
 }
+[data-theme='dark'] #loading-overlay { background: rgba(11, 12, 15, 0.92); }
 #loading-overlay.visible { display: flex; }
+<<<<<<< Updated upstream
 .loading-title { font-size: 13px; color: var(--text2); letter-spacing: 0.04em; }
 .loading-sub   { font-size: 11px; color: var(--text3); }
 .loading-bar-wrap { width: 280px; height: 2px; background: var(--border); border-radius: 1px; overflow: hidden; }
@@ -329,20 +630,89 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   display: none; position: absolute; inset: 0;
   background: rgba(0,0,0,0.7); z-index: 20;
   align-items: center; justify-content: center;
+=======
+.loading-title { font-size: 14px; color: var(--text-primary); font-weight: 500; }
+.loading-sub { font-size: 12px; color: var(--text-tertiary); }
+.loading-bar-wrap {
+  width: 280px;
+  height: 4px;
+  background: var(--border-default);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+.loading-bar { height: 100%; background: var(--accent); border-radius: var(--r-pill); width: 0%; transition: width 0.4s ease; }
+.loading-steps { font-size: 11px; color: var(--text-tertiary); text-align: center; line-height: 1.7; }
+.loading-steps span.done { color: var(--accent); font-weight: 600; }
+
+/* ── API key modal ── */
+#apikey-modal {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 20;
+  align-items: center;
+  justify-content: center;
+>>>>>>> Stashed changes
 }
 #apikey-modal.visible { display: flex; }
+
 .modal-box {
+<<<<<<< Updated upstream
   background: var(--bg2); border: 1px solid var(--border2);
   border-radius: 6px; padding: 28px 32px; width: 420px;
+=======
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-lg);
+  padding: 28px 30px;
+  width: 440px;
+  max-width: 92vw;
+  box-shadow: var(--shadow-lg);
 }
-.modal-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-.modal-sub { font-size: 11px; color: var(--text3); margin-bottom: 18px; line-height: 1.6; }
+.modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+.modal-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  line-height: 1.55;
+>>>>>>> Stashed changes
+}
 .modal-input {
+<<<<<<< Updated upstream
   width: 100%; background: var(--bg3); border: 1px solid var(--border2);
   border-radius: 3px; padding: 8px 10px; color: var(--text);
   font-family: var(--mono); font-size: 11px; margin-bottom: 12px;
+=======
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  margin-bottom: 12px;
+>>>>>>> Stashed changes
   outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
 }
+.modal-input:focus { border-color: var(--border-focus); box-shadow: var(--shadow-focus); }
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+<<<<<<< Updated upstream
 .modal-input:focus { border-color: var(--green); }
 .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .modal-btn { padding: 6px 16px; border-radius: 3px; font-family: var(--mono); font-size: 11px; cursor: pointer; transition: all 0.15s; }
@@ -350,9 +720,33 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .modal-btn-cancel:hover { border-color: var(--text2); }
 .modal-btn-confirm { background: var(--green-bg); border: 1px solid var(--green); color: var(--green); font-weight: 600; }
 .modal-btn-confirm:hover { background: #132e1e; }
+=======
+.modal-btn {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--r-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  border: 1px solid transparent;
+  transition: all 120ms ease;
+}
+.modal-btn-cancel {
+  background: var(--surface-card);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+}
+.modal-btn-cancel:hover { background: var(--surface-hover); color: var(--text-primary); border-color: var(--border-strong); }
+.modal-btn-confirm { background: var(--accent); color: #fff; border-color: var(--accent); }
+.modal-btn-confirm:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+>>>>>>> Stashed changes
 
-/* ── ERROR BANNER ── */
+/* ── Error banner ── */
 .error-banner {
+<<<<<<< Updated upstream
   background: var(--red-bg); border: 1px solid #3d1515;
   border-radius: 4px; padding: 12px 14px; margin-bottom: 16px;
   font-size: 11px; color: var(--red); line-height: 1.6;
@@ -360,3 +754,25 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* ── SCROLLBAR GLOBAL ── */
 * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+=======
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--danger);
+  line-height: 1.55;
+}
+
+/* ── Fileworld file types (icon coloring + active row tinting) ── */
+.type-policy .ficon { color: var(--info); }
+.type-invoice .ficon { color: var(--warning); }
+.type-ledger .ficon { color: var(--success); }
+.type-profile .ficon { color: #7c3aed; }
+.type-policy.active { border-left-color: var(--info); background: var(--info-soft) !important; }
+.type-invoice.active { border-left-color: var(--warning); background: var(--warning-soft) !important; }
+.type-ledger.active { border-left-color: var(--success); background: var(--success-soft) !important; }
+.type-profile.active { border-left-color: #7c3aed; background: #f5f3ff !important; }
+[data-theme='dark'] .type-profile.active { background: #1a0f2c !important; }
+>>>>>>> Stashed changes

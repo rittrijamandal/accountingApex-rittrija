@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in — Symbal Accounting Apex</title>
+  <link rel="stylesheet" href="auth-ui.css" />
+</head>
+<body class="page-login">
+  <aside class="auth-brand-panel">
+    <div class="auth-brand-mark">
+      <img src="/assets/symbal-logo.png" alt="Symbal" />
+      <span>Symbal Accounting <span class="title-serif">Apex</span></span>
+    </div>
+    <div class="auth-brand-hero">
+      <h2>A sandbox for benchmarking RL agents on real accounting work.</h2>
+      <p>Build worlds, run agents, and grade their output against expert rubrics.</p>
+      <div class="auth-brand-meta">
+        <div class="auth-brand-meta-item"><span><strong>Experts</strong> author multi-step accounting worlds with rubrics.</span></div>
+        <div class="auth-brand-meta-item"><span><strong>Graders</strong> open published worlds and run agents on them.</span></div>
+        <div class="auth-brand-meta-item"><span><strong>Reviewers</strong> score peer-built worlds before they ship.</span></div>
+      </div>
+    </div>
+    <div class="auth-brand-foot">© Symbal Accounting Apex</div>
+  </aside>
+  <main class="auth-form-panel">
+    <div class="auth-card">
+      <header class="login-brand">
+        <img src="/assets/symbal-logo.png" alt="Symbal" class="login-brand-logo" width="40" height="40" />
+        <h1 class="login-brand-title">Symbal Accounting <span class="title-serif">Apex</span></h1>
+      </header>
+      <h1>Welcome back</h1>
+      <p class="auth-sub">Sign in to your account to continue.</p>
+      <div class="err" id="err"></div>
+      <form id="form">
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required />
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required />
+        </div>
+        <button type="submit" class="btn btn-block" id="submit">Sign in</button>
+      </form>
+      <div class="auth-footer">
+        Don't have an account? <a href="signup.html">Create one</a>.
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import { getSupabase, fetchMyProfile, roleHomePath, getSession } from './js/auth-core.js';
+
+    const errEl = document.getElementById('err');
+    const form = document.getElementById('form');
+    const submit = document.getElementById('submit');
+
+    function showErr(msg) {
+      errEl.textContent = msg;
+      errEl.classList.add('visible');
+    }
+
+    (async () => {
+      try {
+        const existing = await getSession();
+        if (existing) {
+          const profile = await fetchMyProfile();
+          if (profile) {
+            window.location.replace(roleHomePath(profile.role));
+            return;
+          }
+        }
+      } catch (e) {
+        showErr(e.message || String(e));
+      }
+    })();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errEl.classList.remove('visible');
+      submit.disabled = true;
+      try {
+        const sb = await getSupabase();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        const profile = await fetchMyProfile();
+        if (!profile) throw new Error('Profile missing. Run the SQL migration and try again.');
+        window.location.replace(roleHomePath(profile.role));
+      } catch (err) {
+        showErr(err.message || 'Sign in failed');
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

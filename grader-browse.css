@@ -1,0 +1,612 @@
+/* ==========================================================================
+   Grader: file browse, document viewer, drawer, lobby, world dropdown.
+   Layered on top of styles.css + theme.css.
+   ========================================================================== */
+
+/* ── Browse toolbar ── */
+.grader-browse-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.grader-browse-toolbar .grader-browse-spacer { flex: 1; }
+
+.grader-view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border-default);
+  background: var(--surface-card);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.grader-view-toggle button {
+  border: 0;
+  border-right: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  font-family: var(--font-sans);
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.grader-view-toggle button:last-child { border-right: 0; }
+.grader-view-toggle button:hover { color: var(--text-primary); background: var(--surface-hover); }
+.grader-view-toggle button.active { background: var(--accent-soft); color: var(--accent); }
+
+.grader-browse-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-default);
+  background: var(--surface-card);
+  border-radius: var(--r-md);
+}
+table.grader-browse-table tbody tr.grader-browse-row { cursor: pointer; }
+table.grader-browse-table tbody tr.grader-browse-row:hover td { background: var(--surface-hover); }
+
+.grader-browse-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+.grader-file-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.grader-file-tile {
+  aspect-ratio: 1;
+  border: 1px solid var(--border-default);
+  background: var(--surface-card);
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: var(--r-md);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.grader-file-tile:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.grader-file-tile-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+.grader-file-tile-type {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+}
+.grader-file-tile-tags { margin-top: auto; }
+
+/* ── Tab sidebar (workspace nav) ── */
+.grader-tab-sidebar {
+  width: 200px;
+  min-width: 180px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-default);
+  background: var(--surface-card);
+  padding: 14px 0 16px;
+}
+
+.grader-tab-sidebar .grader-tabnav-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding: 0 16px 12px;
+  font-family: var(--font-sans);
+}
+
+.grader-tab-sidebar .tab {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-bottom: none;
+  margin-bottom: 0;
+  padding: 10px 16px;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
+}
+
+.grader-tab-sidebar .tab:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+.grader-tab-sidebar .tab.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+  border-bottom-color: transparent;
+}
+
+/* Hide file tree during list/grid browse OR when a non-file-view tab is active */
+#main.grader-browse-mode #sidebar,
+#main.grader-non-file-tab #sidebar { display: none; }
+
+#main.grader-browse-mode #content,
+#main.grader-non-file-tab #content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Document viewer ── */
+.grader-doc-viewer {
+  position: relative;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.grader-doc-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.grader-doc-title {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+}
+
+.grader-doc-body {
+  flex: 1;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+/* ── Drawer (file details) ── */
+.grader-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.42);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 80;
+}
+.grader-drawer-backdrop.visible { opacity: 1; pointer-events: auto; }
+
+.grader-drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: min(420px, 100vw);
+  background: var(--surface-card);
+  border-left: 1px solid var(--border-default);
+  box-shadow: var(--shadow-lg);
+  transform: translateX(100%);
+  transition: transform 0.22s cubic-bezier(.32,.72,0,1);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+}
+.grader-drawer-panel.open { transform: translateX(0); }
+
+.grader-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-primary);
+}
+
+.grader-drawer-body { padding: 16px; overflow-y: auto; flex: 1; }
+.grader-drawer-sec { margin-bottom: 16px; }
+.grader-drawer-k {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+.grader-drawer-v { font-size: 13px; color: var(--text-primary); line-height: 1.5; }
+
+.grader-drawer-warn {
+  background: var(--warning-soft);
+  border: 1px solid var(--warning-border);
+  color: var(--warning);
+  padding: 8px 10px;
+  font-size: 12px;
+  margin-bottom: 6px;
+  border-radius: var(--r-sm);
+}
+
+.grader-drawer-pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.55;
+  max-height: 42vh;
+  overflow: auto;
+  border: 1px solid var(--border-default);
+  padding: 10px;
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+  border-radius: var(--r-sm);
+}
+
+/* ── Lobby (world picker) ── */
+.grader-lobby {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface-app);
+}
+
+.grader-lobby-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px;
+  height: 52px;
+  min-height: 52px;
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--border-default);
+  font-size: 13px;
+}
+
+.grader-lobby-topbar .gen-btn { margin-left: 0; }
+.grader-lobby-spacer { flex: 1; }
+
+.grader-lobby-inner {
+  flex: 1;
+  overflow-y: auto;
+  padding: 40px 32px 56px;
+  max-width: 1180px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.grader-lobby-h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.grader-lobby-sub {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  max-width: 60ch;
+  line-height: 1.55;
+}
+
+.grader-lobby-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.grader-world-card {
+  border: 1px solid var(--border-default);
+  background: var(--surface-card);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: var(--r-lg);
+  min-height: 220px;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+  box-shadow: var(--shadow-xs);
+}
+.grader-world-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.grader-world-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.grader-world-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.grader-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  font-family: var(--font-sans);
+  padding: 2px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+}
+
+.grader-pill-arch {
+  border-color: var(--info-border);
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+.grader-pill-tier {
+  border-color: var(--warning-border);
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.grader-world-card-desc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  flex: 1;
+  margin: 0;
+}
+
+.grader-enter-btn {
+  width: 100%;
+  margin-left: 0;
+  margin-top: 4px;
+  height: 36px;
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 500;
+}
+.grader-enter-btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
+
+/* ── Workspace shell ── */
+.grader-workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.grader-workspace #main { flex: 1; min-height: 0; }
+
+/* ── Header world context switcher ── */
+.grader-dd-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.grader-breadcrumb-dd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 4px 8px;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  border-radius: var(--r-md);
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.grader-breadcrumb-dd:hover {
+  border-color: var(--border-default);
+  background: var(--surface-hover);
+}
+
+.grader-dd-label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.grader-dd-caret {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  margin-left: 2px;
+}
+
+.grader-world-dd-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 280px;
+  max-width: min(380px, 92vw);
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-md);
+  z-index: 120;
+  border-radius: var(--r-md);
+  padding: 4px;
+}
+.grader-world-dd-menu.open { display: block; }
+
+.grader-dd-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+.grader-dd-item:hover { background: var(--surface-hover); color: var(--text-primary); }
+.grader-dd-item.is-active { font-weight: 600; color: var(--accent); background: var(--accent-soft); }
+
+.grader-dd-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 4px 0;
+}
+
+.grader-dd-item.grader-dd-return {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-secondary);
+}
+.grader-dd-item.grader-dd-return:hover { color: var(--text-primary); }
+
+/* ── Fileworld file content renderers ── */
+.fw-doc {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  padding: 22px 26px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 880px;
+  box-shadow: var(--shadow-xs);
+}
+
+.fw-doc-type {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  margin-bottom: 14px;
+  font-family: var(--font-sans);
+}
+
+.fw-type-policy { background: var(--info-soft); color: var(--info); border: 1px solid var(--info-border); }
+.fw-type-invoice { background: var(--warning-soft); color: var(--warning); border: 1px solid var(--warning-border); }
+.fw-type-ledger { background: var(--success-soft); color: var(--success); border: 1px solid var(--success-border); }
+.fw-type-profile { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+[data-theme='dark'] .fw-type-profile { background: #1a0f2c; color: #c4b5fd; border-color: #2e1065; }
+
+.fw-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-default);
+  background: var(--surface-card);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-xs);
+  max-width: 100%;
+}
+
+/* ── Excel-style CSV viewer ── */
+.xl-wrap {
+  overflow: auto;
+  max-height: 640px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  background: var(--surface-card);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 12px;
+}
+.xl-table {
+  border-collapse: collapse;
+  min-width: 100%;
+  white-space: nowrap;
+}
+.xl-col-header th {
+  background: var(--surface-sunken);
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  padding: 4px 8px;
+  border-right: 1px solid var(--border-default);
+  border-bottom: 2px solid var(--border-strong);
+  letter-spacing: 0;
+  text-transform: none;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+.xl-field-header { position: sticky; top: 22px; z-index: 2; }
+.xl-field-th {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-right: 1px solid var(--border-default);
+  border-bottom: 2px solid var(--accent);
+  text-align: left;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+.xl-row-num {
+  background: var(--surface-sunken);
+  color: var(--text-tertiary);
+  font-size: 11px;
+  text-align: center;
+  padding: 3px 8px;
+  border-right: 2px solid var(--border-default);
+  border-bottom: 1px solid var(--border-subtle);
+  min-width: 36px;
+  user-select: none;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+.xl-col-header .xl-row-num { z-index: 4; }
+.xl-field-header .xl-row-num { z-index: 3; }
+.xl-cell {
+  padding: 4px 10px;
+  border-right: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  min-width: 80px;
+  background: var(--surface-card);
+}
+.xl-row:nth-child(even) .xl-cell { background: var(--surface-sunken); }
+.xl-row:hover .xl-cell { background: var(--accent-soft); }
+.xl-neg { color: var(--danger); }
+.xl-pos { color: var(--success); }

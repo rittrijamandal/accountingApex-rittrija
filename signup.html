@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign up — Symbal Accounting Apex</title>
+  <link rel="stylesheet" href="auth-ui.css" />
+</head>
+<body class="page-login">
+  <aside class="auth-brand-panel">
+    <div class="auth-brand-mark">
+      <img src="/assets/symbal-logo.png" alt="Symbal" />
+      <span>Symbal Accounting <span class="title-serif">Apex</span></span>
+    </div>
+    <div class="auth-brand-hero">
+      <h2>Get started in under a minute.</h2>
+      <p>New accounts start with grader access. An admin can promote you to expert when you're ready to author worlds.</p>
+      <div class="auth-brand-meta">
+        <div class="auth-brand-meta-item"><span><strong>Open published worlds</strong> and run agents through them out of the box.</span></div>
+        <div class="auth-brand-meta-item"><span><strong>Test prompts</strong> against your own API key — keys never leave your browser.</span></div>
+        <div class="auth-brand-meta-item"><span><strong>Score and review</strong> peer worlds once you're promoted to expert.</span></div>
+      </div>
+    </div>
+    <div class="auth-brand-foot">© Symbal Accounting Apex</div>
+  </aside>
+  <main class="auth-form-panel">
+    <div class="auth-card">
+      <header class="login-brand">
+        <img src="/assets/symbal-logo.png" alt="Symbal" class="login-brand-logo" width="40" height="40" />
+        <h1 class="login-brand-title">Symbal Accounting <span class="title-serif">Apex</span></h1>
+      </header>
+      <h1>Create your account</h1>
+      <p class="auth-sub">Default role is grader. An admin can promote you to expert.</p>
+      <div class="err" id="err"></div>
+      <form id="form">
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required />
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="new-password" placeholder="At least 6 characters" minlength="6" required />
+        </div>
+        <button type="submit" class="btn btn-block" id="submit">Create account</button>
+      </form>
+      <div class="auth-footer">
+        Already have an account? <a href="login.html">Sign in</a>.
+      </div>
+    </div>
+  </main>
+  <script type="module">
+    import { getSupabase, fetchMyProfile, roleHomePath, getSession } from './js/auth-core.js';
+
+    const errEl = document.getElementById('err');
+    const form = document.getElementById('form');
+    const submit = document.getElementById('submit');
+
+    function showErr(msg) {
+      errEl.textContent = msg;
+      errEl.classList.add('visible');
+    }
+
+    (async () => {
+      try {
+        const existing = await getSession();
+        if (existing) {
+          const profile = await fetchMyProfile();
+          if (profile) {
+            window.location.replace(roleHomePath(profile.role));
+            return;
+          }
+        }
+      } catch (e) {
+        showErr(e.message || String(e));
+      }
+    })();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errEl.classList.remove('visible');
+      submit.disabled = true;
+      try {
+        const sb = await getSupabase();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const { data, error } = await sb.auth.signUp({ email, password });
+        if (error) throw error;
+        if (data.session) {
+          const profile = await fetchMyProfile();
+          if (!profile) throw new Error('Profile not created. Apply the database migration in Supabase.');
+          window.location.replace(roleHomePath(profile.role));
+          return;
+        }
+        showErr('Check your email to confirm, then sign in.');
+      } catch (err) {
+        showErr(err.message || 'Sign up failed');
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

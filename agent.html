@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<<<<<<< Updated upstream
   <title>APEX Agent Runner</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -20,12 +21,19 @@
       --mono: 'IBM Plex Mono', monospace;
     }
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 12px; overflow: hidden; }
+=======
+  <title>Agent runner — Symbal Accounting Apex</title>
+  <link rel="stylesheet" href="theme.css" />
+  <style>
+    html, body { height: 100%; overflow: hidden; background: var(--surface-app); }
+>>>>>>> Stashed changes
 
     #root { display: flex; flex-direction: column; height: 100vh; }
 
     /* TOPBAR */
     #topbar {
       display: flex; align-items: center; gap: 12px;
+<<<<<<< Updated upstream
       padding: 0 20px; height: 44px; min-height: 44px;
       background: var(--bg2); border-bottom: 1px solid var(--border);
       font-size: 12px; flex-shrink: 0;
@@ -40,12 +48,48 @@
       font-family: var(--mono); font-size: 11px; cursor: pointer;
     }
     .back-btn:hover { border-color: var(--text2); color: var(--text); }
+=======
+      padding: 0 20px; height: 52px; min-height: 52px; flex-shrink: 0;
+      background: var(--surface-card); border-bottom: 1px solid var(--border-default);
+      font-size: var(--fs-sm);
+    }
+    .tb-logo {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-weight: 600; color: var(--text-primary);
+      font-size: 14px; letter-spacing: -0.01em;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .tb-logo-img { display: block; width: 22px; height: 22px; object-fit: contain; }
+    .tb-logo .title-serif { font-size: 14px; margin-left: 0; color: var(--text-secondary); font-weight: 400; }
+    .tb-sep { color: var(--border-strong); font-weight: 300; }
+
+    .back-btn {
+      margin-left: auto;
+      height: 30px; padding: 0 12px;
+      border: 1px solid var(--border-default); border-radius: var(--r-md);
+      background: var(--surface-card); color: var(--text-secondary);
+      font: 500 var(--fs-xs) / 1 var(--font-sans);
+      cursor: pointer; transition: all 120ms ease;
+    }
+    .back-btn:hover { border-color: var(--border-strong); color: var(--text-primary); background: var(--surface-hover); }
+
+    .world-select {
+      max-width: 240px; height: 30px;
+      padding: 0 30px 0 10px;
+      border: 1px solid var(--border-default); border-radius: var(--r-md);
+      background-color: var(--surface-card); color: var(--text-primary);
+      font: 500 var(--fs-xs) / 1 var(--font-sans);
+      cursor: pointer;
+    }
+    .world-select:hover { border-color: var(--border-strong); }
+>>>>>>> Stashed changes
 
     /* MAIN SPLIT */
     #main { display: flex; flex: 1; overflow: hidden; }
 
     /* LEFT: AGENT CONSOLE */
     #console-pane {
+<<<<<<< Updated upstream
       width: 56%; border-right: 1px solid var(--border);
       display: flex; flex-direction: column; overflow: hidden;
     }
@@ -53,9 +97,25 @@
       display: flex; align-items: center; gap: 10px;
       padding: 10px 16px; border-bottom: 1px solid var(--border);
       background: var(--bg2); flex-shrink: 0;
+=======
+      width: 55%; border-right: 1px solid var(--border-default);
+      display: flex; flex-direction: column; overflow: hidden;
+      background: var(--surface-card);
+    }
+    #console-header {
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+      padding: 12px 16px; border-bottom: 1px solid var(--border-subtle);
+      background: var(--surface-sunken);
+    }
+    .pane-title {
+      font-size: 11px; color: var(--text-tertiary);
+      letter-spacing: 0.04em; text-transform: uppercase; flex: 1;
+      font-family: var(--font-sans); font-weight: 500;
+>>>>>>> Stashed changes
     }
     .pane-title { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; flex: 1; }
     .run-btn {
+<<<<<<< Updated upstream
       padding: 5px 16px; border: 1px solid var(--green);
       border-radius: 3px; background: var(--green-bg); color: var(--green);
       font-family: var(--mono); font-size: 11px; font-weight: 600;
@@ -87,9 +147,56 @@
       background: var(--amber-bg); border: 1px solid #3d2e00;
       border-radius: 3px; padding: 5px 10px; margin: 2px 0;
       font-size: 10px; color: var(--amber);
+=======
+      height: 30px; padding: 0 14px;
+      border: 1px solid var(--accent); border-radius: var(--r-md);
+      background: var(--accent); color: #fff;
+      font: 500 var(--fs-xs) / 1 var(--font-sans);
+      cursor: pointer; transition: all 120ms ease;
+    }
+    .run-btn:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .run-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .stop-btn {
+      height: 30px; padding: 0 14px;
+      border: 1px solid var(--danger-border); border-radius: var(--r-md);
+      background: var(--surface-card); color: var(--danger);
+      font: 500 var(--fs-xs) / 1 var(--font-sans);
+      cursor: pointer; display: none;
+    }
+    .stop-btn:hover:not(:disabled) { background: var(--danger-soft); }
+
+    .step-counter { font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono); }
+
+    #console-log {
+      flex: 1; overflow-y: auto; padding: 14px 18px;
+      display: flex; flex-direction: column; gap: 4px;
+      background: var(--surface-sunken);
+    }
+
+    .log-entry { display: flex; gap: 10px; align-items: flex-start; line-height: 1.6; }
+    .log-ts {
+      color: var(--text-tertiary); font-size: 11px;
+      min-width: 56px; padding-top: 1px; flex-shrink: 0;
+      font-family: var(--font-mono);
+    }
+    .log-msg { flex: 1; font-size: 12px; font-family: var(--font-mono); }
+    .log-system  { color: var(--text-tertiary); font-style: italic; }
+    .log-think   { color: var(--info); }
+    .log-tool    { color: var(--warning); }
+    .log-result  { color: var(--text-secondary); }
+    .log-output  { color: var(--success); font-weight: 500; }
+    .log-error   { color: var(--danger); }
+
+    .tool-call {
+      background: var(--warning-soft); border: 1px solid var(--warning-border);
+      border-radius: var(--r-sm); padding: 8px 10px; margin: 2px 0;
+      font-size: 11px; color: var(--warning); font-family: var(--font-mono);
+>>>>>>> Stashed changes
     }
     .tool-call.write { background: var(--green-bg); border-color: #1a3d28; color: var(--green); }
     .tool-result {
+<<<<<<< Updated upstream
       background: var(--bg3); border: 1px solid var(--border);
       border-radius: 3px; padding: 5px 10px; margin: 2px 0;
       font-size: 10px; color: var(--text2); max-height: 120px;
@@ -188,10 +295,30 @@
     .fv-data-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); color: var(--text2); }
     .fv-data-table tr:last-child td { border-bottom: none; }
     .fv-data-table tr:hover td { background: var(--bg3); }
+=======
+      background: var(--surface-card); border: 1px solid var(--border-default);
+      border-radius: var(--r-sm); padding: 8px 10px; margin: 2px 0;
+      font-size: 11px; color: var(--text-secondary); max-height: 140px;
+      overflow-y: auto; white-space: pre-wrap; word-break: break-all;
+      font-family: var(--font-mono);
+    }
+
+    #score-pane {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      background: var(--surface-card);
+    }
+    #score-header {
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+      padding: 12px 16px; border-bottom: 1px solid var(--border-subtle);
+      background: var(--surface-sunken);
+    }
+    #score-content { flex: 1; overflow-y: auto; padding: 18px; background: var(--surface-sunken); }
+>>>>>>> Stashed changes
 
     .score-placeholder {
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; height: 100%; gap: 10px;
+<<<<<<< Updated upstream
       color: var(--text3); text-align: center;
     }
 
@@ -205,14 +332,39 @@
     .mv-green { color: var(--green); }
     .mv-amber { color: var(--amber); }
     .mv-red   { color: var(--red); }
+=======
+      color: var(--text-tertiary); text-align: center;
+    }
+    .score-placeholder .big { font-size: 36px; margin-bottom: 8px; color: var(--accent); opacity: 0.4; }
+
+    .metrics-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .metric-card {
+      flex: 1; min-width: 110px;
+      background: var(--surface-card); border: 1px solid var(--border-default);
+      border-radius: var(--r-md); padding: 12px 14px;
+    }
+    .metric-label {
+      font-size: 11px; color: var(--text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .metric-value {
+      font-size: 22px; font-weight: 600; color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+    .mv-green { color: var(--success); }
+    .mv-amber { color: var(--warning); }
+    .mv-red   { color: var(--danger); }
+>>>>>>> Stashed changes
 
     .rubric-score-item {
-      display: flex; gap: 10px; padding: 10px 0;
-      border-bottom: 1px solid var(--border); align-items: flex-start;
+      display: flex; gap: 12px; padding: 12px 0;
+      border-bottom: 1px solid var(--border-subtle); align-items: flex-start;
     }
     .rubric-score-item:last-child { border-bottom: none; }
-    .rs-icon { font-size: 13px; min-width: 18px; padding-top: 1px; }
+    .rs-icon { font-size: 14px; min-width: 18px; padding-top: 1px; }
     .rs-body { flex: 1; }
+<<<<<<< Updated upstream
     .rs-text { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 4px; }
     .rs-reasoning { font-size: 10px; color: var(--text3); line-height: 1.5; font-style: italic; }
     .rs-type { font-size: 9px; padding: 1px 5px; border-radius: 2px; font-weight: 600; }
@@ -262,25 +414,69 @@
       background: var(--green-bg); border: 1px solid #1a3d28;
       border-radius: 4px; padding: 10px 12px; margin-bottom: 16px;
       font-size: 10px; color: var(--green); line-height: 1.8;
+=======
+    .rs-text { font-size: 13px; color: var(--text-primary); line-height: 1.5; margin-bottom: 4px; }
+    .rs-reasoning { font-size: 12px; color: var(--text-tertiary); line-height: 1.5; }
+    .rs-type {
+      display: inline-flex; align-items: center;
+      font-size: 11px; padding: 2px 8px;
+      border-radius: var(--r-pill); font-weight: 500;
+      letter-spacing: 0; text-transform: none;
+    }
+    .rst-det { background: var(--success-soft); color: var(--success); border: 1px solid var(--success-border); }
+    .rst-llm { background: var(--info-soft); color: var(--info); border: 1px solid var(--info-border); }
+    .rst-neg { background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger-border); }
+
+    .section-label {
+      font-size: 11px; color: var(--text-tertiary);
+      letter-spacing: 0.04em; text-transform: uppercase;
+      margin-bottom: 12px; font-weight: 500;
+    }
+
+    .agent-output-box {
+      background: var(--surface-card); border: 1px solid var(--border-default);
+      border-radius: var(--r-md); padding: 14px; font-size: 12px;
+      line-height: 1.7; color: var(--text-secondary); margin-bottom: 16px;
+      max-height: 300px; overflow-y: auto; white-space: pre-wrap;
+      font-family: var(--font-mono);
+>>>>>>> Stashed changes
     }
   </style>
 </head>
 <body>
 <div id="root">
   <div id="topbar">
+<<<<<<< Updated upstream
     <span class="tb-logo">APEX<span>.</span>INV</span>
     <span class="tb-sep">/</span>
     <span style="color:var(--text2)">Agent Runner</span>
     <span class="tb-sep">·</span>
     <span id="world-name" style="color:var(--text);font-size:11px">Meridian Systems</span>
     <button class="back-btn" onclick="window.location.href='/'">← World Viewer</button>
+=======
+    <span class="tb-logo">
+      <img src="/assets/symbal-logo.png" alt="" class="tb-logo-img" width="22" height="22" />
+      Symbal Accounting <span class="title-serif">Apex</span>
+    </span>
+    <span class="tb-sep">/</span>
+    <span style="color:var(--text-secondary);font-weight:500;white-space:nowrap">Agent runner</span>
+    <span class="tb-sep">·</span>
+    <select id="world-select" class="world-select" onchange="selectWorld(this.value)" aria-label="Select world"></select>
+    <span id="world-name" style="display:none"></span>
+    <select id="ai-provider-select" class="world-select" onchange="setAiProvider(this.value)" aria-label="Select AI provider">
+      <option value="anthropic">Anthropic</option>
+      <option value="openai">OpenAI</option>
+    </select>
+    <input id="ai-model-input" class="world-select" type="text" oninput="setAiModel(this.value)" aria-label="Model" placeholder="Model" />
+    <button type="button" class="back-btn" onclick="window.location.href='/'">← Back to viewer</button>
+>>>>>>> Stashed changes
   </div>
   <div id="main">
     <div id="console-pane">
       <div id="console-header">
-        <span class="pane-title">agent console</span>
+        <span class="pane-title">Agent console</span>
         <span class="step-counter" id="step-counter"></span>
-        <button class="run-btn" id="run-btn" onclick="runAgent()">▶ Run Agent</button>
+        <button class="run-btn" id="run-btn" onclick="runAgent()">▶ Run agent</button>
         <button class="stop-btn" id="stop-btn" onclick="stopAgent()">■ Stop</button>
       </div>
       <div id="console-log">
@@ -290,10 +486,16 @@
         </div>
       </div>
     </div>
+<<<<<<< Updated upstream
     <div id="right-pane">
       <div id="right-tabbar">
         <div class="r-tab" id="rtab-files" onclick="switchRightTab('files')">files</div>
         <div class="r-tab active" id="rtab-rubric" onclick="switchRightTab('rubric')">rubric</div>
+=======
+    <div id="score-pane">
+      <div id="score-header">
+        <span class="pane-title">Rubric score</span>
+>>>>>>> Stashed changes
       </div>
       <div id="files-view">
         <div id="dir-tree"></div>
@@ -306,9 +508,15 @@
       </div>
       <div id="score-content" class="visible">
         <div class="score-placeholder">
+<<<<<<< Updated upstream
           <div style="font-size:32px;margin-bottom:8px">◎</div>
           <p style="font-size:12px;color:var(--text2)">Run the agent to see scores</p>
           <p style="font-size:10px">Rubric criteria will be evaluated<br>automatically when the agent finishes</p>
+=======
+          <div class="big">◎</div>
+          <p style="font-size:14px;color:var(--text-secondary)">Run the agent to see scores</p>
+          <p style="font-size:12px">Rubric criteria are evaluated automatically when the run finishes.</p>
+>>>>>>> Stashed changes
         </div>
       </div>
     </div>

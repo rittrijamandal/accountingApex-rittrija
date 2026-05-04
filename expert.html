@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expert workspace — Accounting Apex</title>
+  <link rel="stylesheet" href="expert.css" />
+</head>
+<body class="expert-shell">
+  <div class="wrap" id="expert-root">
+    <header class="expert-top">
+      <div>
+        <h1>Expert worlds</h1>
+        <p class="muted" style="margin-top:4px">
+          Signed in as <strong id="email" style="color:var(--text-primary);font-weight:500"></strong>
+        </p>
+      </div>
+      <div class="spacer"></div>
+      <div class="expert-actions">
+        <a href="admin.html" id="nav-admin" class="btn btn-ghost" style="display:none">Admin dashboard</a>
+        <button type="button" class="btn" id="new-world" style="display:none">+ New world</button>
+        <a href="viewer.html" class="btn btn-ghost">Sample viewer</a>
+        <button type="button" class="btn btn-ghost" id="logout">Sign out</button>
+      </div>
+    </header>
+
+    <p class="muted" style="margin-bottom:24px;line-height:1.6;max-width:78ch">
+      Build accounting worlds manually (no AI). Publish when graders should see them. The editor covers
+      <strong style="color:var(--text-primary);font-weight:500">meta</strong>,
+      <strong style="color:var(--text-primary);font-weight:500">bank transactions</strong>,
+      <strong style="color:var(--text-primary);font-weight:500">charts of accounts</strong>,
+      <strong style="color:var(--text-primary);font-weight:500">expense policies</strong>,
+      <strong style="color:var(--text-primary);font-weight:500">invoices</strong>,
+      <strong style="color:var(--text-primary);font-weight:500">rubric</strong>,
+      <strong style="color:var(--text-primary);font-weight:500">task prompt</strong>, and
+      <strong style="color:var(--text-primary);font-weight:500">ambiguity / misleading files</strong>.
+      Run SQL migration <code>20260413000000_worlds_payload.sql</code> once if saves fail.
+    </p>
+
+    <section class="section" id="expert-choice">
+      <h2>Choose a workflow</h2>
+      <p class="muted" style="margin-bottom:16px">Author your own worlds, or score peer worlds awaiting review.</p>
+      <div class="review-path-grid">
+        <button type="button" class="review-path-card" id="choice-create">
+          <span class="review-path-title">Create a world</span>
+          <span class="review-path-copy">Open the world builder to author or edit your own worlds.</span>
+        </button>
+        <a href="/review-queue" class="review-path-card" id="choice-review">
+          <span class="review-path-title">Review worlds</span>
+          <span class="review-path-copy">Score worlds from other experts that are currently in review.</span>
+        </a>
+      </div>
+    </section>
+
+    <div class="data-table-wrap" id="my-worlds-wrap" style="display:none">
+      <table class="world-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Updated</th>
+            <th>Creator</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="world-rows">
+          <tr><td colspan="5" class="muted" style="padding:18px">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script src="seedData.js"></script>
+  <script type="module" src="js/expert-list.js"></script>
+</body>
+</html>
