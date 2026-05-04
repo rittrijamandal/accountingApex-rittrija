@@ -3,52 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<<<<<<< Updated upstream
-  <title>APEX Agent Runner</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0f0f0f; --bg2: #161616; --bg3: #1e1e1e; --bg4: #252525;
-      --border: #2e2e2e; --border2: #3a3a3a;
-      --text: #e8e6e0; --text2: #9a9690; --text3: #5c5a56;
-      --green: #4caf7d; --green-bg: #0d1f15;
-      --amber: #d4a84b; --amber-bg: #1e1600;
-      --red: #e05252; --red-bg: #1f0d0d;
-      --blue: #5b9cf6; --blue-bg: #0d1525;
-      --purple: #a78bfa; --purple-bg: #130e1f;
-      --mono: 'IBM Plex Mono', monospace;
-    }
-    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 12px; overflow: hidden; }
-=======
+
   <title>Agent runner — Symbal Accounting Apex</title>
   <link rel="stylesheet" href="theme.css" />
   <style>
     html, body { height: 100%; overflow: hidden; background: var(--surface-app); }
->>>>>>> Stashed changes
+
 
     #root { display: flex; flex-direction: column; height: 100vh; }
 
     /* TOPBAR */
     #topbar {
       display: flex; align-items: center; gap: 12px;
-<<<<<<< Updated upstream
-      padding: 0 20px; height: 44px; min-height: 44px;
-      background: var(--bg2); border-bottom: 1px solid var(--border);
-      font-size: 12px; flex-shrink: 0;
-    }
-    .tb-logo { font-weight: 600; font-size: 11px; letter-spacing: 0.05em; }
-    .tb-logo span { color: var(--green); }
-    .tb-sep { color: var(--border2); }
-    .back-btn {
-      margin-left: auto; padding: 4px 12px;
-      border: 1px solid var(--border2); border-radius: 3px;
-      background: transparent; color: var(--text2);
-      font-family: var(--mono); font-size: 11px; cursor: pointer;
-    }
-    .back-btn:hover { border-color: var(--text2); color: var(--text); }
-=======
+
       padding: 0 20px; height: 52px; min-height: 52px; flex-shrink: 0;
       background: var(--surface-card); border-bottom: 1px solid var(--border-default);
       font-size: var(--fs-sm);
@@ -82,22 +49,14 @@
       cursor: pointer;
     }
     .world-select:hover { border-color: var(--border-strong); }
->>>>>>> Stashed changes
+
 
     /* MAIN SPLIT */
     #main { display: flex; flex: 1; overflow: hidden; }
 
     /* LEFT: AGENT CONSOLE */
     #console-pane {
-<<<<<<< Updated upstream
-      width: 56%; border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; overflow: hidden;
-    }
-    #console-header {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 16px; border-bottom: 1px solid var(--border);
-      background: var(--bg2); flex-shrink: 0;
-=======
+
       width: 55%; border-right: 1px solid var(--border-default);
       display: flex; flex-direction: column; overflow: hidden;
       background: var(--surface-card);
@@ -111,43 +70,11 @@
       font-size: 11px; color: var(--text-tertiary);
       letter-spacing: 0.04em; text-transform: uppercase; flex: 1;
       font-family: var(--font-sans); font-weight: 500;
->>>>>>> Stashed changes
+
     }
     .pane-title { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; flex: 1; }
     .run-btn {
-<<<<<<< Updated upstream
-      padding: 5px 16px; border: 1px solid var(--green);
-      border-radius: 3px; background: var(--green-bg); color: var(--green);
-      font-family: var(--mono); font-size: 11px; font-weight: 600;
-      cursor: pointer; letter-spacing: 0.04em;
-    }
-    .run-btn:hover { background: #132e1e; }
-    .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .stop-btn {
-      padding: 5px 16px; border: 1px solid var(--red);
-      border-radius: 3px; background: var(--red-bg); color: var(--red);
-      font-family: var(--mono); font-size: 11px; font-weight: 600;
-      cursor: pointer; display: none;
-    }
-    .step-counter { font-size: 10px; color: var(--text3); }
 
-    #console-log { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 3px; }
-    #console-log::-webkit-scrollbar { width: 4px; }
-    #console-log::-webkit-scrollbar-thumb { background: var(--border2); }
-
-    .log-entry { display: flex; gap: 10px; align-items: flex-start; line-height: 1.6; }
-    .log-ts  { color: var(--text3); font-size: 10px; min-width: 52px; padding-top: 1px; flex-shrink: 0; }
-    .log-msg { flex: 1; font-size: 11px; }
-    .log-system { color: var(--text3); font-style: italic; }
-    .log-think  { color: var(--blue); }
-    .log-output { color: var(--green); }
-    .log-error  { color: var(--red); }
-
-    .tool-call {
-      background: var(--amber-bg); border: 1px solid #3d2e00;
-      border-radius: 3px; padding: 5px 10px; margin: 2px 0;
-      font-size: 10px; color: var(--amber);
-=======
       height: 30px; padding: 0 14px;
       border: 1px solid var(--accent); border-radius: var(--r-md);
       background: var(--accent); color: #fff;
@@ -192,110 +119,11 @@
       background: var(--warning-soft); border: 1px solid var(--warning-border);
       border-radius: var(--r-sm); padding: 8px 10px; margin: 2px 0;
       font-size: 11px; color: var(--warning); font-family: var(--font-mono);
->>>>>>> Stashed changes
+
     }
     .tool-call.write { background: var(--green-bg); border-color: #1a3d28; color: var(--green); }
     .tool-result {
-<<<<<<< Updated upstream
-      background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 3px; padding: 5px 10px; margin: 2px 0;
-      font-size: 10px; color: var(--text2); max-height: 120px;
-      overflow-y: auto; white-space: pre-wrap; word-break: break-all;
-    }
 
-    /* RIGHT PANE */
-    #right-pane { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    #right-tabbar {
-      display: flex; align-items: center;
-      background: var(--bg2); border-bottom: 1px solid var(--border);
-      flex-shrink: 0; padding: 0 16px; gap: 2px;
-    }
-    .r-tab {
-      padding: 10px 14px; font-size: 10px; cursor: pointer;
-      color: var(--text3); border-bottom: 2px solid transparent;
-      letter-spacing: 0.06em; text-transform: uppercase;
-      margin-bottom: -1px; transition: color 0.1s;
-    }
-    .r-tab:hover { color: var(--text2); }
-    .r-tab.active { color: var(--green); border-bottom-color: var(--green); }
-
-    #score-content { flex: 1; overflow-y: auto; padding: 16px; display: none; }
-    #score-content.visible { display: block; }
-    #score-content::-webkit-scrollbar { width: 4px; }
-    #score-content::-webkit-scrollbar-thumb { background: var(--border2); }
-
-    /* FILES TAB */
-    #files-view { flex: 1; display: none; overflow: hidden; }
-    #files-view.visible { display: flex; }
-    #dir-tree {
-      width: 200px; min-width: 200px; border-right: 1px solid var(--border);
-      overflow-y: auto; background: var(--bg2); padding: 6px 0;
-    }
-    #dir-tree::-webkit-scrollbar { width: 3px; }
-    #dir-tree::-webkit-scrollbar-thumb { background: var(--border2); }
-    #dir-viewer { flex: 1; overflow-y: auto; padding: 16px; }
-    #dir-viewer::-webkit-scrollbar { width: 4px; }
-    #dir-viewer::-webkit-scrollbar-thumb { background: var(--border2); }
-
-    /* TREE NODES */
-    .dt-folder {
-      display: flex; align-items: center; gap: 5px;
-      padding: 3px 12px; cursor: pointer; font-size: 10px;
-      color: var(--text3); user-select: none;
-    }
-    .dt-folder:hover { color: var(--text2); }
-    .dt-toggle { font-size: 7px; min-width: 8px; }
-    .dt-folder-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .dt-file {
-      display: flex; align-items: center; gap: 5px;
-      padding: 3px 12px 3px 0; cursor: pointer; font-size: 10px;
-      color: var(--text3); border-left: 2px solid transparent;
-      user-select: none; transition: all 0.1s;
-    }
-    .dt-file:hover { background: var(--bg3); color: var(--text2); }
-    .dt-file.active { background: var(--bg3); color: var(--text); border-left-color: var(--green); }
-    .dt-file.type-ledger.active  { border-left-color: var(--green); }
-    .dt-file.type-invoice.active { border-left-color: var(--amber); }
-    .dt-file.type-policy.active  { border-left-color: var(--blue); }
-    .dt-file.type-profile.active { border-left-color: var(--purple); }
-    .dt-file-icon { font-size: 9px; min-width: 12px; text-align: center; }
-    .dt-file.type-policy  .dt-file-icon { color: var(--blue); }
-    .dt-file.type-invoice .dt-file-icon { color: var(--amber); }
-    .dt-file.type-ledger  .dt-file-icon { color: var(--green); }
-    .dt-file.type-profile .dt-file-icon { color: var(--purple); }
-    .dt-file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-    /* FILE VIEWER CONTENT */
-    .fv-label { font-size: 10px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
-    .fv-type {
-      display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 2px;
-      font-weight: 600; letter-spacing: 0.05em; margin-bottom: 8px;
-    }
-    .fv-policy  { background: var(--blue-bg);   color: var(--blue);   border: 1px solid #152240; }
-    .fv-profile { background: var(--purple-bg);  color: var(--purple); border: 1px solid #2a1f40; }
-    .fv-invoice { background: var(--amber-bg);   color: var(--amber);  border: 1px solid #3d2e00; }
-    .fv-ledger  { background: var(--green-bg);   color: var(--green);  border: 1px solid #1a3d28; }
-    .fv-prose {
-      background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 4px; padding: 14px 18px; font-size: 11px;
-      line-height: 1.8; color: var(--text2); white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-    .fv-empty {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; height: 160px; gap: 8px;
-      color: var(--text3); text-align: center;
-    }
-    .fv-data-table { width: 100%; border-collapse: collapse; font-size: 10px; }
-    .fv-data-table th {
-      text-align: left; padding: 5px 8px; color: var(--text3); font-weight: 500;
-      font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
-      border-bottom: 1px solid var(--border);
-    }
-    .fv-data-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); color: var(--text2); }
-    .fv-data-table tr:last-child td { border-bottom: none; }
-    .fv-data-table tr:hover td { background: var(--bg3); }
-=======
       background: var(--surface-card); border: 1px solid var(--border-default);
       border-radius: var(--r-sm); padding: 8px 10px; margin: 2px 0;
       font-size: 11px; color: var(--text-secondary); max-height: 140px;
@@ -313,26 +141,75 @@
       background: var(--surface-sunken);
     }
     #score-content { flex: 1; overflow-y: auto; padding: 18px; background: var(--surface-sunken); }
->>>>>>> Stashed changes
+
+    #files-view { flex: 1; display: none; overflow: hidden; background: var(--surface-sunken); }
+    #files-view.visible { display: flex; }
+    #dir-tree {
+      width: 220px; min-width: 220px; overflow-y: auto;
+      background: var(--surface-card); border-right: 1px solid var(--border-default);
+      padding: 8px 0;
+    }
+    #dir-viewer { flex: 1; overflow-y: auto; padding: 18px; }
+    .dt-folder {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px; cursor: pointer; font-size: 12px;
+      color: var(--text-tertiary); user-select: none;
+    }
+    .dt-folder:hover { color: var(--text-secondary); background: var(--surface-hover); }
+    .dt-toggle { font-size: 9px; min-width: 10px; }
+    .dt-folder-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dt-file {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px 5px 0; cursor: pointer; font-size: 12px;
+      color: var(--text-tertiary); border-left: 2px solid transparent;
+      user-select: none; transition: background 100ms ease, color 100ms ease;
+    }
+    .dt-file:hover { background: var(--surface-hover); color: var(--text-secondary); }
+    .dt-file.active { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); }
+    .dt-file-icon { font-size: 10px; min-width: 14px; text-align: center; }
+    .dt-file.type-policy .dt-file-icon { color: var(--info); }
+    .dt-file.type-invoice .dt-file-icon { color: var(--warning); }
+    .dt-file.type-ledger .dt-file-icon { color: var(--success); }
+    .dt-file.type-profile .dt-file-icon { color: var(--purple); }
+    .dt-file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fv-label {
+      font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.04em;
+      text-transform: uppercase; margin-bottom: 12px; font-weight: 500;
+    }
+    .fv-type {
+      display: inline-flex; align-items: center; font-size: 11px;
+      padding: 2px 8px; border-radius: var(--r-pill);
+      font-weight: 500; margin-bottom: 10px;
+    }
+    .fv-policy { background: var(--info-soft); color: var(--info); border: 1px solid var(--info-border); }
+    .fv-profile { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-border); }
+    .fv-invoice { background: var(--warning-soft); color: var(--warning); border: 1px solid var(--warning-border); }
+    .fv-ledger { background: var(--success-soft); color: var(--success); border: 1px solid var(--success-border); }
+    .fv-prose {
+      background: var(--surface-card); border: 1px solid var(--border-default);
+      border-radius: var(--r-md); padding: 14px 16px; font-size: 12px;
+      line-height: 1.7; color: var(--text-secondary); white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .fv-empty {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 180px; gap: 8px;
+      color: var(--text-tertiary); text-align: center;
+    }
+    .fv-data-table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--surface-card); }
+    .fv-data-table th {
+      text-align: left; padding: 7px 10px; color: var(--text-tertiary);
+      font-weight: 500; font-size: 11px; text-transform: uppercase;
+      border-bottom: 1px solid var(--border-default); background: var(--surface-sunken);
+    }
+    .fv-data-table td { padding: 7px 10px; border-bottom: 1px solid var(--border-subtle); color: var(--text-primary); }
+    .fv-data-table tr:last-child td { border-bottom: none; }
+
 
     .score-placeholder {
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; height: 100%; gap: 10px;
-<<<<<<< Updated upstream
-      color: var(--text3); text-align: center;
-    }
 
-    .metrics-row { display: flex; gap: 8px; margin-bottom: 16px; }
-    .metric-card {
-      flex: 1; background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 4px; padding: 10px 12px;
-    }
-    .metric-label { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-    .metric-value { font-size: 18px; font-weight: 600; }
-    .mv-green { color: var(--green); }
-    .mv-amber { color: var(--amber); }
-    .mv-red   { color: var(--red); }
-=======
       color: var(--text-tertiary); text-align: center;
     }
     .score-placeholder .big { font-size: 36px; margin-bottom: 8px; color: var(--accent); opacity: 0.4; }
@@ -355,7 +232,7 @@
     .mv-green { color: var(--success); }
     .mv-amber { color: var(--warning); }
     .mv-red   { color: var(--danger); }
->>>>>>> Stashed changes
+
 
     .rubric-score-item {
       display: flex; gap: 12px; padding: 12px 0;
@@ -364,57 +241,7 @@
     .rubric-score-item:last-child { border-bottom: none; }
     .rs-icon { font-size: 14px; min-width: 18px; padding-top: 1px; }
     .rs-body { flex: 1; }
-<<<<<<< Updated upstream
-    .rs-text { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 4px; }
-    .rs-reasoning { font-size: 10px; color: var(--text3); line-height: 1.5; font-style: italic; }
-    .rs-type { font-size: 9px; padding: 1px 5px; border-radius: 2px; font-weight: 600; }
-    .rst-det { background: var(--green-bg); color: var(--green); border: 1px solid #1a3d28; }
-    .rst-llm { background: var(--blue-bg);  color: var(--blue);  border: 1px solid #152240; }
-    .rst-neg { background: var(--red-bg);   color: var(--red);   border: 1px solid #3d1515; }
 
-    .section-label { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
-
-    .agent-output-box {
-      background: var(--bg3); border: 1px solid var(--border2);
-      border-radius: 4px; padding: 12px; font-size: 11px;
-      line-height: 1.7; color: var(--text2); margin-bottom: 16px;
-      max-height: 300px; overflow-y: auto; white-space: pre-wrap;
-    }
-
-    /* WORLD CRITIQUE */
-    .critique-btn {
-      display: block; width: 100%; margin-top: 20px;
-      padding: 9px 0; border: 1px solid var(--blue); border-radius: 3px;
-      background: var(--blue-bg); color: var(--blue);
-      font-family: var(--mono); font-size: 11px; font-weight: 600;
-      letter-spacing: 0.06em; cursor: pointer; transition: all 0.15s;
-    }
-    .critique-btn:hover { background: #0d1f3d; }
-    .critique-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .critique-box {
-      margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;
-    }
-    .critique-item {
-      padding: 10px 0; border-bottom: 1px solid var(--border);
-      font-size: 11px; line-height: 1.6; color: var(--text2);
-    }
-    .critique-item:last-child { border-bottom: none; }
-    .critique-tag {
-      display: inline-block; font-size: 9px; padding: 1px 6px;
-      border-radius: 2px; font-weight: 600; letter-spacing: 0.04em;
-      margin-bottom: 5px; text-transform: uppercase;
-    }
-    .ctag-easy    { background: var(--amber-bg); color: var(--amber); border: 1px solid #3d2e00; }
-    .ctag-broken  { background: var(--red-bg);   color: var(--red);   border: 1px solid #3d1515; }
-    .ctag-gap     { background: var(--purple-bg);color: var(--purple);border: 1px solid #2a1f40; }
-    .ctag-change  { background: var(--green-bg); color: var(--green); border: 1px solid #1a3d28; }
-
-    /* LEDGER DIFF */
-    .ledger-writes {
-      background: var(--green-bg); border: 1px solid #1a3d28;
-      border-radius: 4px; padding: 10px 12px; margin-bottom: 16px;
-      font-size: 10px; color: var(--green); line-height: 1.8;
-=======
     .rs-text { font-size: 13px; color: var(--text-primary); line-height: 1.5; margin-bottom: 4px; }
     .rs-reasoning { font-size: 12px; color: var(--text-tertiary); line-height: 1.5; }
     .rs-type {
@@ -439,21 +266,14 @@
       line-height: 1.7; color: var(--text-secondary); margin-bottom: 16px;
       max-height: 300px; overflow-y: auto; white-space: pre-wrap;
       font-family: var(--font-mono);
->>>>>>> Stashed changes
+
     }
   </style>
 </head>
 <body>
 <div id="root">
   <div id="topbar">
-<<<<<<< Updated upstream
-    <span class="tb-logo">APEX<span>.</span>INV</span>
-    <span class="tb-sep">/</span>
-    <span style="color:var(--text2)">Agent Runner</span>
-    <span class="tb-sep">·</span>
-    <span id="world-name" style="color:var(--text);font-size:11px">Meridian Systems</span>
-    <button class="back-btn" onclick="window.location.href='/'">← World Viewer</button>
-=======
+
     <span class="tb-logo">
       <img src="/assets/symbal-logo.png" alt="" class="tb-logo-img" width="22" height="22" />
       Symbal Accounting <span class="title-serif">Apex</span>
@@ -469,7 +289,7 @@
     </select>
     <input id="ai-model-input" class="world-select" type="text" oninput="setAiModel(this.value)" aria-label="Model" placeholder="Model" />
     <button type="button" class="back-btn" onclick="window.location.href='/'">← Back to viewer</button>
->>>>>>> Stashed changes
+
   </div>
   <div id="main">
     <div id="console-pane">
@@ -486,16 +306,11 @@
         </div>
       </div>
     </div>
-<<<<<<< Updated upstream
-    <div id="right-pane">
-      <div id="right-tabbar">
-        <div class="r-tab" id="rtab-files" onclick="switchRightTab('files')">files</div>
-        <div class="r-tab active" id="rtab-rubric" onclick="switchRightTab('rubric')">rubric</div>
-=======
+
     <div id="score-pane">
       <div id="score-header">
         <span class="pane-title">Rubric score</span>
->>>>>>> Stashed changes
+
       </div>
       <div id="files-view">
         <div id="dir-tree"></div>
@@ -508,15 +323,11 @@
       </div>
       <div id="score-content" class="visible">
         <div class="score-placeholder">
-<<<<<<< Updated upstream
-          <div style="font-size:32px;margin-bottom:8px">◎</div>
-          <p style="font-size:12px;color:var(--text2)">Run the agent to see scores</p>
-          <p style="font-size:10px">Rubric criteria will be evaluated<br>automatically when the agent finishes</p>
-=======
+
           <div class="big">◎</div>
           <p style="font-size:14px;color:var(--text-secondary)">Run the agent to see scores</p>
           <p style="font-size:12px">Rubric criteria are evaluated automatically when the run finishes.</p>
->>>>>>> Stashed changes
+
         </div>
       </div>
     </div>

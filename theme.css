@@ -51,6 +51,9 @@
   --info: #1d4ed8;
   --info-soft: #eaf0fe;
   --info-border: #c7d4f7;
+  --purple: #7c3aed;
+  --purple-bg: #f5f3ff;
+  --purple-border: #ddd6fe;
 
   /* Radius */
   --r-sm: 4px;
@@ -168,6 +171,9 @@
   --info: #93b4fb;
   --info-soft: #0c1428;
   --info-border: #1c2d52;
+  --purple: #a78bfa;
+  --purple-bg: #1a0f2c;
+  --purple-border: #3b2465;
 
   --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.5);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);

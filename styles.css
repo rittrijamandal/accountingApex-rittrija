@@ -3,35 +3,7 @@
    Builds on theme.css; only adds workspace-specific layout.
    ========================================================================== */
 
-<<<<<<< Updated upstream
-:root {
-  --bg: #0f0f0f;
-  --bg2: #161616;
-  --bg3: #1e1e1e;
-  --bg4: #252525;
-  --border: #2e2e2e;
-  --border2: #3a3a3a;
-  --text: #e8e6e0;
-  --text2: #9a9690;
-  --text3: #5c5a56;
-  --green: #4caf7d;
-  --green-bg: #0d1f15;
-  --amber: #d4a84b;
-  --amber-bg: #1e1600;
-  --red: #e05252;
-  --red-bg: #1f0d0d;
-  --blue: #5b9cf6;
-  --blue-bg: #0d1525;
-  --purple: #a78bfa;
-  --purple-bg: #130e1f;
-  --mono: 'IBM Plex Mono', monospace;
-  --sans: 'IBM Plex Sans', sans-serif;
-}
 
-html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; overflow: hidden; }
-
-/* ── LAYOUT ── */
-=======
 @import url('./theme.css');
 
 html, body {
@@ -44,27 +16,13 @@ html, body {
 }
 
 /* ── Layout shell ── */
->>>>>>> Stashed changes
+
 #root { display: flex; flex-direction: column; height: 100vh; position: relative; }
 #loading-overlay, #apikey-modal { position: fixed; }
 
 /* ── Topbar ── */
 #topbar {
-<<<<<<< Updated upstream
-  display: flex; align-items: center; gap: 12px;
-  padding: 0 20px; height: 44px; min-height: 44px;
-  background: var(--bg2); border-bottom: 1px solid var(--border);
-  font-size: 12px;
-}
-.tb-logo { font-weight: 600; color: var(--text); letter-spacing: 0.05em; font-size: 11px; }
-.tb-logo span { color: var(--green); }
-.tb-sep { color: var(--border2); }
-.tb-world { color: var(--text2); }
-.tb-name { color: var(--text); font-weight: 500; }
-.tb-meta { margin-left: auto; color: var(--text3); font-size: 11px; display: flex; gap: 16px; }
-.tb-meta span { display: flex; align-items: center; gap: 5px; }
-.tb-meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; }
-=======
+
   display: flex;
   align-items: center;
   gap: 12px;
@@ -97,26 +55,14 @@ html, body {
 .tb-meta { margin-left: auto; color: var(--text-tertiary); font-size: 12px; display: flex; gap: 12px; align-items: center; }
 .tb-meta span { display: inline-flex; align-items: center; gap: 6px; }
 .tb-meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); display: inline-block; }
->>>>>>> Stashed changes
+
 
 /* ── Main row ── */
 #main { display: flex; flex: 1; overflow: hidden; }
 
 /* ── Sidebar (file list) ── */
 #sidebar {
-<<<<<<< Updated upstream
-  width: 260px; min-width: 260px;
-  border-right: 1px solid var(--border);
-  background: var(--bg2);
-  display: flex; flex-direction: column;
-  overflow: hidden;
-}
-.sb-files { flex: 1; overflow-y: auto; padding-bottom: 8px; padding-top: 6px; }
-.sb-files::-webkit-scrollbar { width: 4px; }
-.sb-files::-webkit-scrollbar-track { background: transparent; }
-.sb-files::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-.sb-footer { padding: 10px 14px; border-top: 1px solid var(--border); font-size: 10px; color: var(--text3); }
-=======
+
   width: 250px;
   min-width: 250px;
   border-right: 1px solid var(--border-default);
@@ -134,7 +80,7 @@ html, body {
   font-weight: 500;
 }
 .sb-files { flex: 1; overflow-y: auto; padding-bottom: 8px; }
->>>>>>> Stashed changes
+
 
 /* ── TREE ── */
 .tree-folder {
@@ -182,13 +128,7 @@ html, body {
   font-size: 13px;
   color: var(--text-secondary);
   border-left: 2px solid transparent;
-<<<<<<< Updated upstream
-  transition: all 0.1s;
-  user-select: none;
-}
-.file-row:hover { background: var(--bg3); color: var(--text); }
-.file-row.active { background: var(--bg3); color: var(--text); border-left-color: var(--green); }
-=======
+
   transition: background 100ms ease, color 100ms ease;
   user-select: none;
 }
@@ -196,17 +136,12 @@ html, body {
 .file-row.active { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); }
 .file-row.noise { color: var(--text-tertiary); font-style: italic; }
 .file-row.mislead { color: var(--warning); }
->>>>>>> Stashed changes
+
 .file-row .fname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-row .ficon { font-size: 11px; min-width: 14px; color: var(--text-tertiary); }
 .file-row.active .ficon { color: var(--accent); }
 
-<<<<<<< Updated upstream
-/* ── CONTENT AREA ── */
-#content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
-/* ── TABS ── */
-=======
 .sb-footer {
   padding: 12px 16px;
   border-top: 1px solid var(--border-subtle);
@@ -225,7 +160,7 @@ html, body {
 }
 
 /* ── Tabs (used by some pages) ── */
->>>>>>> Stashed changes
+
 #tabbar {
   display: flex;
   border-bottom: 1px solid var(--border-default);
@@ -234,11 +169,7 @@ html, body {
   gap: 0;
 }
 .tab {
-<<<<<<< Updated upstream
-  padding: 10px 16px; font-size: 11px; cursor: pointer;
-  color: var(--text3); border-bottom: 2px solid transparent;
-  transition: all 0.15s; letter-spacing: 0.03em;
-=======
+
   padding: 12px 16px;
   font-size: 13px;
   cursor: pointer;
@@ -247,29 +178,11 @@ html, body {
   transition: color 120ms ease;
   letter-spacing: 0;
   text-transform: none;
->>>>>>> Stashed changes
+
   margin-bottom: -1px;
   font-weight: 500;
 }
-<<<<<<< Updated upstream
-.tab:hover { color: var(--text2); }
-.tab.active { color: var(--green); border-bottom-color: var(--green); }
 
-/* ── PANEL ── */
-#panel { flex: 1; overflow-y: auto; padding: 20px; }
-#panel::-webkit-scrollbar { width: 4px; }
-#panel::-webkit-scrollbar-track { background: transparent; }
-#panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-/* ── SECTION LABEL ── */
-.section-label {
-  font-size: 10px; color: var(--text3); letter-spacing: 0.1em;
-  text-transform: uppercase; margin-bottom: 12px;
-}
-
-/* ── TABLE ── */
-.data-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-=======
 .tab:hover { color: var(--text-secondary); }
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
@@ -282,7 +195,7 @@ html, body {
   border-collapse: collapse;
   font-size: var(--fs-sm);
 }
->>>>>>> Stashed changes
+
 .data-table th {
   text-align: left;
   padding: 8px 12px;
@@ -301,90 +214,7 @@ html, body {
   vertical-align: middle;
   color: var(--text-primary);
 }
-<<<<<<< Updated upstream
-.data-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-.data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover td { background: var(--bg3); }
 
-/* ── PROSE (policy / profile) ── */
-.prose-doc {
-  background: var(--bg3); border: 1px solid var(--border);
-  border-radius: 4px; padding: 20px 24px;
-  font-size: 12px; line-height: 1.85; color: var(--text2);
-  white-space: pre-wrap; word-wrap: break-word;
-  max-width: 780px;
-}
-.prose-doc-type {
-  display: inline-block; font-size: 9px; padding: 2px 6px;
-  border-radius: 2px; font-weight: 600; letter-spacing: 0.05em;
-  margin-bottom: 12px;
-}
-.prose-type-policy  { background: var(--blue-bg);   color: var(--blue);   border: 1px solid #152240; }
-.prose-type-profile { background: var(--purple-bg);  color: var(--purple); border: 1px solid #2a1f40; }
-
-/* ── INVOICE ── */
-.invoice-doc {
-  background: var(--bg3); border: 1px solid var(--border);
-  border-radius: 4px; padding: 20px 24px;
-  font-size: 12px; line-height: 1.8; color: var(--text2);
-  white-space: pre-wrap; word-wrap: break-word;
-  max-width: 680px; font-family: var(--mono);
-}
-.invoice-doc-type {
-  display: inline-block; font-size: 9px; padding: 2px 6px;
-  border-radius: 2px; font-weight: 600; letter-spacing: 0.05em;
-  background: var(--amber-bg); color: var(--amber);
-  border: 1px solid #3d2e00; margin-bottom: 12px;
-}
-
-/* ── LEDGER ── */
-.ledger-empty {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; height: 200px; gap: 10px;
-  color: var(--text3); text-align: center;
-}
-.ledger-empty .le-icon { font-size: 28px; margin-bottom: 8px; }
-.ledger-type {
-  display: inline-block; font-size: 9px; padding: 2px 6px;
-  border-radius: 2px; font-weight: 600; letter-spacing: 0.05em;
-  background: var(--green-bg); color: var(--green);
-  border: 1px solid #1a3d28; margin-bottom: 12px;
-}
-
-/* ── WARN BANNER ── */
-.warn-banner {
-  background: var(--amber-bg); border: 1px solid #3d2e00;
-  border-radius: 4px; padding: 10px 14px; margin-bottom: 16px;
-  font-size: 11px; color: var(--amber); line-height: 1.5;
-}
-.warn-banner .wicon { margin-right: 6px; }
-
-/* ── TAGS ── */
-.tag {
-  display: inline-block; font-size: 9px; padding: 2px 6px;
-  border-radius: 2px; font-weight: 600; letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-.tag-ambig    { background: #1f1600; color: var(--amber); border: 1px solid #3d2e00; }
-.tag-personal { background: var(--red-bg); color: var(--red); border: 1px solid #3d1515; }
-.tag-recur    { background: var(--blue-bg); color: var(--blue); border: 1px solid #152240; }
-.tag-clear    { background: var(--green-bg); color: var(--green); border: 1px solid #1a3d28; }
-.tag-dupe     { background: var(--bg4); color: var(--text2); border: 1px solid var(--border2); }
-
-.amount-neg { color: var(--red); }
-.amount-pos { color: var(--green); }
-
-/* ── BADGE ── */
-.badge {
-  font-size: 9px; padding: 1px 5px; border-radius: 2px;
-  font-weight: 600; letter-spacing: 0.04em; white-space: nowrap;
-}
-.badge-core  { background: var(--green-bg);  color: var(--green);  border: 1px solid #1a3d28; }
-.badge-warn  { background: var(--amber-bg);  color: var(--amber);  border: 1px solid #3d2e00; }
-.badge-noise { background: var(--bg4);       color: var(--text3);  border: 1px solid var(--border); }
-
-/* ── RUBRIC ── */
-=======
 .data-table tr:last-child td { border-bottom: none; }
 .data-table tbody tr:hover td { background: var(--surface-hover); }
 
@@ -392,7 +222,7 @@ html, body {
 .amount-pos { color: var(--success); }
 
 /* ── Rubric ── */
->>>>>>> Stashed changes
+
 .rubric-item {
   display: flex;
   gap: 16px;
@@ -401,19 +231,11 @@ html, body {
   align-items: flex-start;
 }
 .rubric-item:last-child { border-bottom: none; }
-<<<<<<< Updated upstream
-.rubric-n { min-width: 22px; font-size: 11px; color: var(--text3); padding-top: 1px; }
-.rubric-body { flex: 1; }
-.rubric-text { font-size: 12px; line-height: 1.65; color: var(--text); margin-bottom: 6px; }
-.rtype { display: inline-block; font-size: 9px; padding: 2px 6px; border-radius: 2px; font-weight: 600; letter-spacing: 0.04em; }
-.rtype-det { background: var(--green-bg); color: var(--green); border: 1px solid #1a3d28; }
-.rtype-llm { background: var(--blue-bg);  color: var(--blue);  border: 1px solid #152240; }
-.rtype-neg { background: var(--red-bg);   color: var(--red);   border: 1px solid #3d1515; }
-=======
+
 .rubric-n { min-width: 24px; font-size: 12px; color: var(--text-tertiary); padding-top: 1px; font-family: var(--font-mono); }
 .rubric-body { flex: 1; }
 .rubric-text { font-size: 14px; line-height: 1.6; color: var(--text-primary); margin-bottom: 8px; }
->>>>>>> Stashed changes
+
 
 .rtype {
   display: inline-flex;
@@ -432,12 +254,7 @@ html, body {
 
 /* ── Task box (the prompt card) ── */
 .task-box {
-<<<<<<< Updated upstream
-  background: var(--bg3); border: 1px solid var(--border2);
-  border-radius: 4px; padding: 16px; font-size: 12px;
-  line-height: 1.75; color: var(--text2); margin-bottom: 20px;
-}
-=======
+
   background: var(--surface-card);
   border: 1px solid var(--border-default);
   border-radius: var(--r-md);
@@ -448,32 +265,12 @@ html, body {
   margin-bottom: 20px;
 }
 .task-box strong { color: var(--text-primary); font-weight: 600; }
->>>>>>> Stashed changes
+
 
 /* ── Metric cards ── */
 .metrics-row { display: flex; gap: 12px; margin-bottom: 24px; }
 .metric-card {
-<<<<<<< Updated upstream
-  flex: 1; background: var(--bg3); border: 1px solid var(--border);
-  border-radius: 4px; padding: 12px 14px;
-}
-.metric-label { font-size: 10px; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
-.metric-value { font-size: 20px; font-weight: 600; color: var(--text); }
-.metric-value.green { color: var(--green); }
-.metric-value.amber { color: var(--amber); }
 
-/* ── FILE PREVIEW (legacy) ── */
-.file-preview { display: flex; flex-direction: column; gap: 8px; }
-.kv { display: flex; gap: 0; }
-.kk { color: var(--text3); min-width: 200px; font-size: 11px; }
-.vv { color: var(--text); font-size: 11px; }
-
-/* ── WORLD SUMMARY ── */
-.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-.meta-card {
-  background: var(--bg3); border: 1px solid var(--border);
-  border-radius: 4px; padding: 12px 14px;
-=======
   flex: 1;
   background: var(--surface-card);
   border: 1px solid var(--border-default);
@@ -528,7 +325,7 @@ html, body {
   border: 1px solid var(--border-default);
   border-radius: var(--r-md);
   padding: 14px 16px;
->>>>>>> Stashed changes
+
 }
 .meta-card .mc-label {
   font-size: 11px;
@@ -553,26 +350,7 @@ html, body {
 .arch-label { color: var(--text-tertiary); white-space: nowrap; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; }
 
 .arch-btn {
-<<<<<<< Updated upstream
-  padding: 4px 10px; border: 1px solid var(--border2);
-  border-radius: 3px; background: transparent; color: var(--text2);
-  font-family: var(--mono); font-size: 10px; cursor: pointer;
-  white-space: nowrap; transition: all 0.15s; letter-spacing: 0.02em;
-}
-.arch-btn:hover  { border-color: var(--green); color: var(--green); background: var(--green-bg); }
-.arch-btn.active { border-color: var(--green); color: var(--green); background: var(--green-bg); }
-.arch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.gen-btn {
-  margin-left: auto; padding: 5px 14px;
-  border: 1px solid var(--green); border-radius: 3px;
-  background: var(--green-bg); color: var(--green);
-  font-family: var(--mono); font-size: 11px; cursor: pointer;
-  white-space: nowrap; transition: all 0.15s; font-weight: 600;
-  letter-spacing: 0.04em;
-}
-.gen-btn:hover { background: #132e1e; }
-.gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-=======
+
   padding: 6px 12px;
   border: 1px solid var(--border-default);
   border-radius: var(--r-md);
@@ -593,16 +371,11 @@ html, body {
   background: var(--accent-soft);
 }
 .arch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
->>>>>>> Stashed changes
+
 
 /* ── Loading overlay ── */
 #loading-overlay {
-<<<<<<< Updated upstream
-  display: none; position: absolute; inset: 0;
-  background: var(--bg); z-index: 10;
-  flex-direction: column; align-items: center; justify-content: center;
-  gap: 20px;
-=======
+
   display: none;
   position: absolute;
   inset: 0;
@@ -613,24 +386,11 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 18px;
->>>>>>> Stashed changes
+
 }
 [data-theme='dark'] #loading-overlay { background: rgba(11, 12, 15, 0.92); }
 #loading-overlay.visible { display: flex; }
-<<<<<<< Updated upstream
-.loading-title { font-size: 13px; color: var(--text2); letter-spacing: 0.04em; }
-.loading-sub   { font-size: 11px; color: var(--text3); }
-.loading-bar-wrap { width: 280px; height: 2px; background: var(--border); border-radius: 1px; overflow: hidden; }
-.loading-bar { height: 100%; background: var(--green); border-radius: 1px; width: 0%; transition: width 0.4s ease; }
-.loading-steps { font-size: 10px; color: var(--text3); text-align: center; line-height: 2; }
-.loading-steps .done { color: var(--green); }
 
-/* ── API KEY MODAL ── */
-#apikey-modal {
-  display: none; position: absolute; inset: 0;
-  background: rgba(0,0,0,0.7); z-index: 20;
-  align-items: center; justify-content: center;
-=======
 .loading-title { font-size: 14px; color: var(--text-primary); font-weight: 500; }
 .loading-sub { font-size: 12px; color: var(--text-tertiary); }
 .loading-bar-wrap {
@@ -653,15 +413,12 @@ html, body {
   z-index: 20;
   align-items: center;
   justify-content: center;
->>>>>>> Stashed changes
+
 }
 #apikey-modal.visible { display: flex; }
 
 .modal-box {
-<<<<<<< Updated upstream
-  background: var(--bg2); border: 1px solid var(--border2);
-  border-radius: 6px; padding: 28px 32px; width: 420px;
-=======
+
   background: var(--surface-card);
   border: 1px solid var(--border-default);
   border-radius: var(--r-lg);
@@ -682,14 +439,10 @@ html, body {
   color: var(--text-secondary);
   margin-bottom: 20px;
   line-height: 1.55;
->>>>>>> Stashed changes
+
 }
 .modal-input {
-<<<<<<< Updated upstream
-  width: 100%; background: var(--bg3); border: 1px solid var(--border2);
-  border-radius: 3px; padding: 8px 10px; color: var(--text);
-  font-family: var(--mono); font-size: 11px; margin-bottom: 12px;
-=======
+
   width: 100%;
   height: 36px;
   padding: 0 12px;
@@ -700,7 +453,7 @@ html, body {
   font-family: var(--font-mono);
   font-size: 13px;
   margin-bottom: 12px;
->>>>>>> Stashed changes
+
   outline: none;
   transition: border-color 120ms ease, box-shadow 120ms ease;
 }
@@ -712,15 +465,7 @@ html, body {
   justify-content: flex-end;
   margin-top: 6px;
 }
-<<<<<<< Updated upstream
-.modal-input:focus { border-color: var(--green); }
-.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
-.modal-btn { padding: 6px 16px; border-radius: 3px; font-family: var(--mono); font-size: 11px; cursor: pointer; transition: all 0.15s; }
-.modal-btn-cancel  { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
-.modal-btn-cancel:hover { border-color: var(--text2); }
-.modal-btn-confirm { background: var(--green-bg); border: 1px solid var(--green); color: var(--green); font-weight: 600; }
-.modal-btn-confirm:hover { background: #132e1e; }
-=======
+
 .modal-btn {
   height: 36px;
   padding: 0 16px;
@@ -742,19 +487,11 @@ html, body {
 .modal-btn-cancel:hover { background: var(--surface-hover); color: var(--text-primary); border-color: var(--border-strong); }
 .modal-btn-confirm { background: var(--accent); color: #fff; border-color: var(--accent); }
 .modal-btn-confirm:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
->>>>>>> Stashed changes
+
 
 /* ── Error banner ── */
 .error-banner {
-<<<<<<< Updated upstream
-  background: var(--red-bg); border: 1px solid #3d1515;
-  border-radius: 4px; padding: 12px 14px; margin-bottom: 16px;
-  font-size: 11px; color: var(--red); line-height: 1.6;
-}
 
-/* ── SCROLLBAR GLOBAL ── */
-* { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
-=======
   background: var(--danger-soft);
   border: 1px solid var(--danger-border);
   border-radius: var(--r-md);
@@ -775,4 +512,4 @@ html, body {
 .type-ledger.active { border-left-color: var(--success); background: var(--success-soft) !important; }
 .type-profile.active { border-left-color: #7c3aed; background: #f5f3ff !important; }
 [data-theme='dark'] .type-profile.active { background: #1a0f2c !important; }
->>>>>>> Stashed changes
+
