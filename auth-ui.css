@@ -1,205 +1,69 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&display=swap');
 
-/* Hybrid (B): light Symbal-adjacent palette, square corners, caps tool UI, serif italic accents */
+/* ─── Design tokens matching the Lovable/React SPA ──────────────────────── */
 :root {
-  --bg: #e8eef4;
-  --card: #ffffff;
-  --border: #e2e8f0;
-  --border-focus: #93c5fd;
-  --text: #0f172a;
-  --muted: #64748b;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-soft: #dbeafe;
-  --accent-muted: #eff6ff;
-  --input-bg: #f8fafc;
-  --red: #dc2626;
-  --red-soft: #fef2f2;
-  --red-text: #991b1b;
-  /* legacy token for inline styles */
-  --green: var(--accent);
+  --bg-from:       #f8fafc;
+  --bg-to:         #eef2ff;   /* faint indigo tint */
+  --card:          #ffffff;
+  --border:        hsl(214 32% 91%);
+  --border-focus:  hsl(250 60% 60%);
+  --text:          hsl(222 47% 11%);
+  --muted:         hsl(215 16% 47%);
+  --accent:        hsl(250 60% 45%);   /* indigo-700 equivalent */
+  --accent-hover:  hsl(250 65% 38%);
+  --accent-soft:   hsl(250 70% 96%);
+  --input-bg:      hsl(210 20% 98%);
+  --radius-card:   1.75rem;
+  --radius-input:  0.875rem;
+  --radius-btn:    9999px;
+  --red:           hsl(0 72% 51%);
+  --red-soft:      hsl(0 86% 97%);
+  --red-text:      hsl(0 63% 31%);
+  --green:         var(--accent);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   min-height: 100vh;
-  background: linear-gradient(165deg, #f8fafc 0%, #e2e8f0 48%, #dbeafe 100%);
+  background: linear-gradient(150deg, var(--bg-from) 0%, var(--bg-to) 100%);
   color: var(--text);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-size: 15px;
+  -webkit-font-smoothing: antialiased;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
 }
 
-.auth-card,
-.dashboard,
-input,
-.btn,
-.btn-ghost,
-.btn-inline,
-.err {
-  border-radius: 0;
-}
-
+/* ─── Card ───────────────────────────────────────────────────────────────── */
 .auth-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   background: var(--card);
   border: 1px solid var(--border);
-  padding: 28px 28px 24px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  border-radius: var(--radius-card);
+  padding: 36px 36px 30px;
+  box-shadow: 0 4px 24px rgba(99, 80, 220, 0.07), 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
 .auth-card h1 {
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   margin-bottom: 6px;
 }
 
-.auth-sub { color: var(--muted); font-size: 13px; margin-bottom: 22px; line-height: 1.45; }
-
-label {
-  display: block;
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 6px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  background: var(--input-bg);
-  color: var(--text);
-  font-size: 14px;
-  margin-bottom: 16px;
-  font-family: inherit;
-}
-
-input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent-soft);
-}
-
-.btn {
-  width: 100%;
-  padding: 11px 16px;
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  background: var(--accent);
-  color: #ffffff;
-  font-family: inherit;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.btn:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.btn-ghost {
-  background: var(--card);
-  color: var(--muted);
-  border: 1px solid var(--border);
-  margin-top: 12px;
-}
-
-.btn-ghost:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.err {
-  background: var(--red-soft);
-  color: var(--red-text);
-  font-size: 13px;
-  padding: 10px 12px;
-  margin-bottom: 16px;
-  display: none;
-  border: 1px solid #fecaca;
-}
-
-.err.visible { display: block; }
-
-.auth-footer {
-  margin-top: 20px;
-  font-size: 12px;
-  color: var(--muted);
-  text-align: center;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.auth-footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
-.auth-footer a:hover { text-decoration: underline; }
-
-.dashboard {
-  width: 100%;
-  max-width: 720px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 28px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
-}
-
-.dashboard h1 {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  line-height: 1.35;
-  margin-bottom: 12px;
-  text-transform: uppercase;
-  color: var(--text);
-}
-
-.dashboard p { color: var(--muted); line-height: 1.5; margin-bottom: 20px; font-size: 13px; }
-
-.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-
-.btn-inline {
-  width: auto;
-  padding: 8px 16px;
-  font-size: 12px;
-}
-
-.loading-note { color: var(--muted); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
-
-.app-kicker {
-  margin: 18px 0 10px;
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-/* Serif italic accent (reference: emphasized word in hero) */
-.title-serif {
-  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  font-style: italic;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  color: var(--accent);
-}
-
+/* ─── Brand block ────────────────────────────────────────────────────────── */
 .login-brand {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 18px;
-  margin-bottom: 8px;
+  gap: 16px;
+  margin-bottom: 28px;
 }
 
 .login-brand-logo {
@@ -208,34 +72,187 @@ input:focus {
   height: 56px;
   max-width: 100%;
   object-fit: contain;
+  border-radius: 16px;   /* softly rounded logo container */
 }
 
 body.page-login .login-brand-title {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  line-height: 1.35;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  line-height: 1.3;
   margin: 0;
   color: var(--text);
   text-transform: uppercase;
 }
 
-body.page-login .login-brand-title .title-serif {
+/* "apex" in Playfair italic — keeps the serif accent */
+.title-serif {
+  font-family: 'Playfair Display', ui-serif, Georgia, serif;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
   color: var(--accent);
 }
 
-body.page-login .auth-sub {
-  letter-spacing: 0.08em;
-  font-size: 12px;
+/* ─── Sub-label ──────────────────────────────────────────────────────────── */
+.auth-sub {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   text-align: center;
+  margin-bottom: 26px;
+  /* small indigo eyebrow — matches label-eyebrow from Lovable */
+  color: hsl(250 60% 45%);
 }
 
-body.page-login .auth-footer {
-  letter-spacing: 0.06em;
-  font-size: 12px;
+/* ─── Labels ─────────────────────────────────────────────────────────────── */
+label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: hsl(250 60% 45%);
+  margin-bottom: 6px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.dashboard h1 .title-serif {
+/* ─── Inputs ─────────────────────────────────────────────────────────────── */
+input {
+  width: 100%;
+  padding: 11px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 18px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px hsl(250 70% 96%);
+}
+
+/* ─── Primary button ─────────────────────────────────────────────────────── */
+.btn {
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  border-radius: var(--radius-btn);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  background: hsl(222 47% 11%);   /* slate-900 — matches Lovable's dark buttons */
+  color: #ffffff;
+  font-family: inherit;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  transition: background 0.15s;
+  margin-top: 4px;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--accent);   /* slate → indigo on hover */
+}
+
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ─── Ghost button ───────────────────────────────────────────────────────── */
+.btn-ghost {
+  background: var(--card);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-btn);
+  margin-top: 12px;
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent);
   color: var(--accent);
+}
+
+/* ─── Error banner ───────────────────────────────────────────────────────── */
+.err {
+  background: var(--red-soft);
+  color: var(--red-text);
+  font-size: 13px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: none;
+  border: 1px solid hsl(0 86% 90%);
+  border-radius: var(--radius-input);
+}
+
+.err.visible { display: block; }
+
+/* ─── Footer ─────────────────────────────────────────────────────────────── */
+.auth-footer {
+  margin-top: 22px;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.auth-footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.auth-footer a:hover { text-decoration: underline; }
+
+/* ─── Dashboard shell (signup / other pages) ─────────────────────────────── */
+.dashboard {
+  width: 100%;
+  max-width: 720px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(99, 80, 220, 0.07);
+}
+
+.dashboard h1 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.dashboard h1 .title-serif { color: var(--accent); }
+.dashboard p { color: var(--muted); line-height: 1.5; margin-bottom: 20px; font-size: 13px; }
+
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+.btn-inline {
+  width: auto;
+  padding: 8px 18px;
+  font-size: 11px;
+}
+
+.loading-note {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-kicker {
+  margin: 18px 0 10px;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }

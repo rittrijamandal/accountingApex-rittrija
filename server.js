@@ -213,15 +213,26 @@ app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.get('/admin', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
-});
+// /admin.html still reachable directly; /admin goes to the new React SPA
 
 app.get('/review-queue', (_req, res) => {
   res.sendFile(path.join(__dirname, 'review-queue.html'));
 });
 
+// Existing vanilla HTML/CSS/JS static files (served before the React SPA)
 app.use(express.static(path.join(__dirname)));
+
+// React SPA (dist-client/) — serves the new Lovable UI for /expert and /expert/*
+// These routes are intentionally placed AFTER the existing static-file middleware so
+// that old pages (expert.html, grader.html, admin.html, etc.) are unaffected.
+const CLIENT_DIST = path.join(__dirname, 'dist-client');
+app.use(express.static(CLIENT_DIST));
+
+app.get('/expert', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
+app.get('/expert/*', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
+app.get('/admin', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
+app.get('/grader', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
+app.get('/grader/workspace', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
 
 // Vercel serverless entrypoint
 module.exports = app;
@@ -230,9 +241,11 @@ module.exports = app;
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`\n  APEX server running at http://localhost:${PORT}`);
-    console.log(`  Home (auth redirect): http://localhost:${PORT}/`);
-    console.log(`  Sample world viewer:  http://localhost:${PORT}/viewer.html`);
-    console.log(`  Agent runner UI:      http://localhost:${PORT}/agent.html`);
-    console.log(`  AI proxy:             POST /api/test-grader\n`);
+    console.log(`  Home (auth redirect):    http://localhost:${PORT}/`);
+    console.log(`  Expert dashboard (new):  http://localhost:${PORT}/expert`);
+    console.log(`  Review queue (new):      http://localhost:${PORT}/expert/review-queue`);
+    console.log(`  Sample world viewer:     http://localhost:${PORT}/viewer.html`);
+    console.log(`  Agent runner UI:         http://localhost:${PORT}/agent.html`);
+    console.log(`  AI proxy:                POST /api/test-grader\n`);
   });
 }

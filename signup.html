@@ -15,6 +15,8 @@
     <p class="auth-sub">CREATE AN ACCOUNT — DEFAULT ROLE IS GRADER. AN ADMIN CAN PROMOTE YOU TO EXPERT.</p>
     <div class="err" id="err"></div>
     <form id="form">
+      <label for="first_name">FIRST NAME</label>
+      <input id="first_name" name="first_name" type="text" autocomplete="given-name" required placeholder="Jane" />
       <label for="email">EMAIL</label>
       <input id="email" name="email" type="email" autocomplete="email" required />
       <label for="password">PASSWORD</label>
@@ -58,11 +60,24 @@
       submit.disabled = true;
       try {
         const sb = await getSupabase();
+        const firstName = document.getElementById('first_name').value.trim();
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
-        const { data, error } = await sb.auth.signUp({ email, password });
+        const { data, error } = await sb.auth.signUp({
+          email,
+          password,
+          options: { data: { first_name: firstName, display_name: firstName } },
+        });
         if (error) throw error;
         if (data.session) {
+          // Ensure the profile row has the first name stored
+          if (data.user?.id) {
+            await sb.from('profiles').upsert({
+              id: data.user.id,
+              first_name: firstName,
+              display_name: firstName,
+            }, { onConflict: 'id' });
+          }
           const profile = await fetchMyProfile();
           if (!profile) throw new Error('Profile not created. Apply the database migration in Supabase.');
           window.location.replace(roleHomePath(profile.role));

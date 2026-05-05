@@ -56,9 +56,9 @@ export async function fetchMyProfile() {
 }
 
 export function roleHomePath(role) {
-  if (role === 'admin') return '/admin.html';
-  if (role === 'expert') return '/expert.html';
-  return '/grader.html';
+  if (role === 'admin') return '/admin';     // new React SPA
+  if (role === 'expert') return '/expert';   // new React SPA
+  return '/grader';                          // new React SPA
 }
 
 export function clearSupabaseLocalStorage() {
