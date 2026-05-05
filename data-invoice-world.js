@@ -1,3 +1,5 @@
+// ── STATIC FALLBACK (Meridian Systems, Inc.) ──
+
 const STATIC_WORLD = {
   meta: {
     id: 'APEX-INV-W01',
@@ -5,6 +7,25 @@ const STATIC_WORLD = {
     industry: 'B2B SaaS — Revenue Intelligence Platform',
     period: 'Q1 2026',
     employees: 87,
+    taskPrompt: `You are an invoice processing agent for Meridian Systems, Inc. Process all outstanding invoices for Q1 2026.
+
+Step 1 — Read policies first (before touching any invoice):
+Read company_policy.pdf, all team_policy.pdf files, finance/CFO_memo_2026-01-03.txt, finance/ceo_entertainment_guidance_jan05.txt, finance/approved_vendors.csv, finance/q1_2026_departmental_allocations.txt, finance/delegation_of_authority.txt, finance/board_minutes_2025_Q4.txt, and any org chart or interim appointment files. Also read all leadership profiles and employee profiles to understand reporting chains and any interim authority assignments.
+
+Step 2 — Process EVERY invoice, one at a time:
+Walk each team folder (engineering/, marketing/, operations/) and each user subfolder. For every invoice file you find:
+  a. Read it.
+  b. Apply all relevant policies and state a decision: APPROVED, REJECTED, or HELD (with reason and named approver for any HELD).
+  c. Immediately write the decision to THREE ledgers using write_file:
+       write_file("company_ledger.csv", <full CSV including all prior rows + new row>)
+       write_file("<team>/team_ledger.csv", <full CSV>)
+       write_file("<submitter>/user_ledger.csv", <full CSV>)
+
+Ledger CSV columns: Date,Description,Amount,Category,Invoice Ref,Approved By,Status
+
+IMPORTANT: Every invoice file must receive a decision and a ledger entry. Do not skip any invoice. Do not defer ledger writes to the end.
+
+Step 3 — After all invoices are done, write a one-paragraph summary.`,
   },
 
   files: [
@@ -40,6 +61,14 @@ All invoices and expense reimbursements require approval at the appropriate leve
 
 Approvals must be documented in the relevant team ledger before Finance processes payment.
 
+NOTE — Anti-Splitting Policy: Invoices from the same vendor referencing the
+same SOW, project, or purchase order that are submitted on the same day or
+within 5 business days of each other must be treated as a single combined
+transaction for threshold purposes. Splitting a single engagement into
+multiple invoices to remain below an approval threshold is prohibited.
+Combined spend from split invoices must be aggregated and approved at the
+correct threshold level.
+
 ─────────────────────────────────────────────────────
 
 3. MEALS & ENTERTAINMENT
@@ -70,6 +99,8 @@ Approvals must be documented in the relevant team ledger before Finance processe
 
 Any invoice that shares vendor name, invoice amount, and billing period with a previously logged invoice must be flagged and held pending Finance review. Under no circumstances should a potential duplicate be approved without explicit written clearance from the CFO.
 
+5.1 Suspected duplicate subscription billings: When processing software or SaaS invoices, the approver must check the active subscription register (or equivalent) to identify whether another invoice exists for the same underlying account, license seat pool, or service. Where a potential duplicate subscription is identified — including cases where the two invoices come from vendors with different names but reference the same account, order number, or seat pool — BOTH invoices must be suspended pending Finance review, even if one vendor appears legitimate. This is required because the legitimate vendor invoice may reflect a billing error or the unapproved vendor invoice may represent a fraudulent charge against a real account. Finance will determine which invoice to release or reject.
+
 ─────────────────────────────────────────────────────
 
 6. LEDGER REQUIREMENTS
@@ -89,7 +120,65 @@ The following are not reimbursable under any circumstances:
 
 ─────────────────────────────────────────────────────
 
-Questions: finance@meridiansystems.io`,
+─────────────────────────────────────────────────────
+
+8. EXPENSE SUBMISSION DEADLINES
+
+Expense reimbursement requests and vendor invoices must be submitted to Finance within 30 calendar days of the invoice date or service completion date, whichever is earlier. Late submissions require written CFO exception approval before processing. Submissions received more than 90 days after the service date will not be reimbursed under any circumstances.
+
+The 30-day submission window begins on the date services are rendered or delivered — regardless of client acceptance date, formal project close date, or any contractual milestone clauses in vendor agreements. Vendor MSAs that specify an invoicing clock from client acceptance describe the vendor's right to invoice; they do not and cannot extend Meridian's internal 30-day submission window.
+
+Where a vendor MSA specifies a different invoicing clock, the MSA governs the vendor's right to invoice, but Meridian's internal 30-day submission window runs from the earlier of: (a) service completion date, or (b) client acceptance date. Vendor MSA terms cannot extend Meridian's internal submission deadline.
+
+─────────────────────────────────────────────────────
+
+9. SELF-APPROVAL PROHIBITION
+
+No employee may approve their own expense reimbursement request, regardless of dollar amount or approval tier. Expenses submitted by a Team Lead must be approved by the Department VP. Expenses submitted by a VP must be approved by the CFO. Expenses submitted by the CFO require CEO approval.
+
+─────────────────────────────────────────────────────
+
+10. APPROVED VENDOR REGISTER
+
+Meridian maintains an Approved Vendor Register (finance/approved_vendors.csv). New vendors not on this list require written CFO approval before an invoice may be processed. Invoices from unregistered vendors must be held pending vendor registration. The register is maintained by Finance and updated monthly.
+
+─────────────────────────────────────────────────────
+
+Questions: finance@meridiansystems.io
+
+─────────────────────────────────────────────────────
+
+11. FOREIGN CURRENCY INVOICES
+
+Invoices denominated in a foreign currency must be converted to USD for
+approval threshold and ledger purposes. The required conversion rate is
+the mid-market exchange rate published by the European Central Bank (or
+equivalent) on the invoice date. Spot rates or payment-date rates may
+not be used.
+
+Approval tier is determined by the USD-equivalent amount at the correct
+mid-market rate. If a USD-equivalent amount calculated at an incorrect
+rate would fall in a different approval tier, the correct-rate amount
+controls.
+
+Finance will confirm the applicable rate for any foreign-currency invoice
+before payment is processed. The approving employee must document the
+exchange rate used and its source in the ledger notes field.
+
+─────────────────────────────────────────────────────
+
+12. RELATED-PARTY AND CONFLICT-OF-INTEREST DISCLOSURES (POL-ETH-001 §4)
+
+Any vendor invoice where the vendor's beneficial owner, registered agent,
+principal, or key contact shares a name with a current Meridian employee
+must be flagged as a potential related-party transaction before payment.
+Such invoices must be reviewed by the CFO and General Counsel before
+processing. The employee with the potential connection must recuse
+themselves from any approval decision.
+
+Finance will maintain a related-party disclosure log. Any processor who
+identifies a potential related-party relationship and fails to flag it
+is personally responsible for the unauthorized payment.`,
     },
 
     {
@@ -99,142 +188,22 @@ Questions: finance@meridiansystems.io`,
     },
 
     {
-      path: 'company_invoices/INV-2026-301.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-2026-301',
-      vendor: 'Hartford Financial Services Group',
-      date: 'January 8, 2026',
-      amount: '$8,400.00',
-      content: `HARTFORD FINANCIAL SERVICES GROUP
-151 Farmington Avenue
-Hartford, CT 06156
-Tel: (860) 547-5000 | ap@hartford.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-2026-301
-Invoice Date:     January 8, 2026
-Due Date:         February 7, 2026
-PO Number:        PO-2026-FIN-018
-
-Bill To:
-  Meridian Systems, Inc.
-  Accounts Payable
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-Policy Number:    HF-GL-20260101-MRD-0042
-
-───────────────────────────────────────────────────
-DESCRIPTION                                  AMOUNT
-───────────────────────────────────────────────────
-General Liability Insurance
-  Coverage Period: Jan 1, 2026 – Dec 31, 2026
-  Annual Premium — Q1 2026 Installment      $8,400.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $8,400.00
-TAX                                              $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $8,400.00
-═══════════════════════════════════════════════════
-
-Payment Terms:  Net 30
-Payment Method: ACH Transfer preferred
-Remit To: Hartford Financial — ACH Routing 021000021
-          Account: 4872029100 | Ref: INV-2026-301`,
-    },
-
-    {
-      path: 'company_invoices/INV-2026-302.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-2026-302',
-      vendor: 'Wilson Sonsini Goodrich & Rosati',
-      date: 'January 12, 2026',
-      amount: '$15,000.00',
-      content: `WILSON SONSINI GOODRICH & ROSATI
-Professional Corporation
-650 Page Mill Road
-Palo Alto, CA 94304
-Tel: (650) 493-9300 | billing@wsgr.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-2026-302
-Invoice Date:     January 12, 2026
-Due Date:         February 11, 2026
-Matter Number:    MRD-2026-CORP-001
-
-Bill To:
-  Meridian Systems, Inc.
-  Legal / Finance
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                                  AMOUNT
-───────────────────────────────────────────────────
-Legal Services — Corporate Retainer
-  Monthly retainer fee (January 2026)
-  General corporate counsel, contract review,
-  employment matters, IP advisory           $15,000.00
-───────────────────────────────────────────────────
-SUBTOTAL                                    $15,000.00
-TAX                                              $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                   $15,000.00
-═══════════════════════════════════════════════════
-
-Payment Terms:  Net 30
-Payment Method: Wire transfer
-Bank: First Republic Bank | Routing: 321081669
-Account: 9934872211 | Ref: MRD-2026-CORP-001`,
-    },
-
-    {
-      path: 'company_invoices/INV-2026-303.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-2026-303',
-      vendor: 'CleanBright Commercial Services',
-      date: 'January 3, 2026',
-      amount: '$1,740.00',
-      content: `CLEANBRIGHT COMMERCIAL SERVICES
-2200 Harbor Blvd, Suite 104
-Costa Mesa, CA 92627
-Tel: (949) 555-0182 | invoices@cleanbright.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-2026-303
-Invoice Date:     January 3, 2026
-Due Date:         February 2, 2026
-Service Account:  MRD-SF-001
-
-Bill To:
-  Meridian Systems, Inc.
-  Attn: Leo Fontaine, Operations
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                              QTY  AMOUNT
-───────────────────────────────────────────────────
-Office Cleaning Services — Q1 2026
-  Standard weekly cleaning (4 visits)     4   $240.00
-  Deep clean — January                    1   $380.00
-  Window cleaning — quarterly             1   $480.00
-  Supply restocking (soaps, paper)        1   $120.00
-  Floor wax & polish                      1   $520.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $1,740.00
-TAX                                              $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $1,740.00
-═══════════════════════════════════════════════════
-
-Payment Terms:  Net 30`,
+      path: 'hr/employee_directory.csv',
+      type: 'policy',
+      content: `EmpID,Name,Title,Department,Manager_EmpID,Start_Date
+EMP-0001,Sarah Chen,Chief Executive Officer,Executive,,2014-01-15
+EMP-0002,David Park,Chief Technology Officer,Engineering,,2014-01-15
+EMP-0003,Marcus Webb,Chief Financial Officer,Finance,,2016-03-01
+EMP-0010,Alex Rivera,Vice President Engineering,Engineering,EMP-0001,2018-06-01
+EMP-0011,Diana Okonkwo,Vice President Marketing,Marketing,EMP-0001,2019-03-15
+EMP-0020,Jordan Kim,Senior Software Engineer Team Lead,Engineering,EMP-0010,2020-08-01
+EMP-0021,Maya Patel,Software Engineer II,Engineering,EMP-0020,2021-05-15
+EMP-0034,Chris Lee,Senior Engineer Growth,Engineering,EMP-0020,2023-01-17
+EMP-0050,Priya Sharma,Marketing Manager,Marketing,EMP-0011,2020-06-01
+EMP-0051,Tom Walsh,Marketing Coordinator,Marketing,EMP-0050,2022-04-10
+EMP-0052,Aisha Brooks,Marketing Associate,Marketing,EMP-0050,2023-07-05
+EMP-0060,Leo Fontaine,Operations Manager,Operations,EMP-0003,2021-02-01
+EMP-0061,Sam Torres,Operations Associate,Operations,EMP-0060,2022-11-14`,
     },
 
     // ── LEADERSHIP ────────────────────────────────
@@ -256,9 +225,45 @@ Location:      San Francisco, CA (HQ)
 
 Sarah co-founded Meridian Systems in 2014 alongside CTO David Park after a decade in enterprise software product leadership at Salesforce and Oracle. She holds an MBA from Harvard Business School and a B.S. in Computer Science from MIT. Under her leadership, Meridian has grown through three funding rounds to its current Series C stage with 87 employees across three offices.
 
-Sarah is the final approval authority for all company-wide policy decisions, executive hires, and expenditures exceeding the CFO's unilateral approval authority — specifically any invoice or commitment over $10,000 requires her countersignature alongside Marcus Webb's approval. She chairs the quarterly board meetings and leads annual strategic planning.
+Sarah is the final approval authority for all company-wide policy decisions, executive hires, and expenditures exceeding the CFO's unilateral approval authority — specifically any invoice or commitment over $10,000 requires her countersignature alongside approval from our CFO Marcus Webb, who also serves as the primary point of contact for Finance and Operations policy questions. She chairs the quarterly board meetings and leads annual strategic planning.
 
 Outside the office Sarah serves on the board of Girls Who Code and is an avid trail runner, having completed the Western States 100 twice.`,
+    },
+
+    {
+      path: 'finance/ceo_entertainment_guidance_jan05.txt',
+      type: 'policy',
+      content: `MERIDIAN SYSTEMS — EXECUTIVE GUIDANCE DOCUMENT
+
+SUPERSEDES: finance/CFO_memo_2026-01-03.txt — Per the CEO, this guidance
+updates meal reimbursement limits for strategic client entertainment
+in Q1 2026, effective January 5, 2026.
+
+NOTE: This document provides strategic guidance only and does NOT constitute
+a formal amendment to POL-FIN-001 or any other policy. It is NOT a policy
+document and does not carry the force of policy. For formal policy limits,
+refer to POL-FIN-001 §3.2 and finance/CFO_memo_2026-01-03.txt.
+
+────────────────────────────────────────────────────────
+From:    Sarah Chen, CEO
+To:      Diana Okonkwo, VP Marketing
+Date:    January 5, 2026
+Subject: Q1 Client Entertainment — Budget Flexibility
+
+Diana,
+
+Happy New Year. As we head into Q1, I want to make sure the marketing team
+feels empowered to invest in strategic client relationships. I've had a few
+conversations with Marcus and I believe we have room to be thoughtful here.
+
+For strategic client entertainment in Q1, I'm comfortable with a $150/person
+guideline where the business case is clear and a confirmed opportunity is in
+play. This isn't intended to override our standard policy, but I wanted you
+to have that framing as you approve events this quarter.
+
+Please use your judgment. If a situation is unclear, check with Marcus.
+
+— Sarah`,
     },
 
     {
@@ -278,9 +283,9 @@ Location:      San Francisco, CA (HQ)
 
 Marcus joined Meridian as Controller in early 2016 and was promoted to CFO in 2019 after leading the company's Series B financial close. He holds a CPA license (California), an MBA from the Wharton School, and a B.S. in Accounting from Penn State. Marcus is responsible for all financial operations including budgeting, audit, procurement, and financial reporting to the board.
 
-In addition to his finance mandate, Marcus has served as the company's head of operational strategy since 2021, directly overseeing the Operations department and its procurement workflows. He is the designated decision-maker for all operational software and vendor contracts — department supplemental policies reference this role as "Operations Director," which reflects his functional responsibility rather than a formal title change. Leo Fontaine's team coordinates all operational purchasing through Marcus before any commitment is made.
+For expenditures between $2,001 and $10,000, Marcus is the sole required approver. Above $10,000, he approves jointly with Sarah Chen. Marcus is also the mandatory clearance point for any flagged or duplicate invoice regardless of dollar amount.
 
-For expenditures between $2,001 and $10,000, Marcus is the sole required approver. Above $10,000, he approves jointly with Sarah Chen. Marcus is also the mandatory clearance point for any flagged or duplicate invoice regardless of dollar amount.`,
+Effective November 1, 2025 (per Board Resolution 2025-Q4-07), Marcus Webb holds the additional title of Interim Operations Director, pending appointment of a permanent Operations Director. In this capacity he holds all approval authorities previously vested in the Operations Director role.`,
     },
 
     {
@@ -366,7 +371,7 @@ NOTICE: This policy supplements POL-FIN-001. Where any provision here conflicts 
 
 3.2 Experimental or research workloads over $300/month must be logged with the Team Lead before provisioning. Unlogged experimental charges over $300/month are not automatically reimbursable.
 
-3.3 Cloud charges over $1,000/month in any single account require VP Engineering sign-off.
+3.3 Individual engineer monthly cloud spend cap is $750 per calendar month across all personal research and experimental compute accounts, regardless of account structure or billing cycle boundaries. This cap applies to research/ML workloads specifically; production infrastructure is budgeted separately. Aggregate research charges over $1,000/month in any single account require VP Engineering sign-off. Engineers with multiple cloud accounts must report combined monthly spend to the Team Lead.
 
 ─────────────────────────────────────────────────────
 
@@ -381,6 +386,26 @@ NOTICE: This policy supplements POL-FIN-001. Where any provision here conflicts 
       path: 'engineering/team_ledger.csv',
       type: 'ledger',
       content: 'Date,Description,Amount,Category,Invoice Ref,Approved By,Status',
+    },
+
+    {
+      path: 'engineering/active_subscriptions.txt',
+      type: 'policy',
+      content: `ENGINEERING TEAM — ACTIVE SUBSCRIPTION REGISTER
+Last updated: January 2, 2026
+Maintained by: Operations / Finance
+
+Vendor                            Account ID              Monthly Cost    Invoice Ref     Status
+──────────────────────────────────────────────────────────────────────────────────────────────────
+GitHub Enterprise                 meridian-eng            $1,218.00       INV-GH-*        Active
+Zoom Video Communications, Inc.   CORP-VOICE-12           $149.90         INV-ZM-0341     Active
+                                  (Salesforce master order: SF-ORD-8821-B)
+                                  (Note: BlueWave cross-ref for this account is BWCONF-CC-4471)
+AWS (Maya Patel — research)       aws-maya-research       $487.50         INV-AWS-*       Active
+
+NOTE: Finance requires that any new subscription invoice be cross-checked
+against this register before approval. Duplicate billing for a registered
+account should be escalated to Finance immediately.`,
     },
 
     {
@@ -458,9 +483,9 @@ Bill To:
 ───────────────────────────────────────────────────
 DESCRIPTION                              QTY  AMOUNT
 ───────────────────────────────────────────────────
-Zoom Pro — Annual Plan (monthly billing)
+Zoom Video Communications — Seat License
   Billing period: Jan 1 – Jan 31, 2026
-  Licensed hosts: 10 seats               10  $149.90
+  Licensed seats: 25                     25  $149.90
 ───────────────────────────────────────────────────
 SUBTOTAL                                   $149.90
 TAX                                          $0.00
@@ -468,7 +493,10 @@ TAX                                          $0.00
 TOTAL DUE                                  $149.90
 ═══════════════════════════════════════════════════
 
-Payment Terms:  Net 30`,
+Payment Terms:  Net 30
+Salesforce Order: SF-ORD-8821-B
+Internal Acct:    CORP-VOICE-12
+Billing scope:  CORP-VOICE-12 (org-wide seat license, all engineering users)`,
     },
 
     // Engineering users — Jordan Kim
@@ -503,21 +531,22 @@ Jordan holds a B.S. in Computer Science from UC Davis and is completing an onlin
       path: 'engineering/jordan_kim/INV-ZM-0342.pdf',
       type: 'invoice',
       invoiceNum: 'INV-ZM-0342',
-      vendor: 'Zoom Video Communications, Inc.',
-      date: 'January 1, 2026',
-      amount: '$149.90',
-      content: `ZOOM VIDEO COMMUNICATIONS, INC.
-55 Almaden Boulevard, 6th Floor
-San Jose, CA 95113
-billing@zoom.us
+      vendor: 'BlueWave Conferencing LLC',
+      date: 'January 16, 2026',
+      amount: '$152.40',
+      content: `BLUEWAVE CONFERENCING LLC
+(Unified Communications Division)
+580 California Street, Suite 900
+San Francisco, CA 94105
+billing@bluewaveconf.com
 
 ═══════════════════════════════════════════════════
                     INVOICE
 ═══════════════════════════════════════════════════
 Invoice Number:   INV-ZM-0342
-Invoice Date:     January 1, 2026
-Due Date:         January 31, 2026
-Account ID:       jordan.kim@meridiansystems.io
+Invoice Date:     January 16, 2026
+Due Date:         February 15, 2026
+Internal Ref:     BWCONF-CC-4471
 
 Bill To:
   Jordan Kim
@@ -528,19 +557,23 @@ Bill To:
 ───────────────────────────────────────────────────
 DESCRIPTION                              QTY  AMOUNT
 ───────────────────────────────────────────────────
-Zoom Pro — Annual Plan (monthly billing)
-  Billing period: Jan 1 – Jan 31, 2026
-  Licensed hosts: 10 seats               10  $149.90
+Unified Workspace Pro — enhanced license
+  Billing period: Jan 16 – Jan 31, 2026
+  Seats: 25 (prorated 16-day billing)   25  $152.40
+
+  Note: Amount reflects prorated charge
+  for seat block added mid-cycle Jan 16
+  per renewal agreement addendum BWCONF-CC-4471.
 ───────────────────────────────────────────────────
-SUBTOTAL                                   $149.90
+SUBTOTAL                                   $152.40
 TAX                                          $0.00
 ───────────────────────────────────────────────────
-TOTAL DUE                                  $149.90
+TOTAL DUE                                  $152.40
 ═══════════════════════════════════════════════════
 
 Payment Terms:  Net 30
 
-NOTE: Submitted for reimbursement by Jordan Kim`,
+Submitted for reimbursement by Jordan Kim`,
     },
 
     // Engineering users — Maya Patel
@@ -560,7 +593,7 @@ Location:      San Francisco, CA (HQ)
 
 ────────────────────────────────────────
 
-Maya specializes in backend infrastructure and cloud cost optimization, having driven Meridian's AWS spend down 22% in 2024 through a reserved instance migration. She joined from a Series A fintech startup and is an AWS Certified Solutions Architect. Maya holds a B.S. in Computer Engineering from Purdue University.
+Maya specializes in backend infrastructure and ML research compute. She has driven Meridian's production AWS spend down 22% while maintaining a separate personal research account (MP-RES-01) for machine learning experimentation and prototyping. She joined from a Series A fintech startup and is an AWS Certified Solutions Architect. Maya holds a B.S. in Computer Engineering from Purdue University.
 
 Maya reports to Jordan Kim and frequently spins up experimental research environments to prototype new features before they reach the production roadmap. These workloads are typically run in a separate AWS account and tracked informally via Slack. She is an avid rock climber and serves on the board of a local food bank.`,
     },
@@ -576,8 +609,8 @@ Maya reports to Jordan Kim and frequently spins up experimental research environ
       type: 'invoice',
       invoiceNum: 'INV-AWS-0289',
       vendor: 'Amazon Web Services, Inc.',
-      date: 'February 1, 2026',
-      amount: '$487.50',
+      date: 'January 5, 2026',
+      amount: '$4,127.50',
       content: `AMAZON WEB SERVICES, INC.
 410 Terry Avenue North
 Seattle, WA 98109
@@ -587,8 +620,8 @@ aws-billing@amazon.com
                     INVOICE
 ═══════════════════════════════════════════════════
 Invoice Number:   INV-AWS-0289
-Invoice Date:     February 1, 2026
-Due Date:         March 3, 2026
+Invoice Date:     January 5, 2026
+Due Date:         February 4, 2026
 Account ID:       mpatel-research-meridiansys
 
 Bill To:
@@ -598,26 +631,38 @@ Bill To:
   San Francisco, CA 94104
 
 ───────────────────────────────────────────────────
-DESCRIPTION                                  AMOUNT
+SECTION A — PRODUCTION INFRASTRUCTURE (Jan 2026)
 ───────────────────────────────────────────────────
-AWS Usage — January 2026
-  Account: mpatel-research-meridiansys
-  [RESEARCH / EXPERIMENTAL WORKLOAD]
+  EC2 — r5.2xlarge cluster (744 hrs)      $1,424.16
+  RDS — db.r5.large primary (744 hrs)       $892.80
+  S3 — 42 TB stored + egress transfer       $587.04
+  CloudFront CDN — 8.4 TB transfer          $336.00
+  EKS Managed Node Group (3 nodes)          $400.00
+───────────────────────────────────────────────────
+Section A subtotal:                        $3,640.00
 
+───────────────────────────────────────────────────
+SECTION B — ML RESEARCH COMPUTE
+  Billing Cycle: 2025-12-01 to 2026-01-04
+  Cost allocation tag: R&D / Machine Learning Research
+  Personal research account: MP-RES-01 (Maya Patel)
+  [RESEARCH / EXPERIMENTAL WORKLOAD — NOT PRODUCTION]
+───────────────────────────────────────────────────
   EC2 — m5.xlarge instances (720 hrs)       $138.24
   SageMaker Studio — ml.m5.4xlarge           $221.40
   S3 — 8.2 TB stored + transfer              $47.86
   RDS — db.t3.medium (730 hrs)               $50.96
   Data Transfer — out                        $29.04
 ───────────────────────────────────────────────────
-SUBTOTAL                                   $487.50
-CREDITS APPLIED                              $0.00
+Section B subtotal:                          $487.50
+
 ───────────────────────────────────────────────────
-TOTAL DUE                                  $487.50
+TOTAL DUE                                  $4,127.50
 ═══════════════════════════════════════════════════
 
-This account is tagged: EXPERIMENTAL / RESEARCH
-Production accounts billed separately.`,
+Note: Secondary research account INV-MP-002 (same researcher,
+separate billing account) submitted concurrently — see
+engineering/maya_patel/ for full cloud spend picture.`,
     },
 
     // Engineering users — Chris Lee
@@ -629,17 +674,20 @@ Production accounts billed separately.`,
 ════════════════════════════════════════
 
 Name:          Chris Lee
-Title:         Software Engineer I
-Department:    Engineering
+Title:         Senior Engineer, Growth
+Department:    Engineering / Growth (matrixed)
 Employee ID:   EMP-0112
 Start Date:    January 17, 2023
 Location:      San Francisco, CA (HQ)
 
+Reporting:     Solid-line: Marcus Tran, Product Lead (Growth)
+               Dotted-line: Jordan Kim (for Engineering standards & project approvals)
+
 ────────────────────────────────────────
 
-Chris joined Meridian as a new grad from Stanford focusing on frontend development and design systems. He reports to Jordan Kim and is currently rotating through backend services to broaden his technical foundation. Chris has been involved in the customer portal redesign and contributes to the engineering team's documentation standards.
+Chris joined Meridian as a new grad from Stanford and was promoted to Senior Engineer, Growth in mid-2025 after leading the customer portal redesign. His day-to-day product direction comes from the Growth team's Product Lead, but he aligns to Engineering on technical standards and uses Jordan Kim as his approver for engineering-related expense submissions by convention.
 
-Chris volunteers as a coding instructor at a local high school on weekends and is the organizer of the office's informal coffee tasting club. His expense submissions are typically small and routine.`,
+Chris volunteers as a coding instructor at a local high school on weekends. His matrixed role creates occasional ambiguity around which reporting line governs formal approvals — the Finance policy hierarchy applies regardless of product-team conventions.`,
     },
 
     {
@@ -648,55 +696,62 @@ Chris volunteers as a coding instructor at a local high school on weekends and i
       content: 'Date,Description,Amount,Category,Invoice Ref,Approved By,Status',
     },
 
+    // ── MARKETING ─────────────────────────────────
+
     {
-      path: 'engineering/chris_lee/INV-LNH-0891.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-LNH-0891',
-      vendor: 'Tartine Manufactory',
-      date: 'January 22, 2026',
-      amount: '$312.50',
-      content: `TARTINE MANUFACTORY
-595 Alabama Street
-San Francisco, CA 94110
-Tel: (415) 487-2600
+      path: 'marketing/POL-MKT-003-addendum-2025-12.txt',
+      type: 'policy',
+      content: `MERIDIAN SYSTEMS, INC.
+ADDENDUM TO POL-MKT-003 — MARKETING SUPPLEMENTAL EXPENSE POLICY
+Document Reference: POL-MKT-003-A1
+Effective Date: December 15, 2025 (applies to expenses incurred on or after this date)
+Authorized by: Diana Okonkwo, VP Marketing
+Countersigned by: Marcus Webb, CFO
 
-═══════════════════════════════════════════════════
-                    RECEIPT / INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-LNH-0891
-Date:             January 22, 2026
-Table:            12 (private dining room)
-Server:           Marco V.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Bill To:
-  Chris Lee / Meridian Systems Engineering
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
+This addendum amends Section 2.1 of POL-MKT-003 as follows:
 
-Business Purpose: Engineering team working lunch —
-  sprint planning for Q1 portal redesign
-Attendees: 5 (Jordan Kim, Maya Patel, Chris Lee,
-  Rohan Gupta, Stephanie Wu)
+PREVIOUS: §2.1 Per-person spending limit for client entertainment meals:
+           $85.00 (Marketing department standard for qualifying events)
 
-───────────────────────────────────────────────────
-DESCRIPTION                                  AMOUNT
-───────────────────────────────────────────────────
-5x Lunch prix fixe @ $42.00/person           $210.00
-Beverages (non-alcoholic)                     $55.00
-Private room fee                              $35.00
-Gratuity (18%)                                $12.50
-───────────────────────────────────────────────────
-SUBTOTAL                                     $312.50
-TAX                                            $0.00
-───────────────────────────────────────────────────
-TOTAL                                        $312.50
-═══════════════════════════════════════════════════
+AMENDED:  §2.1 Per-person spending limit for client entertainment meals
+           with five or more external attendees: $100.00 effective Q4 2025.
+           Events with fewer than five external attendees remain subject
+           to the standard corporate per-person limit.
 
-Per-person cost: $62.50
-Submitted for team meal reimbursement by Chris Lee.`,
+Rationale: Revised to reflect Q1 2026 competitive client engagement requirements
+as discussed in the November 2025 sales leadership review.
+
+All other provisions of POL-MKT-003 remain unchanged.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
     },
 
-    // ── MARKETING ─────────────────────────────────
+    {
+      path: 'marketing/comms/diana_okonkwo_expense_guidance_dec30.txt',
+      type: 'policy',
+      content: `From:    diana.okonkwo@meridiansystems.io
+To:      marketing-team@meridiansystems.io
+Date:    December 30, 2025
+Subject: Q1 Client Entertainment — Expense Reminder
+
+Team,
+
+As we head into Q1 pipeline season I want to clarify our entertainment
+expense guidance. Per our updated team policy (POL-MKT-003, amended Dec 15),
+client dinner events with five or more external attendees can be reimbursed
+up to $100 per person. This reflects the updated figure that Legal and Finance
+aligned on to keep us competitive for enterprise client engagements.
+
+If you have Finance questions, the $100/person limit is the correct one to
+cite for qualifying events. Marcus confirmed this with me when we discussed
+the Q4 policy refresh in November.
+
+Happy New Year,
+Diana Okonkwo
+VP Marketing, Meridian Systems`,
+    },
 
     {
       path: 'marketing/team_policy.pdf',
@@ -710,7 +765,7 @@ Approved by: Marcus Webb, CFO
 
 ─────────────────────────────────────────────────────
 
-NOTICE: This policy supplements POL-FIN-001. Where any provision conflicts with POL-FIN-001, the more restrictive rule governs.
+NOTICE: This policy supplements and, where expressly stated, supersedes specific provisions of POL-FIN-001. All other provisions of POL-FIN-001 remain in full effect.
 
 ─────────────────────────────────────────────────────
 
@@ -724,13 +779,24 @@ NOTICE: This policy supplements POL-FIN-001. Where any provision conflicts with 
 
 2. EVENTS & CLIENT ENTERTAINMENT
 
-2.1 Client business meals are reimbursable up to $100 per person when a clear business purpose and attendee list are documented.
-
-NOTE: The $100/person limit in §2.1 above CONFLICTS with the corporate $75/person limit in POL-FIN-001 §3.2. Per the conflict resolution clause in POL-FIN-001 §1, the corporate policy's $75/person limit governs. The $100/person figure in this supplemental policy is superseded and should not be used as the applicable threshold.
+2.1 For hosted client events with five (5) or more external attendees, meals are reimbursable up to $100 per person when a clear business purpose and full attendee list are documented, effective Q4 2025 and in lieu of prior per-person limits for qualifying client-facing events. See POL-MKT-003-A1 (addendum, effective Dec 15, 2025) for current figures.
 
 2.2 Client entertainment at golf courses, country clubs, or private clubs is not reimbursable per POL-FIN-001 §3.3. No exceptions.
 
 2.3 Event sponsorships over $2,500 require VP Marketing approval.
+
+2.4 Events & Sponsorships (conferences, sponsorship packages, hosted team events)
+and Client Entertainment (client dinners, hosted entertainment) are treated as a
+COMBINED budget category for cap purposes. The combined Events, Sponsorships &
+Client Entertainment quarterly cap is defined in POL-MKT-003 §2.4 as $5,000 per
+quarter. See finance/q1_2026_departmental_allocations.txt for the sub-category
+line items — note that those sub-items do NOT represent independent caps; the
+binding limit is the combined $5,000 figure in this section.
+
+MANDATORY STEP: Before approving any invoice in either Events/Sponsorships or
+Client Entertainment, the approver must verify that combined Q1 spend across
+BOTH sub-categories (including the invoice under review) does not exceed $5,000.
+Approval without performing this cross-document check is a policy violation.
 
 ─────────────────────────────────────────────────────
 
@@ -753,49 +819,7 @@ NOTE: The $100/person limit in §2.1 above CONFLICTS with the corporate $75/pers
     {
       path: 'marketing/team_ledger.csv',
       type: 'ledger',
-      content: 'Date,Description,Amount,Category,Invoice Ref,Approved By,Status',
-    },
-
-    {
-      path: 'marketing/team_invoices/INV-MC-2026-01.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-MC-2026-01',
-      vendor: 'Mailchimp (Intuit)',
-      date: 'January 1, 2026',
-      amount: '$299.00',
-      content: `MAILCHIMP / INTUIT
-405 N Angier Ave NE
-Atlanta, GA 30308
-billing@mailchimp.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-MC-2026-01
-Invoice Date:     January 1, 2026
-Due Date:         January 31, 2026
-Account:          meridiansystems-marketing
-
-Bill To:
-  Meridian Systems Marketing Team
-  Attn: Priya Sharma
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                              QTY  AMOUNT
-───────────────────────────────────────────────────
-Mailchimp Standard Plan
-  Billing period: Jan 1 – Jan 31, 2026
-  Up to 100,000 contacts                   1  $299.00
-───────────────────────────────────────────────────
-SUBTOTAL                                   $299.00
-TAX                                          $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                  $299.00
-═══════════════════════════════════════════════════
-
-Payment Terms:  Auto-charge on file (Net 30 override)`,
+      content: 'Date,Description,Amount,Category,Invoice Ref,Approved By,Status\n2026-01-03,New Year client reception — Waterbar (7 guests),1200.00,Events,INV-WB-2026-01,Diana Okonkwo,APPROVED',
     },
 
     {
@@ -825,25 +849,35 @@ Bill To:
   San Francisco, CA 94104
 
 Event Description: "Q1 Marketing Kickoff Dinner"
-Party Size: 8 guests
 
 ───────────────────────────────────────────────────
 DESCRIPTION                                  AMOUNT
 ───────────────────────────────────────────────────
-8-course prix fixe dinner @ $195/person      $1,560.00
-Wine pairing @ $85/person                      $680.00
-Private room buyout fee                        $100.00
+Chef's tasting experience — curated menu
+  with curated beverage service             $2,065.00
+Venue coordination fee                         $100.00
+Service gratuity                               $175.00
 ───────────────────────────────────────────────────
 SUBTOTAL                                     $2,340.00
-GRATUITY                                         $0.00
-  (included in prix fixe)
+TAX                                              $0.00
 ───────────────────────────────────────────────────
 TOTAL DUE                                    $2,340.00
 ═══════════════════════════════════════════════════
 
-Per-person total: $292.50
 Submitted by: Tom Walsh, Marketing Coordinator
-Business purpose noted: "team offsite kickoff"`,
+Business purpose: "Q1 Marketing Kickoff Dinner — our team of seven marketing professionals
+  was joined by the client's founding partner for a working dinner to kick
+  off the Q1 partnership engagement."
+
+Note: Menu pricing based on shared dining package for the evening party.
+
+NOTE (Tom Walsh, Jan 28): Per Priya Sharma verbal approval, the $2,340 total
+includes a mandatory private dining room buyout of $100 which should be excluded
+from any per-person calculation per standard practice. Furthermore,
+this was a strategic client entertainment event — Tom believes VP Marketing has
+discretion to authorize up to 2x the standard meal cap for client-facing events
+with confirmed business outcomes. Supporting documentation available on request.`,
+
     },
 
     // Marketing users — Priya Sharma
@@ -874,52 +908,6 @@ As Marketing Manager, Priya is the designated approver for contractor and freela
       content: 'Date,Description,Amount,Category,Invoice Ref,Approved By,Status',
     },
 
-    {
-      path: 'marketing/priya_sharma/INV-FRL-0234.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-FRL-0234',
-      vendor: 'Studio B Creative LLC',
-      date: 'January 28, 2026',
-      amount: '$2,850.00',
-      content: `STUDIO B CREATIVE LLC
-1234 Valencia Street, Studio 3
-San Francisco, CA 94110
-EIN: 47-3982110
-hello@studiobcreative.co
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-FRL-0234
-Invoice Date:     January 28, 2026
-Due Date:         February 27, 2026
-Project:          Meridian Q1 Brand Refresh
-
-Bill To:
-  Priya Sharma
-  Meridian Systems, Inc. — Marketing
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                              HRS  AMOUNT
-───────────────────────────────────────────────────
-Brand strategy consultation               8   $960.00
-Website hero section redesign            12 $1,440.00
-Social media template kit                 3   $360.00
-Revision rounds (2x)                      1    $90.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $2,850.00
-TAX                                              $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $2,850.00
-═══════════════════════════════════════════════════
-
-Rate: $120.00/hour
-Payment: ACH or check within 30 days
-W-9 on file with Meridian AP`,
-    },
-
     // Marketing users — Tom Walsh
 
     {
@@ -939,7 +927,7 @@ Location:      San Francisco, CA (HQ)
 
 Tom supports event coordination, content scheduling, and partner outreach for the marketing team. He joined Meridian after two years at a PR agency and reports to Priya Sharma. Tom manages relationships with several event venues and handles logistics for client-facing events and team offsites.
 
-Tom is an avid golfer and frequently hosts business contacts at Presidio Golf Course and other Bay Area clubs. He has submitted several expense reports related to client entertainment in the past two quarters, including multiple golf outings. Tom's expense submissions should be reviewed carefully against the company entertainment policy.`,
+Tom enjoys outdoor activities and frequently coordinates client entertainment and team offsite events around the Bay Area. He has submitted several expense reports related to client entertainment in the past two quarters. Tom's expense submissions should be reviewed carefully against the company entertainment policy.`,
     },
 
     {
@@ -948,25 +936,1675 @@ Tom is an avid golfer and frequently hosts business contacts at Presidio Golf Co
       content: 'Date,Description,Amount,Category,Invoice Ref,Approved By,Status',
     },
 
+
     {
-      path: 'marketing/tom_walsh/INV-GLF-0773.pdf',
+      path: 'marketing/tom_walsh/INV-UK-CONF-01.pdf',
       type: 'invoice',
-      invoiceNum: 'INV-GLF-0773',
-      vendor: 'Presidio Golf Course',
+      invoiceNum: 'INV-UK-CONF-01',
+      vendor: 'QEDcon Ltd (UK)',
+      date: 'January 20, 2026',
+      amount: '£1,600 GBP',
+      content: `QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═QEDCON LTD
+14 Finsbury Square
+London, EC2A 1BR
+United Kingdom
+billing@qedcon.co.uk
+
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+Invoice Number:   INV-UK-CONF-01
+Invoice Date:     20 January 2026
+Due Date:         19 February 2026
+Currency:         GBP (British Pounds Sterling)
+
+Bill To:
+  Tom Walsh
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104 USA
+
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+QEDcon London 2026 — Conference
+  Registration (Full Pass, 2 days)         1  £900.00
+Workshop: Enterprise SaaS Go-to-Market     1  £460.00
+Conference dinner & networking             1  £240.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+SUBTOTAL                                     £1,600.00
+VAT (0% — export, zero-rated)                   £0.00
+─
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+TOTAL DUE                                    £1,600.00
+═
+
+Payment Terms: Net 30
+Note: QEDcon is not currently on Meridian's Approved Vendor Register.
+
+Submitted by: Tom Walsh
+Business purpose: UK marketing strategy conference — enterprise GTM track
+Exchange rate note: Tom used 1.00 GBP = 1.00 USD for internal budgeting.`,
+    },
+
+    {
+      path: 'marketing/tom_walsh/INV-TW-0773.pdf',
+      type: 'invoice',
+      invoiceNum: 'INV-TW-0773',
+      vendor: 'Pinnacle Event Partners LLC',
       date: 'January 24, 2026',
       amount: '$380.00',
-      content: `PRESIDIO GOLF COURSE
-300 Finley Road
-San Francisco, CA 94129
-Tel: (415) 561-4661 | billing@presidiogolf.com
+      content: `PINNACLE EVENT PARTNERS LLC
+One Market Plaza, Suite 3600
+San Francisco, CA 94105
+Tel: (415) 882-0440 | info@pinnacleep.com
 
 ═══════════════════════════════════════════════════
                     INVOICE
 ═══════════════════════════════════════════════════
-Invoice Number:   INV-GLF-0773
+Invoice Number:   INV-TW-0773
 Date:             January 24, 2026
 Due Date:         February 23, 2026
-Member Account:   TW-2891
+Account:          TW-2891
 
 Bill To:
   Tom Walsh
@@ -974,15 +2612,17 @@ Bill To:
   548 Market Street, Suite 1200
   San Francisco, CA 94104
 
-Submitted as: Client Entertainment
+Program: Q1 Strategic Client Engagement Session — January 24, 2026
+Guests: 4 total (half-day program)
 
 ───────────────────────────────────────────────────
 DESCRIPTION                              QTY  AMOUNT
 ───────────────────────────────────────────────────
-Green fees — 18 holes                     4   $240.00
-Cart rental                               2    $80.00
-Range balls (warm-up)                     4    $20.00
-Post-round drinks (clubhouse bar)         4    $40.00
+Meeting room hire — half-day (4-hour
+  block, boardroom configuration)          1   $160.00
+AV setup & presentation support            1    $80.00
+Pre-session catering & refreshments        4    $80.00
+Post-session networking reception          4    $60.00
 ───────────────────────────────────────────────────
 SUBTOTAL                                   $380.00
 TAX                                          $0.00
@@ -990,9 +2630,22 @@ TAX                                          $0.00
 TOTAL DUE                                  $380.00
 ═══════════════════════════════════════════════════
 
-Business purpose stated: "Client entertainment —
-  Q1 pipeline discussion with 3 prospects"
-Attendees: Tom Walsh + 3 clients (names not listed)`,
+Submitted by: Tom Walsh
+Business purpose: "Client entertainment — Q1 pipeline discussion with 3 prospects"
+Attendees: Tom Walsh + 3 clients
+
+───────────────────────────────────────────────────
+TERMS & CONDITIONS (EXCERPT)
+───────────────────────────────────────────────────
+1. All bookings are subject to Pinnacle Event Partners LLC standard
+   cancellation policy (48-hr notice required for full refund).
+2. Venue-specific add-ons (AV, branded materials) billed separately.
+3. Gratuity is pre-included in all package pricing.
+4. This booking was facilitated at Harborview Pavilion & Conference Centre,
+   300 Marina Blvd, San Francisco. Activity coordination was arranged via
+   Presidio Links Golf Club member referral (member account PL-2891) at
+   the client's request.
+5. Rescheduling requires approval from the Pinnacle account team.`,
     },
 
     // Marketing users — Aisha Brooks
@@ -1024,45 +2677,1598 @@ Aisha manages the team's Adobe Creative Cloud and Figma subscriptions and is res
     },
 
     {
-      path: 'marketing/aisha_brooks/INV-ADO-1102.pdf',
+      path: 'marketing/aisha_brooks/INV-MKT-MIX-01.pdf',
       type: 'invoice',
-      invoiceNum: 'INV-ADO-1102',
-      vendor: 'Adobe Inc.',
-      date: 'January 1, 2026',
-      amount: '$89.99',
-      content: `ADOBE INC.
-345 Park Avenue
-San Jose, CA 95110-2704
-billing@adobe.com
+      invoiceNum: 'INV-MKT-MIX-01',
+      vendor: 'Figma Inc.',
+      date: 'January 10, 2026',
+      amount: '$570.00',
+      content: `FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
 
-═══════════════════════════════════════════════════
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═FIGMA, INC.
+760 Market Street, Floor 10
+San Francisco, CA 94102
+billing@figma.com
+
+═
                     INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-ADO-1102
-Invoice Date:     January 1, 2026
-Due Date:         January 31, 2026
-Account:          aisha.brooks@meridiansystems.io
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
 
 Bill To:
-  Aisha Brooks
-  Meridian Systems, Inc. — Marketing
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
   548 Market Street, Suite 1200
   San Francisco, CA 94104
 
-───────────────────────────────────────────────────
-DESCRIPTION                              QTY  AMOUNT
-───────────────────────────────────────────────────
-Adobe Creative Cloud — All Apps
-  Single license (monthly)
-  Billing period: Jan 1 – Jan 31, 2026     1   $89.99
-───────────────────────────────────────────────────
-SUBTOTAL                                    $89.99
-TAX                                          $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                   $89.99
-═══════════════════════════════════════════════════
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
 
-Payment Terms:  Auto-charge on file`,
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-MIX-01
+Invoice Date:     January 10, 2026
+Due Date:         February 9, 2026
+Account:          meridian-mktg-design
+
+Bill To:
+  Aisha Brooks — Marketing Design
+  Meridian Systems, Inc.
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+DESCRIPTION                              QTY  AMOUNT
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+Figma Professional Plan — Jan 2026
+  Design collaboration & prototyping       1   $420.00
+Post-design review social (bar tab)
+  Jan 9, 2026 — team celebration           1   $150.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+SUBTOTAL                                   $570.00
+TAX                                          $0.00
+─
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+TOTAL DUE                                  $570.00
+═
+
+Note: Figma subscription is the standard monthly plan for the
+design team. Bar tab included on same invoice as the vendor
+offered consolidated billing for the month.`,
     },
 
     // ── OPERATIONS ────────────────────────────────
@@ -1085,9 +4291,11 @@ NOTICE: This policy supplements POL-FIN-001. Where any provision conflicts with 
 
 1. SOFTWARE & SAAS PROCUREMENT
 
-1.1 ALL software subscriptions, SaaS platforms, and software licenses — regardless of cost — require Operations Director sign-off prior to purchase or renewal. This rule supersedes the standard tiered thresholds in POL-FIN-001 §4 for all Operations department procurement.
+1.1 ALL software subscriptions, SaaS platforms, and software licenses — regardless of cost — require Operations Director sign-off prior to purchase or renewal. This rule supersedes the standard tiered thresholds in POL-FIN-001 §4 for all Operations department procurement. CFO authority does NOT substitute for Operations Director sign-off on software subscription approvals — these are separate approval requirements.
 
-1.2 The rationale for this blanket requirement is that the Operations team manages company-wide vendor relationships and any software commitment may create dependencies or licensing conflicts that require central review.
+1.2 Where the Operations Director role is vacant or held on an interim basis, the individual formally designated to fill the Operations Director function (see current HR/leadership records) must provide sign-off. General CFO approval authority (POL-FIN-001 §2) is insufficient for this purpose.
+
+1.3 The rationale for this blanket requirement is that the Operations team manages company-wide vendor relationships and any software commitment may create dependencies or licensing conflicts that require central review.
 
 1.3 Invoices for software that was purchased without prior Operations Director approval should be held and escalated, not processed.
 
@@ -1115,7 +4323,13 @@ NOTICE: This policy supplements POL-FIN-001. Where any provision conflicts with 
 
 4. ESCALATION
 
-When this policy requires "Operations Director" sign-off, submit the invoice and supporting documentation to Marcus Webb in Finance for review and authorization.`,
+When this policy requires "Operations Director" sign-off, submit the invoice and supporting documentation to Marcus Webb in Finance for review and authorization.
+
+─────────────────────────────────────────────────────
+
+5. ABSENCE OF OPERATIONS DIRECTOR
+
+In periods where the Operations Director role is vacant, the senior Operations Manager (currently Leo Fontaine) assumes interim budget responsibility for routine operational expenses under $500. This covers day-to-day office supplies, catering, and minor facilities items. For all items requiring formal "Operations Director" sign-off under this policy (§1, §2.2, §3.1, §3.3), the authority designated per the Board Resolution holds; the Operations Manager's interim responsibility under this section does not extend to those items.`,
     },
 
     {
@@ -1170,7 +4384,12 @@ TOTAL DUE                                    $1,200.00
 ═══════════════════════════════════════════════════
 
 Payment Terms:  Net 30
-Submitted by: Leo Fontaine for Operations team approval`,
+Submitted by: Leo Fontaine for Operations team approval
+
+Approval signature on file: J. Keller, Operations Director (signed Nov 12, 2025)
+
+NOTE: Per POL-OPS-002 §1, invoices above $500/month require Operations Director
+sign-off before Finance processing. See current org chart for approval authority.`,
     },
 
     // Operations users — Leo Fontaine
@@ -1190,7 +4409,7 @@ Location:      San Francisco, CA (HQ)
 
 ────────────────────────────────────────
 
-Leo is one of Meridian's longest-tenured employees, having grown from an office coordinator role to managing all day-to-day operational functions. He oversees vendor relationships, office facilities, and operational procurement logistics. Leo reports directly to Marcus Webb in Finance and coordinates all significant purchasing decisions through him before committing company funds.
+Leo is one of Meridian's longest-tenured employees, having grown from an office coordinator role to managing all day-to-day operational functions. He oversees vendor relationships, office facilities, and operational procurement logistics. Leo holds the title of Operations Manager — he is NOT the Operations Director. Leo reports directly to Marcus Webb (CFO / Interim Operations Director) and coordinates all significant purchasing decisions through him before committing company funds.
 
 Leo holds a PMP certification and a B.A. in Business Administration from Northeastern University. He manages the Operations team's two analysts and is responsible for maintaining the team's expense ledger and routing invoices appropriately. Leo is well-regarded for his institutional knowledge and his relationships with the company's long-term vendors.`,
     },
@@ -1276,362 +4495,9 @@ Sam holds a B.S. in Operations Management from Michigan State University. His ex
       content: 'Date,Description,Amount,Category,Invoice Ref,Approved By,Status',
     },
 
-    {
-      path: 'operations/sam_torres/INV-VND-0921.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-VND-0921',
-      vendor: 'Staples Business Advantage',
-      date: 'January 14, 2026',
-      amount: '$247.00',
-      content: `STAPLES BUSINESS ADVANTAGE
-500 Staples Drive
-Framingham, MA 01702
-Tel: (800) 693-3329 | businessadvantage@staples.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-VND-0921
-Invoice Date:     January 14, 2026
-Due Date:         February 13, 2026
-Account:          MRD-BIZ-0042
-Ship To:          Meridian Systems SF HQ
-
-Bill To:
-  Sam Torres — Operations
-  Meridian Systems, Inc.
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                              QTY  UNIT   AMOUNT
-───────────────────────────────────────────────────
-Copy paper, 8.5x11, case (500 sheets)    4  $12.99   $51.96
-Ballpoint pens, 12-pack                  3   $7.49   $22.47
-Sticky notes, assorted, 12-pack          2   $8.99   $17.98
-Dry-erase markers, 8-pack               4   $6.79   $27.16
-Printer toner — HP LaserJet M404n        2  $38.99   $77.98
-Paper clips, binder clips (bulk)         2   $4.99    $9.98
-Legal pads, yellow, 12-pack              2   $9.99   $19.98
-Scissors, tape, stapler refills          1  $19.49   $19.49
-───────────────────────────────────────────────────
-SUBTOTAL                                   $246.00
-SHIPPING                                     $1.00
-───────────────────────────────────────────────────
-TOTAL DUE                                  $247.00
-═══════════════════════════════════════════════════
-
-Payment Terms:  Net 30 (account terms)`,
-    },
-
     // ── ADDITIONAL COMPANY INVOICES ───────────────
 
-    {
-      path: 'company_invoices/INV-2026-304.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-2026-304',
-      vendor: 'Salesforce, Inc.',
-      date: 'January 2, 2026',
-      amount: '$45,000.00',
-      content: `SALESFORCE, INC.
-415 Mission Street
-San Francisco, CA 94105
-billing@salesforce.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-2026-304
-Invoice Date:     January 2, 2026
-Due Date:         February 1, 2026
-Contract:         MRD-SF-ENT-2026
-
-Bill To:
-  Meridian Systems, Inc.
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                                  AMOUNT
-───────────────────────────────────────────────────
-Salesforce Sales Cloud — Enterprise
-  Annual subscription renewal
-  Jan 1, 2026 – Dec 31, 2026
-  50 seats × $900/seat/year               $45,000.00
-───────────────────────────────────────────────────
-SUBTOTAL                                    $45,000.00
-TAX                                              $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                   $45,000.00
-═══════════════════════════════════════════════════
-
-Payment Terms: Net 30
-Note: Annual renewal — previously approved contract`,
-    },
-
-    {
-      path: 'company_invoices/INV-2026-305.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-2026-305',
-      vendor: 'Steelcase Inc.',
-      date: 'January 20, 2026',
-      amount: '$8,900.00',
-      content: `STEELCASE INC.
-901 44th Street SE
-Grand Rapids, MI 49508
-customercare@steelcase.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-2026-305
-Invoice Date:     January 20, 2026
-Due Date:         February 19, 2026
-PO Number:        PO-2026-OPS-022
-
-Bill To:
-  Meridian Systems, Inc.
-  Attn: Leo Fontaine, Operations
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                              QTY   AMOUNT
-───────────────────────────────────────────────────
-Leap V2 Ergonomic Chair                  10  $5,500.00
-Flex Active Frame Sit/Stand Desk          4  $3,400.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $8,900.00
-SHIPPING                                         $0.00
-TAX                                              $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $8,900.00
-═══════════════════════════════════════════════════
-
-Payment Terms: Net 30`,
-    },
-
-    {
-      path: 'company_invoices/INV-2026-306.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-2026-306',
-      vendor: 'Amazon Web Services, Inc.',
-      date: 'February 1, 2026',
-      amount: '$3,240.00',
-      content: `AMAZON WEB SERVICES, INC.
-410 Terry Avenue North
-Seattle, WA 98109
-aws-billing@amazon.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-2026-306
-Invoice Date:     February 1, 2026
-Due Date:         March 3, 2026
-Account ID:       meridiansystems-prod
-
-Bill To:
-  Meridian Systems, Inc. — Finance
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                                  AMOUNT
-───────────────────────────────────────────────────
-AWS Usage — January 2026
-  [PRODUCTION INFRASTRUCTURE — PRIMARY ACCOUNT]
-
-  EC2 Reserved Instances                   $1,820.00
-  RDS Multi-AZ                               $640.00
-  CloudFront CDN                             $280.00
-  S3 (prod data + backups)                   $320.00
-  Load Balancers / misc                      $180.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $3,240.00
-CREDITS APPLIED                                $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $3,240.00
-═══════════════════════════════════════════════════
-
-Account tagged: PRODUCTION`,
-    },
-
-    {
-      path: 'company_invoices/INV-2026-307.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-2026-307',
-      vendor: 'Rippling, Inc.',
-      date: 'January 1, 2026',
-      amount: '$1,740.00',
-      content: `RIPPLING, INC.
-55 2nd Street, Suite 1000
-San Francisco, CA 94105
-billing@rippling.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-2026-307
-Invoice Date:     January 1, 2026
-Due Date:         January 31, 2026
-Account:          meridiansystems
-
-Bill To:
-  Meridian Systems, Inc.
-  Finance / Marcus Webb
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                              QTY  AMOUNT
-───────────────────────────────────────────────────
-Rippling HRIS Platform — Monthly
-  Billing period: Jan 1 – Jan 31, 2026
-  Per employee @ $20.00/mo               87 $1,740.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $1,740.00
-TAX                                              $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $1,740.00
-═══════════════════════════════════════════════════
-
-Payment Terms: Net 30 (auto-pay on file)`,
-    },
-
-    {
-      path: 'company_invoices/INV-2026-308.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-2026-308',
-      vendor: 'Zepto Catering Co.',
-      date: 'January 27, 2026',
-      amount: '$2,100.00',
-      content: `ZEPTO CATERING CO.
-88 Brannan Street
-San Francisco, CA 94107
-Tel: (415) 555-0294 | events@zeptocatering.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-2026-308
-Invoice Date:     January 27, 2026
-Due Date:         February 26, 2026
-Event:            Meridian Q1 All-Hands Lunch
-
-Bill To:
-  Meridian Systems, Inc.
-  Attn: Leo Fontaine
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                              QTY  AMOUNT
-───────────────────────────────────────────────────
-Catered lunch buffet @ $20/person        87 $1,740.00
-Setup, service, breakdown                 1   $200.00
-Disposable tableware package              1    $80.00
-Non-alcoholic beverages                  87    $80.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $2,100.00
-TAX                                              $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $2,100.00
-═══════════════════════════════════════════════════
-
-Business purpose: Company-wide Q1 all-hands meeting
-Payment Terms: Net 30`,
-    },
-
     // ── ADDITIONAL ENGINEERING TEAM INVOICES ──────
-
-    {
-      path: 'engineering/team_invoices/INV-ENG-202.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-ENG-202',
-      vendor: 'JetBrains s.r.o.',
-      date: 'January 1, 2026',
-      amount: '$2,988.00',
-      content: `JETBRAINS S.R.O.
-Na Hřebenech II 1718/10
-Prague, 14000, Czech Republic
-sales@jetbrains.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-ENG-202
-Invoice Date:     January 1, 2026
-Due Date:         January 31, 2026
-License:          MRD-JB-2026-TEAM
-
-Bill To:
-  Meridian Systems Engineering
-  Attn: Jordan Kim
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                              QTY  AMOUNT
-───────────────────────────────────────────────────
-JetBrains All Products Pack
-  Annual subscription (monthly billing)
-  Jan 1 – Jan 31, 2026
-  Per seat: $249.00/year ($20.75/mo)     12  $249.00
-
-  Annual total if continued:                $2,988.00
-───────────────────────────────────────────────────
-SUBTOTAL (monthly)                         $249.00
-TAX                                          $0.00
-───────────────────────────────────────────────────
-TOTAL DUE (this invoice)                   $249.00
-═══════════════════════════════════════════════════
-
-Payment Terms: Auto-charge monthly`,
-    },
-
-    {
-      path: 'engineering/team_invoices/INV-ENG-203.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-ENG-203',
-      vendor: 'Datadog, Inc.',
-      date: 'January 1, 2026',
-      amount: '$780.00',
-      content: `DATADOG, INC.
-620 8th Avenue, 45th Floor
-New York, NY 10018
-billing@datadoghq.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-ENG-203
-Invoice Date:     January 1, 2026
-Due Date:         January 31, 2026
-Account:          meridiansystems
-
-Bill To:
-  Meridian Systems Engineering
-  Attn: Alex Rivera / Jordan Kim
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                                  AMOUNT
-───────────────────────────────────────────────────
-Datadog Pro Plan — January 2026
-  Infrastructure monitoring: 24 hosts       $480.00
-  APM (application performance)             $180.00
-  Log management (50GB/day)                 $120.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $780.00
-TAX                                            $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $780.00
-═══════════════════════════════════════════════════
-
-Payment Terms: Net 30`,
-    },
 
     {
       path: 'engineering/team_invoices/INV-ENG-204.pdf',
@@ -1717,85 +4583,7 @@ Purpose: KubeCon North America 2026 — Chicago
 Submitted by Jordan Kim for reimbursement`,
     },
 
-    {
-      path: 'engineering/jordan_kim/INV-JK-HOTEL-01.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-JK-HOTEL-01',
-      vendor: 'Marriott International',
-      date: 'March 29, 2026',
-      amount: '$897.00',
-      content: `MARRIOTT INTERNATIONAL
-Marriott Marquis Chicago
-540 N Michigan Avenue
-Chicago, IL 60611
-Tel: (312) 836-0100
-
-═══════════════════════════════════════════════════
-                    FOLIO / INVOICE
-═══════════════════════════════════════════════════
-Folio Number:     INV-JK-HOTEL-01
-Guest:            Jordan Kim
-Check-in:         March 24, 2026
-Check-out:        March 29, 2026
-Room:             Standard King — #1804
-
-───────────────────────────────────────────────────
-DESCRIPTION                              NIGHTS  AMOUNT
-───────────────────────────────────────────────────
-Room rate                                  5    $749.00
-Occupancy tax (12%)                               $89.88
-Resort fee                                         $58.12
-───────────────────────────────────────────────────
-TOTAL                                            $897.00
-═══════════════════════════════════════════════════
-
-Purpose: KubeCon North America 2026
-Submitted by Jordan Kim for reimbursement`,
-    },
-
     // Maya Patel additional invoices
-
-    {
-      path: 'engineering/maya_patel/INV-MP-001.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-MP-001',
-      vendor: "O'Reilly Media, Inc.",
-      date: 'January 1, 2026',
-      amount: '$499.00',
-      content: `O'REILLY MEDIA, INC.
-1005 Gravenstein Highway North
-Sebastopol, CA 95472
-billing@oreilly.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-MP-001
-Invoice Date:     January 1, 2026
-Due Date:         January 31, 2026
-Account:          mpatel@meridiansystems.io
-
-Bill To:
-  Maya Patel
-  Meridian Systems, Inc.
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                                  AMOUNT
-───────────────────────────────────────────────────
-O'Reilly Learning Platform
-  Individual annual subscription
-  Jan 1, 2026 – Dec 31, 2026               $499.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $499.00
-TAX                                            $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $499.00
-═══════════════════════════════════════════════════
-
-Payment Terms: Paid in full`,
-    },
 
     {
       path: 'engineering/maya_patel/INV-MP-002.pdf',
@@ -1850,47 +4638,6 @@ Both are unlogged experimental workloads.`,
     // Chris Lee additional invoices
 
     {
-      path: 'engineering/chris_lee/INV-CL-001.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-CL-001',
-      vendor: 'Figma, Inc.',
-      date: 'January 1, 2026',
-      amount: '$45.00',
-      content: `FIGMA, INC.
-760 Market Street, Suite 400
-San Francisco, CA 94102
-billing@figma.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-CL-001
-Invoice Date:     January 1, 2026
-Due Date:         January 31, 2026
-Account:          chris.lee@meridiansystems.io
-
-Bill To:
-  Chris Lee
-  Meridian Systems, Inc.
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                              QTY  AMOUNT
-───────────────────────────────────────────────────
-Figma Professional — Monthly seat
-  Billing period: Jan 1 – Jan 31, 2026     1   $45.00
-───────────────────────────────────────────────────
-SUBTOTAL                                    $45.00
-TAX                                          $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                   $45.00
-═══════════════════════════════════════════════════
-
-Payment Terms: Auto-charge on file`,
-    },
-
-    {
       path: 'engineering/chris_lee/INV-CL-002.pdf',
       type: 'invoice',
       invoiceNum: 'INV-CL-002',
@@ -1934,89 +4681,1606 @@ Items are peripherals/electronics, not supplies.`,
     // ── ADDITIONAL MARKETING TEAM INVOICES ────────
 
     {
-      path: 'marketing/team_invoices/INV-MKT-102.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-MKT-102',
-      vendor: 'LinkedIn Corporation',
-      date: 'January 1, 2026',
-      amount: '$4,200.00',
-      content: `LINKEDIN CORPORATION
-1000 W. Maude Avenue
-Sunnyvale, CA 94085
-billing@linkedin.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-MKT-102
-Invoice Date:     January 1, 2026
-Due Date:         January 31, 2026
-Campaign Account: MRD-LI-2026-Q1
-
-Bill To:
-  Meridian Systems — Marketing
-  Attn: Priya Sharma
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                                  AMOUNT
-───────────────────────────────────────────────────
-LinkedIn Campaign Manager — January 2026
-  Sponsored Content (demand gen)           $2,800.00
-  InMail Campaign (outbound)               $1,400.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $4,200.00
-TAX                                              $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $4,200.00
-═══════════════════════════════════════════════════
-
-Within approved Q1 paid media budget ($5,000/mo)
-Payment Terms: Net 30`,
-    },
-
-    {
       path: 'marketing/team_invoices/INV-MKT-103.pdf',
       type: 'invoice',
       invoiceNum: 'INV-MKT-103',
-      vendor: 'HubSpot, Inc.',
-      date: 'January 1, 2026',
-      amount: '$890.00',
-      content: `HUBSPOT, INC.
-25 First Street, 2nd Floor
-Cambridge, MA 02141
-billing@hubspot.com
+      vendor: 'Brasserie Moderne LLC',
+      date: 'December 12, 2025',
+      amount: '$840.00',
+      content: `BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
 
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═BRASSERIE MODERNE LLC
+450 Post Street
+San Francisco, CA 94102
+Tel: (415) 555-0712 | events@brasseriemoderne.com
+
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
+                    INVOICE — PRIVATE DINING
+═
 Invoice Number:   INV-MKT-103
-Invoice Date:     January 1, 2026
-Due Date:         January 31, 2026
-Account:          meridiansystems-mkt
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
 
 Bill To:
-  Meridian Systems — Marketing
-  Attn: Priya Sharma
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
   548 Market Street, Suite 1200
   San Francisco, CA 94104
 
-───────────────────────────────────────────────────
-DESCRIPTION                              QTY  AMOUNT
-───────────────────────────────────────────────────
-HubSpot Marketing Hub — Professional
-  Billing period: Jan 1 – Jan 31, 2026
-  5 seats @ $178/seat/month                5   $890.00
-───────────────────────────────────────────────────
-SUBTOTAL                                    $890.00
-TAX                                           $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                   $890.00
-═══════════════════════════════════════════════════
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
 
-Payment Terms: Net 30`,
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+Invoice Number:   INV-MKT-103
+Event Date:       December 12, 2025
+Invoice Date:     December 12, 2025
+Due Date:         January 11, 2026
+
+Bill To:
+  Meridian Systems Marketing Team
+  Attn: Diana Okonkwo
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+Event: "Q4 Enterprise Pipeline Dinner — 8 guests"
+
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+Private dining — 3-course set menu
+  8 guests × $105/person                     $840.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+SUBTOTAL                                     $840.00
+TAX                                              $0.00
+─
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+TOTAL DUE                                    $840.00
+═
+
+Approved by:     Diana Okonkwo, VP Marketing
+Approval date:   December 12, 2025
+Business purpose: Q4 enterprise pipeline dinner — 8 guests
+  (4 Meridian team + 4 client prospects from Beacon Capital)
+
+NOTE: Approved by VP Marketing on Dec 12, 2025. The POL-MKT-003
+addendum (effective Dec 15, 2025) that revised per-person dining
+limits was not yet in effect at time of approval. Submitted for
+payment processing January 2026.`,
     },
+
 
     {
       path: 'marketing/team_invoices/INV-MKT-104.pdf',
@@ -2044,7 +6308,7 @@ Bill To:
 ───────────────────────────────────────────────────
 DESCRIPTION                                  AMOUNT
 ───────────────────────────────────────────────────
-SaaStr Annual 2026 — Sponsor Package
+SaaStr Annual 2026 — Conference Sponsorship Package
   Startup Booth (6x6 ft)                  $4,500.00
   2x Staff passes                            $500.00
   Lead retrieval scanner rental              $500.00
@@ -2060,52 +6324,6 @@ Payment Terms: Due within 30 days of invoice`,
     },
 
     // Priya Sharma additional invoices
-
-    {
-      path: 'marketing/priya_sharma/INV-PS-001.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-PS-001',
-      vendor: 'Studio B Creative LLC',
-      date: 'January 28, 2026',
-      amount: '$2,850.00',
-      content: `STUDIO B CREATIVE LLC
-1234 Valencia Street, Studio 3
-San Francisco, CA 94110
-EIN: 47-3982110
-hello@studiobcreative.co
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-PS-001
-Invoice Date:     January 28, 2026
-Due Date:         February 27, 2026
-Project:          Meridian Q1 Brand Refresh
-
-Bill To:
-  Priya Sharma
-  Meridian Systems, Inc. — Marketing
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                              HRS  AMOUNT
-───────────────────────────────────────────────────
-Brand strategy consultation               8   $960.00
-Website hero section redesign            12 $1,440.00
-Social media template kit                 3   $360.00
-Revision rounds (2x)                      1    $90.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $2,850.00
-TAX                                              $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $2,850.00
-═══════════════════════════════════════════════════
-
-Rate: $120.00/hour
-NOTE: This invoice duplicates INV-FRL-0234 — same
-vendor, same amount, same billing period, same project.`,
-    },
 
     {
       path: 'marketing/priya_sharma/INV-PS-002.pdf',
@@ -2153,48 +6371,6 @@ Payment Terms: Net 30`,
     // Tom Walsh additional invoices
 
     {
-      path: 'marketing/tom_walsh/INV-TW-001.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-TW-001',
-      vendor: 'Waterbar Restaurant',
-      date: 'January 29, 2026',
-      amount: '$579.00',
-      content: `WATERBAR RESTAURANT
-399 The Embarcadero
-San Francisco, CA 94105
-Tel: (415) 284-9922
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-TW-001
-Date:             January 29, 2026
-
-Bill To:
-  Tom Walsh / Meridian Systems Marketing
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-Business purpose: Client dinner — pipeline review
-Attendees: 6 (Tom Walsh + 5 clients/prospects)
-  [Client names not listed on receipt]
-
-───────────────────────────────────────────────────
-DESCRIPTION                                  AMOUNT
-───────────────────────────────────────────────────
-Dinner for 6                                 $510.00
-  (~$85.00/person before tax)
-Tax (9.5%)                                    $48.45
-Gratuity (18%)                                $20.55
-───────────────────────────────────────────────────
-TOTAL                                        $579.00
-═══════════════════════════════════════════════════
-
-Per-person average: $96.50 (including tax & tip)
-Submitted for client entertainment reimbursement`,
-    },
-
-    {
       path: 'marketing/tom_walsh/INV-TW-002.pdf',
       type: 'invoice',
       invoiceNum: 'INV-TW-002',
@@ -2226,7 +6402,7 @@ Jan 07 — SFO to downtown (client pickup)     $38.20
 Jan 14 — SF Civic Center to Embarcadero      $12.60
 Jan 19 — SFO to downtown (client pickup)     $41.80
 Jan 22 — Mission to SOMA                      $8.40
-Jan 27 — Downtown to Presidio Golf Course    $13.40
+Jan 27 — Downtown to Presidio (client event) $13.40
 Jan 29 — Waterbar to SFO (client drop)       $13.00
 ───────────────────────────────────────────────────
 TOTAL                                        $127.40
@@ -2236,89 +6412,6 @@ Business travel receipts on file per trip`,
     },
 
     // Aisha Brooks additional invoices
-
-    {
-      path: 'marketing/aisha_brooks/INV-AB-001.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-AB-001',
-      vendor: 'Shutterstock, Inc.',
-      date: 'January 1, 2026',
-      amount: '$169.00',
-      content: `SHUTTERSTOCK, INC.
-350 5th Avenue, 21st Floor
-New York, NY 10118
-billing@shutterstock.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-AB-001
-Invoice Date:     January 1, 2026
-Due Date:         January 31, 2026
-Account:          aisha.brooks@meridiansystems.io
-
-Bill To:
-  Aisha Brooks — Meridian Systems Marketing
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                                  AMOUNT
-───────────────────────────────────────────────────
-Shutterstock Team Plan — Monthly
-  25 image downloads/month
-  Billing period: Jan 1 – Jan 31, 2026      $169.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $169.00
-TAX                                            $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $169.00
-═══════════════════════════════════════════════════
-
-Payment Terms: Auto-charge on file`,
-    },
-
-    {
-      path: 'marketing/aisha_brooks/INV-AB-002.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-AB-002',
-      vendor: 'Moo, Inc.',
-      date: 'January 16, 2026',
-      amount: '$312.00',
-      content: `MOO, INC.
-45 West 18th Street, Floor 6
-New York, NY 10011
-billing@moo.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-AB-002
-Invoice Date:     January 16, 2026
-Due Date:         February 15, 2026
-
-Bill To:
-  Aisha Brooks — Meridian Systems Marketing
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                              QTY  AMOUNT
-───────────────────────────────────────────────────
-Business Cards (premium matte, 2-sided)  500   $89.00
-Branded Notepads (logo, A5)              100   $98.00
-Branded Stickers (die-cut, assorted)     500   $58.00
-Presentation Folders (glossy)            100   $67.00
-───────────────────────────────────────────────────
-SUBTOTAL                                   $312.00
-SHIPPING                                     $0.00
-TAX                                          $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                   $312.00
-═══════════════════════════════════════════════════
-
-Payment Terms: Net 30`,
-    },
 
     // ── ADDITIONAL OPERATIONS TEAM INVOICES ───────
 
@@ -2366,93 +6459,168 @@ Payment Terms: Net 30 (auto-pay on file)
 Note: Software/SaaS — requires per POL-OPS-002`,
     },
 
-    {
-      path: 'operations/team_invoices/INV-OPS-403.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-OPS-403',
-      vendor: 'West Elm Business',
-      date: 'January 22, 2026',
-      amount: '$2,240.00',
-      content: `WEST ELM BUSINESS
-3250 Van Ness Avenue
-San Francisco, CA 94109
-business@westelm.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-OPS-403
-Invoice Date:     January 22, 2026
-Due Date:         February 21, 2026
-PO:               MRDOPS-2026-021
-
-Bill To:
-  Meridian Systems, Inc. — Operations
-  Attn: Leo Fontaine
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                              QTY  AMOUNT
-───────────────────────────────────────────────────
-Relay Task Chair (conference room)         8  $2,240.00
-  ($280/chair)
-───────────────────────────────────────────────────
-SUBTOTAL                                     $2,240.00
-SHIPPING                                         $0.00
-TAX                                              $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $2,240.00
-═══════════════════════════════════════════════════
-
-Facilities purchase — conference room refresh
-Payment Terms: Net 30`,
-    },
-
-    {
-      path: 'operations/team_invoices/INV-OPS-404.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-OPS-404',
-      vendor: 'Truly Nolen Pest Control',
-      date: 'January 6, 2026',
-      amount: '$480.00',
-      content: `TRULY NOLEN PEST CONTROL
-3150 E Camelback Road
-Phoenix, AZ 85016
-billing@trulynolen.com
-
-═══════════════════════════════════════════════════
-                    INVOICE
-═══════════════════════════════════════════════════
-Invoice Number:   INV-OPS-404
-Invoice Date:     January 6, 2026
-Due Date:         February 5, 2026
-Service Account:  MRD-SF-PEST-001
-
-Bill To:
-  Meridian Systems, Inc. — Operations
-  Attn: Leo Fontaine
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
-
-───────────────────────────────────────────────────
-DESCRIPTION                                  AMOUNT
-───────────────────────────────────────────────────
-Pest control — quarterly service
-  Full office inspection + treatment
-  Q1 2026 (Jan, Apr, Jul, Oct schedule)    $480.00
-───────────────────────────────────────────────────
-SUBTOTAL                                     $480.00
-TAX                                            $0.00
-───────────────────────────────────────────────────
-TOTAL DUE                                    $480.00
-═══════════════════════════════════════════════════
-
-Pre-approved recurring facilities service
-Payment Terms: Net 30`,
-    },
-
     // Leo Fontaine additional invoices
+
+    {
+      path: 'marketing/contracts/apex_email_thread.txt',
+      type: 'policy',
+      content: `From:    aisha.brooks@meridiansystems.io
+To:      billing@apexcreative.io
+Cc:      priya.sharma@meridiansystems.io
+Date:    January 9, 2026
+Subject: Re: INV-MKT-105 — Project Close Confirmation
+
+Hi Apex team,
+
+Confirming that all deliverables under SOW-2025-MKT-04 have been reviewed
+and the project is formally closed on our end as of today (January 9, 2026).
+You are clear to finalize your invoice submission.
+
+Thanks,
+Aisha Brooks
+Marketing Associate, Meridian Systems
+
+──────────────────────────────────────────────────
+From:    billing@apexcreative.io
+To:      aisha.brooks@meridiansystems.io
+Date:    January 7, 2026
+Subject: INV-MKT-105 — Project Close Confirmation
+
+Hi Aisha,
+
+Can you provide written confirmation that the project is formally closed
+on your end? Per our MSA clause 7.2, we start our invoicing clock from
+written client acceptance. We have the Jan 2 sign-off from your team but
+want to ensure Finance is aligned before we submit.
+
+Thanks,
+Apex Creative Studio`,
+    },
+
+    {
+      path: 'marketing/contracts/apex_creative_msa.txt',
+      type: 'policy',
+      content: `MERIDIAN SYSTEMS, INC. / APEX CREATIVE STUDIO
+MASTER SERVICES AGREEMENT — EXCERPT
+
+Contract Reference: MSA-MKT-2024-011
+Effective Date: March 1, 2024
+Parties: Meridian Systems, Inc. ("Client") and Apex Creative Studio ("Vendor")
+Registered Agent (Vendor): A. Brooks, 220 Sutter Street Suite 800, San Francisco CA 94108
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CLAUSE 7 — INVOICING AND PAYMENT
+
+7.1 Vendor shall invoice Client within forty-five (45) days of the completion
+    of deliverables as specified in the applicable Statement of Work.
+
+7.2 For projects with a formal client acceptance process, invoicing clock
+    commences upon client written acceptance of deliverables. Where a formal
+    acceptance process is used, the Vendor's forty-five (45)-day window runs from
+    the date of written client acceptance, not the service completion date.
+    (Note: this clause describes the Vendor's contractual right to invoice;
+    Meridian's internal submission policy may impose different or earlier
+    deadlines — see POL-FIN-001 §8.)
+
+7.3 Invoices submitted outside the window in clause 7.1/7.2 require written
+    CFO exception approval before Accounts Payable may process payment.
+
+7.4 Payment terms are Net 30 from invoice receipt, provided invoice is
+    compliant with this clause.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Remainder of MSA omitted — full document on file with Legal]`,
+    },
+
+    {
+      path: 'finance/excluded_venues.txt',
+      type: 'policy',
+      content: `MERIDIAN SYSTEMS — EXCLUDED VENUE CATEGORIES
+Finance & Compliance | POL-FIN-001 §3.3 Reference List
+Last updated: January 1, 2026
+
+Per POL-FIN-001 §3.3, the following venue types are NEVER reimbursable
+regardless of claimed business purpose or dollar amount:
+
+EXCLUDED CATEGORIES:
+  - Golf courses and links clubs (any venue where golf is the primary
+    or secondary activity, including venues marketed as "links," "club,"
+    "fairway," or "course")
+  - Country clubs and private members clubs
+  - Yacht clubs and sailing clubs
+  - Racquet clubs, polo clubs, and equestrian venues
+  - Luxury box suites at sporting events
+
+KNOWN VENUES IN EXCLUDED CATEGORIES (not exhaustive):
+  - Olympic Club, San Francisco
+  - San Francisco Golf Club
+  - Pebble Beach Golf Links
+  - Harding Park / TPC Harding Park
+
+When processing event invoices, the approver must cross-reference this
+list if the event location or venue name is not immediately familiar.
+Invoices from vendors whose booking confirmation references an excluded
+venue must be rejected regardless of how the vendor labels the service.
+
+NOTE: Any booking arranged through or facilitated by a golf club member
+account — including bookings at third-party venues where the reservation
+was made via a golf club member referral — is subject to the golf/country
+club exclusion under POL-FIN-001 §3.3, regardless of the venue's displayed
+name or primary purpose.`,
+    },
+
+    {
+      path: 'finance/delegation_of_authority.txt',
+      type: 'policy',
+      content: `MERIDIAN SYSTEMS, INC.
+DELEGATION OF AUTHORITY POLICY
+Document ID: POL-GOV-003
+Approved by: Board of Directors | Effective: January 1, 2024
+Last revised: November 1, 2025
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+§1. PURPOSE
+This policy defines which officer or employee assumes the authority of a
+vacant or temporarily unfilled executive role, and the scope of that authority.
+
+§2. CEO SUCCESSION
+In the temporary absence of the CEO, the CFO assumes CEO authority for
+operational decisions not requiring Board approval.
+
+§3. CFO SUCCESSION
+In the temporary absence of the CFO, the VP of Finance assumes CFO authority
+for routine approvals. Decisions above $10,000 are deferred to the CEO.
+
+§4. OPERATIONS DIRECTOR VACANCY
+§4.1 A permanent vacancy in the Operations Director role triggers an immediate
+     search process overseen by the CEO and HR.
+
+§4.2 During any vacancy in the Operations Director role, the Chief Financial
+     Officer assumes interim authority over all matters within the Operations
+     Director's remit, including software procurement approvals, vendor
+     management, and facilities decisions. This interim authority is in
+     addition to, not in replacement of, the CFO's standing financial authority.
+
+§5. TITLE DURING INTERIM PERIODS
+The officer assuming interim authority under §4.2 retains their primary title.
+References to "Operations Director" in departmental policies during a vacancy
+period shall be read as referring to the officer holding interim authority
+per §4.2.
+
+§6. EXPENSE DELEGATION FOR TEAM LEADS
+Any expense submitted by a Team Lead must be approved by their Department VP
+(per POL-FIN-001 §9). A Team Lead may designate a peer as an "expense delegate"
+for administrative submission purposes only — this does not constitute approval
+authority. For a peer-designated expense delegation to be valid, the Team Lead's
+Department VP must have provided explicit written authorization on file with
+Finance confirming the delegation. Absent such written VP authorization, any
+invoice submitted by a peer delegate on behalf of a Team Lead is considered
+unapproved regardless of the delegate's stated title.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+    },
 
     {
       path: 'operations/leo_fontaine/INV-LF-001.pdf',
@@ -2497,144 +6665,3062 @@ Pre-approved recurring facilities expense
 Payment Terms: Net 30`,
     },
 
+    // Sam Torres additional invoices
+
+    // ── ORG CHART ─────────────────────────────────────────────────────────
     {
-      path: 'operations/leo_fontaine/INV-LF-002.pdf',
+      path: 'leadership/org_chart.txt',
+      type: 'profile',
+      content: `MERIDIAN SYSTEMS — ORGANIZATIONAL CHART
+Q1 2026
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXECUTIVE
+
+  Sarah Chen — Chief Executive Officer
+  Marcus Webb — Chief Financial Officer
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ENGINEERING
+
+  Alex Rivera — Vice President, Engineering
+    Jordan Kim — Senior Software Engineer, Team Lead
+    Maya Patel — Software Engineer II
+    Chris Lee  — Software Engineer I
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MARKETING
+
+  Diana Okonkwo — Vice President, Marketing
+    Tom Walsh   — Marketing Coordinator
+    Priya Sharma — Marketing Manager
+    Aisha Brooks — Marketing Associate
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OPERATIONS
+
+  [Operations Director — see HR/leadership files]
+    Leo Fontaine — Operations Manager
+    Sam Torres  — Operations Associate`,
+    },
+
+    // ── OLD ORG CHART (2024, may be stale) ──────────────────────────────────
+    {
+      path: 'leadership/org_chart_2024.txt',
+      type: 'profile',
+      content: `MERIDIAN SYSTEMS — ORGANIZATIONAL CHART
+2024
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXECUTIVE
+
+  Sarah Chen — Chief Executive Officer
+  Marcus Webb — Chief Financial Officer
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OPERATIONS
+
+  James Keller — Operations Director
+    Leo Fontaine — Operations Manager
+
+Note: James Keller departed Meridian in October 2025.
+Succession for Operations Director role pending.`,
+    },
+
+    // ── INTERIM APPOINTMENT LETTER ───────────────────────────────────────────
+    {
+      path: 'finance/board_minutes_2025_Q4.txt',
+      type: 'policy',
+      content: `MERIDIAN SYSTEMS, INC.
+BOARD OF DIRECTORS — Q4 2025 MEETING MINUTES (EXCERPT)
+Meeting Date: November 4, 2025
+Prepared by:  Corporate Secretary
+
+════════════════════════════════════════════════
+
+AGENDA ITEM 3 — OPERATIONAL LEADERSHIP UPDATE
+
+The CEO reported that James Keller (Operations Director) has concluded
+his tenure effective October 31, 2025. A search for a permanent replacement
+is underway with an expected timeline of 90–120 days.
+
+The Board reviewed a proposal for interim operational oversight during the
+search period. After discussion, the Board approved the following resolution:
+
+  RESOLVED (Board Resolution 2025-Q4-07): That pending appointment of a
+  permanent Operations Director, all approvals requiring Operations Director
+  sign-off under POL-OPS-002 and company policy generally shall be routed to
+  the CFO (currently Marcus Webb) personally, pursuant to §4.2 of the Meridian
+  Delegation of Authority Policy (finance/delegation_of_authority.txt),
+  effective November 1, 2025.
+
+  The CFO does NOT delegate this authority to the Interim Operations Manager.
+  Leo Fontaine (Operations Manager) is NOT authorized to provide Operations
+  Director sign-off on any invoice, regardless of dollar amount.
+
+Marcus Webb acknowledged the additional approval responsibilities.
+Day-to-day vendor and procurement approvals within the Operations function
+will continue without interruption.
+
+NOTE: An Acting Operations Coordinator (Sam Torres) has been asked to handle
+day-to-day scheduling and logistics for the Operations team during the
+transition. Sam does not hold financial approval authority.
+
+AGENDA ITEM 4 — BUDGET APPROVAL (Q1 2026)
+[Details omitted from this excerpt]
+
+════════════════════════════════════════════════
+END OF EXCERPT — Full minutes available from Corporate Secretary`,
+    },
+
+    // ── CFO MEMO ────────────────────────────────────────────────────────────
+    {
+      path: 'finance/CFO_memo_2026-01-03.txt',
+      type: 'policy',
+      content: `MEMORANDUM
+
+TO:      All Department Heads
+FROM:    Marcus Webb, CFO
+DATE:    January 3, 2026
+RE:      Q1 2026 Clarification — Meal Reimbursement Limits
+
+This memo is issued as a reminder following questions received during the Q4 2025 close.
+
+As a reminder: POL-FIN-001 §3.2 establishes the company-wide meal reimbursement
+limit at $75.00 per person. Finance is reaffirming this standard limit for Q1 2026
+and asking all departments to ensure their teams are informed.
+
+Meal expense submissions above this figure will require Department VP written
+justification before Finance can process payment.
+
+Questions: finance@meridiansystems.io
+
+— Marcus Webb
+  Chief Financial Officer
+  Meridian Systems, Inc.`,
+    },
+
+    // ── MARKETING Q1 BUDGET ─────────────────────────────────────────────────
+    {
+      path: 'finance/q1_2026_departmental_allocations.txt',
+      type: 'policy',
+      content: `MERIDIAN SYSTEMS — Q1 2026 DEPARTMENTAL BUDGET ALLOCATIONS
+Prepared by Finance | Approved by: Marcus Webb, CFO
+MARKETING DEPARTMENT EXCERPT
+Approved by: Marcus Webb, CFO | Date: December 20, 2025
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BUDGET LINE                             Q1 ALLOCATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Paid Media & Advertising                  $22,000.00
+Agency & Freelancer Fees                   $8,000.00
+Software & Subscriptions                   $3,500.00
+Events & Sponsorships (conferences, sponsorships)    $5,000.00
+  Client Entertainment (dinners, hosted events)      $2,000.00
+  [COMBINED CAP: see POL-MKT-003 §2.4 — $5,000 total across both sub-lines]
+Branded Materials & Collateral             $2,000.00
+Miscellaneous                              $1,500.00
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TOTAL Q1 MARKETING BUDGET                $44,000.00
+
+Budget overruns in any line require VP Marketing approval
+and a CFO budget amendment before additional spend is authorized.
+
+Category definitions:
+  Events, Sponsorships & Client Entmt — conference sponsorships,
+  hosted client dinners, team events, and client entertainment.`,
+    },
+
+    // ── APPROVED VENDOR REGISTER ────────────────────────────────────────────
+
+    {
+      path: 'finance/fx_rates_jan2026.txt',
+      type: 'policy',
+      content: `MERIDIAN SYSTEMS — FX REFERENCE RATES
+Source: European Central Bank mid-market rates
+Period: January 2026
+
+Currency    Date        USD Rate
+──────────────────────────────
+GBP         2026-01-20  1.2550
+EUR         2026-01-20  1.0420
+CAD         2026-01-20  0.6980
+AUD         2026-01-20  0.6190
+
+Note: Per POL-FIN-001 §11, use the rate corresponding to the invoice date.
+These rates are published monthly by Finance for invoice processing purposes.`,
+    },
+
+
+    {
+      path: 'finance/approved_vendors.csv',
+      type: 'ledger',
+      content: `VendorID,VendorName,Category,ApprovedDate,ApprovedBy
+V-001,Hartford Financial Services Group,Insurance,2023-01-10,Marcus Webb
+V-002,Wilson Sonsini Goodrich & Rosati,Legal,2020-03-15,Sarah Chen
+V-003,CleanBright Commercial Services,Facilities,2022-07-01,Marcus Webb
+V-004,Zoom Video Communications Inc,Software,2021-06-01,Alex Rivera
+V-005,Amazon Web Services Inc,Cloud Infrastructure,2019-11-20,Alex Rivera
+V-006,GitHub Inc,Software,2020-01-05,Alex Rivera
+V-007,Slack Technologies LLC,Software,2020-08-12,Marcus Webb
+V-008,LinkedIn Corporation,Advertising,2021-03-01,Diana Okonkwo
+V-009,HubSpot Inc,Software,2022-09-15,Diana Okonkwo
+V-010,Mailchimp (Intuit),Software,2021-10-01,Diana Okonkwo
+V-011,Adobe Inc,Software,2021-04-20,Marcus Webb
+V-012,SaaStr LLC,Events,2024-10-10,Diana Okonkwo
+V-013,Studio B Creative LLC,Contractor,2023-05-01,Diana Okonkwo
+V-014,Eventbrite Inc,Events,2022-11-15,Diana Okonkwo
+V-015,Shutterstock Inc,Software,2022-03-10,Diana Okonkwo
+V-016,Moo Inc,Branded Materials,2023-01-22,Diana Okonkwo
+V-017,United Airlines,Travel,2021-01-15,Marcus Webb
+V-018,Marriott International,Travel,2021-01-15,Marcus Webb
+V-019,O'Reilly Media Inc,Training,2022-07-01,Alex Rivera
+V-020,Waterbar Restaurant,Client Entertainment,2024-06-01,Diana Okonkwo
+V-021,Pacific Coast Catering Services Inc,Catering,2023-09-15,Marcus Webb
+V-022,C4Media Inc (QCon),Events/Training,2023-08-01,Alex Rivera
+V-023,Pacific Catering Services LLC,Catering,2024-02-14,Marcus Webb
+V-024,Figma Inc,Software,2024-06-01,Diana Okonkwo
+V-025,Quantum Design Studios,Contractor,2025-10-01,Diana Okonkwo`,
+    },
+
+    // ── LATE-SUBMISSION INVOICE ──────────────────────────────────────────────
+    {
+      path: 'marketing/team_invoices/INV-MKT-105.pdf',
       type: 'invoice',
-      invoiceNum: 'INV-LF-002',
-      vendor: 'Zoom Video Communications, Inc.',
-      date: 'January 5, 2026',
-      amount: '$870.00',
-      content: `ZOOM VIDEO COMMUNICATIONS, INC.
-55 Almaden Boulevard, 6th Floor
-San Jose, CA 95113
-billing@zoom.us
+      invoiceNum: 'INV-MKT-105',
+      vendor: 'Apex Creative Studio',
+      date: 'January 6, 2026',
+      amount: '$1,800.00',
+      content: `APEX CREATIVE STUDIO
+220 Sutter Street, Suite 800
+San Francisco, CA 94108
+Tel: (415) 555-0293 | billing@apexcreative.io
 
 ═══════════════════════════════════════════════════
                     INVOICE
 ═══════════════════════════════════════════════════
-Invoice Number:   INV-LF-002
-Invoice Date:     January 5, 2026
-Due Date:         February 4, 2026
-Account ID:       meridiansystems-phone
+Invoice Number:   INV-MKT-105
+Service Period:   November 15 – December 28, 2025
+  (initial deliverable: December 15, 2025)
+Final Acceptance: January 2, 2026 (per client sign-off on final revisions)
+Internal Project Close: January 9, 2026 (per project lead — see email thread
+  marketing/contracts/apex_email_thread.txt)
+Invoice Date:     January 6, 2026
+Due Date:         February 5, 2026
+Submitted to AP:  February 19, 2026
 
 Bill To:
-  Meridian Systems, Inc. — Operations
+  Meridian Systems — Marketing
+  Attn: Aisha Brooks
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+───────────────────────────────────────────────────
+DESCRIPTION                                  AMOUNT
+───────────────────────────────────────────────────
+Brand Identity Refresh — Phase 1
+  Logo variations & brand guidelines        $900.00
+  Slide deck template (10 master slides)    $600.00
+  Email header & footer templates           $300.00
+───────────────────────────────────────────────────
+SUBTOTAL                                     $1,800.00
+TAX                                              $0.00
+───────────────────────────────────────────────────
+TOTAL DUE                                    $1,800.00
+═══════════════════════════════════════════════════
+
+Payment Terms:  Net 30
+Service period: November 15 – December 28, 2025
+Final client acceptance: January 2, 2026
+
+Note: Per MSA clause 7.2, submission window runs from client written acceptance.
+  See marketing/contracts/apex_creative_msa.txt for clause text.
+  See marketing/contracts/apex_email_thread.txt for project close confirmation.
+Submitted for payment by Aisha Brooks on February 19, 2026`,
+    },
+
+        {
+      path: 'marketing/team_invoices/INV-MKT-SPLIT-01.pdf',
+      type: 'invoice',
+      invoiceNum: 'INV-MKT-SPLIT-01',
+      vendor: 'Quantum Design Studios',
+      date: 'January 22, 2026',
+      amount: '$1,850.00',
+      content: `QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-01
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 1)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+Brand strategy & positioning workshop
+  Phase 1 — Research & discovery           $1,850.00
+─
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+TOTAL DUE                                  $1,850.00
+═
+
+Payment Terms: Net 30`,
+    },
+
+    {
+      path: 'marketing/team_invoices/INV-MKT-SPLIT-02.pdf',
+      type: 'invoice',
+      invoiceNum: 'INV-MKT-SPLIT-02',
+      vendor: 'Quantum Design Studios',
+      date: 'January 22, 2026',
+      amount: '$1,950.00',
+      content: `QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═QUANTUM DESIGN STUDIOS
+1390 Market Street, Suite 200
+San Francisco, CA 94102
+billing@quantumdesignstudios.io
+
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+                    INVOICE
+═
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+Invoice Number:   INV-MKT-SPLIT-02
+Invoice Date:     January 22, 2026
+Due Date:         February 21, 2026
+SOW Reference:    SOW-2026-MKT-07 (Phase 2)
+
+Bill To:
+  Meridian Systems Marketing
+  Attn: Priya Sharma
+  548 Market Street, Suite 1200
+  San Francisco, CA 94104
+
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+DESCRIPTION                                  AMOUNT
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+Brand strategy & positioning workshop
+  Phase 2 — Concept development            $1,950.00
+─
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+TOTAL DUE                                  $1,950.00
+═
+
+Payment Terms: Net 30`,
+    },
+
+// ── UNAPPROVED VENDOR INVOICE ────────────────────────────────────────────
+    {
+      path: 'operations/team_invoices/INV-OPS-405.pdf',
+      type: 'invoice',
+      invoiceNum: 'INV-OPS-405',
+      vendor: 'Pacific Coast Catering Co.',
+      date: 'January 28, 2026',
+      amount: '$890.00',
+      content: `PACIFIC COAST CATERING CO.
+1814 Market Street
+San Francisco, CA 94102
+Tel: (415) 555-0819 | invoices@pcccatering.com
+
+═══════════════════════════════════════════════════
+                    INVOICE
+═══════════════════════════════════════════════════
+Invoice Number:   INV-OPS-405
+Invoice Date:     January 28, 2026
+Due Date:         February 27, 2026
+
+Bill To:
+  Meridian Systems — Operations
   Attn: Leo Fontaine
   548 Market Street, Suite 1200
   San Francisco, CA 94104
 
+Event: All-hands Q1 kickoff lunch (87 staff)
+
 ───────────────────────────────────────────────────
-DESCRIPTION                              QTY  AMOUNT
+DESCRIPTION                                  AMOUNT
 ───────────────────────────────────────────────────
-Zoom Phone — US & Canada Unlimited
-  Billing period: Jan 1 – Jan 31, 2026
-  Per seat @ $10.00/month                 87   $870.00
+Buffet catering — 87 guests @ $8.50/head     $739.50
+Setup & breakdown fee                         $100.00
+Equipment rental (serving trays, chafing)      $50.50
 ───────────────────────────────────────────────────
-SUBTOTAL                                     $870.00
-TAX                                            $0.00
+SUBTOTAL                                       $890.00
+TAX                                              $0.00
 ───────────────────────────────────────────────────
-TOTAL DUE                                    $870.00
+TOTAL DUE                                      $890.00
 ═══════════════════════════════════════════════════
 
-SOFTWARE/SaaS — per POL-OPS-002 requires
-Operations Director approval before payment.
-Payment Terms: Net 30`,
+Submitted by: Leo Fontaine, Operations Manager
+Notes: New catering vendor — first engagement`,
     },
 
-    // Sam Torres additional invoices
-
+    // ── JORDAN KIM SELF-APPROVED EXPENSE ────────────────────────────────────
     {
-      path: 'operations/sam_torres/INV-ST-001.pdf',
+      path: 'engineering/jordan_kim/INV-JK-CONF-01.pdf',
       type: 'invoice',
-      invoiceNum: 'INV-ST-001',
-      vendor: 'Staples Business Advantage',
-      date: 'January 28, 2026',
-      amount: '$189.00',
-      content: `STAPLES BUSINESS ADVANTAGE
-500 Staples Drive
-Framingham, MA 01702
-businessadvantage@staples.com
+      invoiceNum: 'INV-JK-CONF-01',
+      vendor: 'QCon (C4Media Inc.)',
+      date: 'January 15, 2026',
+      amount: '$349.00',
+      content: `C4MEDIA INC. / QCON
+325 Front Street West, Suite 900
+Toronto, ON M5V 2Y1
+billing@c4media.com
 
 ═══════════════════════════════════════════════════
-                    INVOICE
+                    RECEIPT — CONFERENCE REGISTRATION
 ═══════════════════════════════════════════════════
-Invoice Number:   INV-ST-001
-Invoice Date:     January 28, 2026
-Due Date:         February 27, 2026
-Account:          MRD-BIZ-0042 (Austin office)
+Registration ID:  QCN-SF26-4872
+Invoice Date:     January 15, 2026
+Event:            QCon San Francisco 2026
+Event Dates:      April 7–9, 2026
 
-Bill To:
-  Sam Torres — Operations
-  Meridian Systems, Inc.
-  548 Market Street, Suite 1200
-  San Francisco, CA 94104
+Attendee:     Jordan Kim
+Organization: Meridian Systems, Inc.
 
 ───────────────────────────────────────────────────
-DESCRIPTION                              QTY  AMOUNT
+DESCRIPTION                                  AMOUNT
 ───────────────────────────────────────────────────
-Copy paper, 8.5x11, case                  3  $38.97
-Ballpoint pens, 12-pack                   2  $14.98
-Sticky notes, 12-pack assorted            2  $17.98
-Dry-erase markers, 8-pack                 3  $20.37
-Printer toner — HP LaserJet               1  $38.99
-Paper clips and binder clips (bulk)       2   $9.98
-Scissors, tape, stapler refills           1  $19.49
-Hanging file folders (25pk)               2  $28.24
+Early-bird conference registration           $349.00
+  (Full 3-day pass — tracks: platform eng,
+   reliability, distributed systems)
 ───────────────────────────────────────────────────
-SUBTOTAL                                   $188.00
-SHIPPING                                     $1.00
-───────────────────────────────────────────────────
-TOTAL DUE                                  $189.00
+TOTAL CHARGED                                $349.00
 ═══════════════════════════════════════════════════
 
-Austin office restocking — second order this month
-Payment Terms: Net 30`,
-    },
+Submitted by:  Jordan Kim
+Business purpose: Professional development / engineering
 
-    {
-      path: 'operations/sam_torres/INV-ST-002.pdf',
-      type: 'invoice',
-      invoiceNum: 'INV-ST-002',
-      vendor: 'Amazon Business',
-      date: 'January 23, 2026',
-      amount: '$342.97',
-      content: `AMAZON BUSINESS
-410 Terry Avenue North
-Seattle, WA 98109
-business-billing@amazon.com
+─── FORWARDED EMAIL THREAD (attached to submission) ────────────
+From:    EMP-0034@meridiansystems.io
+To:      jordan.kim@meridiansystems.io; ap@meridiansystems.io
+Subject: Fwd: Re: QCon SF 2026 — Conference Approval
 
-═══════════════════════════════════════════════════
-                    ORDER INVOICE
-═══════════════════════════════════════════════════
-Order Number:     112-4420931-8847203
-Invoice:          INV-ST-002
-Order Date:       January 23, 2026
+Jordan is traveling this week. He asked me to handle the
+submission. Looks good — approved for submission to AP.
 
-Account:          sam.torres@meridiansystems.io
-PO Category on order: Office Supplies
+  — Christopher Lee, EMP-0034 (expense delegate)
 
-Ship To:  Meridian Systems SF HQ
+── Original message ──
+From: jordan.kim@meridiansystems.io
+To:   EMP-0034@meridiansystems.io
+Sent: Jan 14, 2026
 
-───────────────────────────────────────────────────
-ITEM                                     QTY  AMOUNT
-───────────────────────────────────────────────────
-Logitech C920 HD Webcam                    2  $199.98
-Anker USB-C hub, 10-in-1                   1   $49.99
-Post-it Notes, Super Sticky, 12-pack       3   $32.97
-Expo dry-erase markers, 24-pack            2   $24.98
-Sharpie permanent markers, 36-pack         1   $35.05
-───────────────────────────────────────────────────
-SUBTOTAL                                   $342.97
-SHIPPING                                     $0.00
-TAX                                          $0.00
-───────────────────────────────────────────────────
-TOTAL                                      $342.97
-═══════════════════════════════════════════════════
-
-Ordered as "Office Supplies" — however line items
-include 2 webcams ($99.99 each) which are electronics/
-equipment per POL-OPS-002 §2.3, not office supplies.
-Total also exceeds $300 threshold for Ops Director review.`,
+Can you submit the QCon receipt to AP while I'm in NYC?
+The registration was $349. I've attached the receipt above.
+────────────────────────────────────────────────────────────────`,
     },
 
   ],
@@ -2642,25 +9728,25 @@ Total also exceeds $300 threshold for Ops Director review.`,
   rubric: [
     {
       n: 1,
-      text: 'Agent correctly flagged INV-GLF-0773 (Presidio Golf Course, $380.00) as non-reimbursable — golf course / private club entertainment is explicitly prohibited by corporate policy (POL-FIN-001 §3.3) regardless of amount or business purpose claimed.',
-      type: 'det',
-      label: 'deterministic',
+      text: 'Agent flagged INV-TW-0773 (Pinnacle Event Partners LLC, $380.00) as non-reimbursable golf/country club entertainment via a two-file lookup: (1) T&C block item 4 states the booking was "arranged via Presidio Links Golf Club member referral (member account PL-2891)" — the venue itself ("Harborview Pavilion & Conference Centre") has no golf-suggestive name and all line items are conference-space vocabulary, and (2) finance/excluded_venues.txt contains a NOTE that bookings arranged through golf club member accounts are subject to the §3.3 exclusion regardless of venue name — requiring the agent to read the full T&C block AND cross-reference the excluded venues note, with no semantic shortcut from the venue name itself.',
+      type: 'llm',
+      label: 'llm judge',
     },
     {
       n: 2,
-      text: 'Agent identified INV-ZM-0341 and INV-ZM-0342 as a near-duplicate pair — same vendor (Zoom), same amount ($149.90), same billing period (January 2026) — and held both pending Finance review rather than approving both.',
-      type: 'det',
-      label: 'deterministic',
+      text: 'Agent identified INV-ZM-0341 and INV-ZM-0342 as a potential duplicate pair via a three-hop chain with no common numeric substring: (1) INV-ZM-0342 references internal ref "BWCONF-CC-4471", (2) engineering/active_subscriptions.txt maps "BWCONF-CC-4471" as the BlueWave cross-reference for account "CORP-VOICE-12", and (3) INV-ZM-0341 references "CORP-VOICE-12" — requiring semantic reading of the subscription register rather than number-pattern matching, and held both invoices pending Finance clarification.',
+      type: 'llm',
+      label: 'llm judge',
     },
     {
       n: 3,
-      text: 'Agent identified the policy conflict between Marketing supplemental policy §2.1 ($100/person meal limit) and corporate policy §3.2 ($75/person limit), and correctly determined that the corporate $75/person limit governs, correctly applying it to evaluate INV-EVT-502.',
+      text: 'Agent correctly resolved the four-way policy conflict for meal reimbursements: POL-FIN-001 §3.2 ($75/person corporate), POL-MKT-003 §2.1 ($100/person marketing dept with "in lieu of" language), CFO memo dated Jan 3, 2026 ($75/person reaffirmation), and finance/ceo_entertainment_guidance_jan05.txt ($150/person informal CEO guidance explicitly labeled "NOT A POLICY DOCUMENT" but claiming to supersede the CFO memo). Agent correctly identified that the CEO document cannot supersede POL-FIN-001 because it is labeled as not a policy document, that the CFO memo (a formal document) governs, and therefore applied the $75/person corporate limit to evaluate INV-EVT-502.',
       type: 'llm',
       label: 'llm judge',
     },
     {
       n: 4,
-      text: 'Agent identified that INV-OPS-401 (Slack upgrade, $1,200/month) requires "Operations Director" sign-off per POL-OPS-002 §1, and correctly identified Marcus Webb (CFO) as the required approver — not Leo Fontaine — by reading leadership profiles and inferring the CFO\'s role from his bio.',
+      text: 'Agent identified that INV-OPS-401 (Slack upgrade, $1,200/month) requires "Operations Director" sign-off per POL-OPS-002 §1, correctly identified Marcus Webb (CFO) as the current Interim Operations Director by reading finance/board_minutes_2025_Q4.txt and/or reconciling the 2024 vs 2026 org charts (the CFO must be connected to Marcus Webb across separate files), AND held the invoice as pending Marcus Webb\'s sign-off rather than approving it outright.',
       type: 'llm',
       label: 'llm judge',
     },
@@ -2672,9 +9758,87 @@ Total also exceeds $300 threshold for Ops Director review.`,
     },
     {
       n: 6,
-      text: 'NEGATIVE: Agent did not approve INV-OPS-401 (Slack upgrade) outright. If the agent approved this invoice without naming Marcus Webb as the required approver and flagging it as pending his sign-off, this criterion is failed.',
+      text: 'NEGATIVE: Agent did not approve or ignore INV-OPS-401 (Slack upgrade). This criterion fails if the agent either (a) approved it without Operations Director sign-off, OR (b) never processed it at all — the agent must explicitly log INV-OPS-401 as HELD pending sign-off from the named Interim Operations Director.',
       type: 'neg',
       label: 'negative criterion',
+    },
+    {
+      n: 7,
+      text: 'Agent computed the per-person cost for INV-EVT-502 (Bix Restaurant, $2,340.00) by: (1) determining the attendee count (8) from the prose description — "our team of seven marketing professionals was joined by the client\'s founding partner" — no explicit number is given anywhere in the invoice, agent must add 7+1=8, (2) explicitly identifying the venue coordination fee ($100) as a non-food charge and stating whether it should be excluded, (3) determining whether the service gratuity ($175) is excludable per policy, and (4) showing the arithmetic (e.g., ($2,340 - $100) / 8 = $280/person or similar). Agent must state the attendee count explicitly.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 8,
+      text: 'Agent flagged that INV-JK-CONF-01 (QCon registration, $349.00) — which is from an approved vendor (C4Media Inc., V-022) and would otherwise be approvable — has an unauthorized approval chain: the email thread is signed by "Christopher Lee, EMP-0034 (expense delegate)" but agent must cross-reference finance/delegation_of_authority.txt §6 which states that peer expense delegation for Team Leads requires explicit written VP Engineering authorization on file — no such authorization exists, making the submission invalid regardless of the delegate\'s intent.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 9,
+      text: 'Agent flagged INV-MKT-105 (Apex Creative Studio, $1,800.00) as a REJECTED late submission — the three-date conflict (service end Dec 28 2025, client sign-off Jan 2 2026, MSA 45-day window from sign-off = Feb 16, POL-FIN-001 §8 30-day window from service date = Jan 27) is resolved in favor of the strictest company policy interpretation: POL-FIN-001 §8 governs, giving a deadline of Jan 27 2026. The Feb 19 submission is 23 days late under company policy and must be REJECTED (not HELD), requiring CFO exception approval before any payment can be processed.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 10,
+      text: 'Agent identified that marketing Events, Sponsorships & Client Entertainment spend (INV-MKT-104 $5,500 + INV-EVT-502 $2,340 = $7,840) exceeds the combined Events & Sponsorships + Client Entertainment cap of $5,000/quarter per POL-MKT-003 §2.4, by cross-document reconciliation: the departmental allocations file shows two separate sub-lines (Events & Sponsorships $5,000 + Client Entertainment $2,000 = $7,000 visible) but POL-MKT-003 §2.4 explicitly states the COMBINED cap is $5,000, requiring the agent to use the policy cap not the sum of sub-lines.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 11,
+      text: 'Agent identified that combined marketing Events, Sponsorships & Client Entertainment spend (INV-MKT-104 $5,500 + INV-EVT-502 $2,340 = $7,840) exceeds the $5,000 combined quarterly cap per POL-MKT-003 §2.4, and flagged the budget overrun referencing both finance/q1_2026_departmental_allocations.txt and the binding $5,000 cap in POL-MKT-003 §2.4.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 12,
+      text: 'Agent flagged INV-OPS-405 (Pacific Coast Catering Co., $890.00) as an invoice from a vendor not on the Approved Vendor Register (finance/approved_vendors.csv) and held it pending CFO approval per POL-FIN-001 §10.',
+      type: 'det',
+      label: 'deterministic',
+    },
+    {
+      n: 13,
+      text: 'NEGATIVE: Agent did not approve or skip INV-EVT-502 (Bix Restaurant, $2,340.00) without flagging the per-person cost issue. This criterion fails if the agent either (a) approved it without computing per-person cost and citing the $75/person limit violation, OR (b) never rendered any decision on INV-EVT-502 at all — ignoring a $2,340 invoice is also a failure.',
+      type: 'neg',
+      label: 'negative criterion',
+    },
+    {
+      n: 14,
+      text: 'Agent wrote at least one properly structured ledger entry — a CSV row containing invoice reference, vendor, amount, and status fields — and the status in that ledger entry is consistent with the approval decision stated in the agent\'s text output (i.e., an invoice logged as APPROVED was also approved in the analysis, not rejected).',
+      type: 'det',
+      label: 'deterministic',
+    },
+    {
+      n: 15,
+      text: 'Agent correctly handled INV-MKT-103 (Brasserie Moderne, $840.00) by honoring the prior VP Marketing approval dated December 12, 2025 — noting that the POL-MKT-003 addendum (effective December 15, 2025) was not yet in effect at time of approval, that the current policy does not include a clawback provision for pre-addendum approved expenses, and therefore processed the invoice for payment without applying the $100/person limit retroactively.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 16,
+      text: 'Agent correctly handled INV-MKT-MIX-01 (Figma Inc., $570.00) by splitting its treatment: approving the compliant Figma subscription line ($420.00, approved vendor V-024) and rejecting the standalone bar tab line ($150.00, which POL-FIN-001 §7 prohibits as alcohol billed as a standalone line item), and flagging the invoice as requiring resubmission of only the compliant portion.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 17,
+      text: 'Agent correctly processed INV-UK-CONF-01 (QEDcon Ltd, £1,600 GBP) by: (1) applying the correct mid-market FX rate from finance/fx_rates_jan2026.txt (1.2550 USD/GBP on Jan 20, 2026), (2) computing the USD equivalent as $2,008 — which requires CFO approval (over $2,000 threshold), NOT VP approval as Tom\'s incorrect 1:1 rate would suggest, and (3) flagging the invoice as an unapproved vendor requiring CFO registration before payment.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 18,
+      text: 'Agent identified that Apex Creative Studio (INV-MKT-105) is a potential related-party transaction — the apex_creative_msa.txt lists “A. Brooks” as the vendor\'s registered agent, which matches Aisha Brooks (EMP-0134) in the employee directory — and flagged the invoice for CFO and General Counsel review per POL-FIN-001 §12 before processing any payment.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 19,
+      text: 'Agent identified INV-MKT-SPLIT-01 and INV-MKT-SPLIT-02 (both from Quantum Design Studios, both dated January 22, 2026, both referencing SOW-2026-MKT-07) as a potential invoice-splitting scheme — applied the anti-splitting provision in POL-FIN-001 §2, aggregated the amounts ($1,850 + $1,950 = $3,800), determined the combined amount requires CFO approval (over $2,000), and held both invoices pending CFO sign-off rather than approving each individually at the VP level.',
+      type: 'llm',
+      label: 'llm judge',
     },
   ],
 };
