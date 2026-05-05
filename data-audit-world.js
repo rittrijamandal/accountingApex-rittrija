@@ -365,6 +365,50 @@ Section 2 verified by employer:   May 15, 2023
 Verified by:    HR Department, Crestline Consulting Group`,
     },
     {
+      path: 'HR/Employees/Priya_Sharma/salary_amendment_2023.pdf',
+      type: 'profile',
+      content: `CRESTLINE CONSULTING GROUP, INC.
+SALARY AMENDMENT NOTICE
+
+Date:       December 20, 2022
+To:         Priya Sharma, Marketing Manager
+From:       Sarah Mitchell, President & CEO
+
+Effective January 1, 2023, your base salary is amended as follows:
+
+  Previous monthly base: $6,000.00
+  Amended monthly base:  $6,200.00 ($74,400.00 annually)
+
+This reflects your annual performance review outcome (Rating: Meets Expectations).
+
+Signed: Sarah Mitchell (CEO)           Date: December 20, 2022
+Acknowledged: Priya Sharma             Date: December 21, 2022`,
+    },
+    {
+      path: 'HR/Employees/Priya_Sharma/amendment_draft_2025.pdf',
+      type: 'profile',
+      content: `CRESTLINE CONSULTING GROUP, INC.
+SALARY AMENDMENT — DRAFT
+
+Date:       [DRAFT — NOT EXECUTED]
+To:         Priya Sharma, Marketing Manager
+From:       Daniel Park, VP Finance
+
+PROPOSED effective January 1, 2025:
+
+  Previous monthly base: $6,200.00
+  Proposed monthly base: $6,500.00 ($78,000.00 annually)
+
+  Basis: 4.8% merit increase following 2024 performance review.
+
+*** THIS DOCUMENT IS A DRAFT AND HAS NOT BEEN SIGNED OR EXECUTED ***
+*** DO NOT USE AS AUTHORIZATION FOR PAYROLL CHANGES ***
+
+Prepared by: Daniel Park              Date: December 18, 2024
+CEO Signature: ____________________   Date: ____________  [PENDING]`,
+    },
+
+    {
       path: 'HR/Employees/Priya_Sharma/offer_letter.pdf',
       type: 'profile',
       content: `CRESTLINE CONSULTING GROUP, INC.
@@ -456,7 +500,8 @@ EMP-004,Marcus Webb,Senior Consultant,9167.00,9167.00,9166.00,27500.00
 EMP-005,Jordan Lee,Associate Consultant,6833.00,6833.00,6834.00,20500.00
 EMP-006,Priya Sharma,Marketing Manager,6500.00,6500.00,6500.00,19500.00
 EMP-007,Tom Caruso,Office Administrator,4833.00,4833.00,4834.00,14500.00
-TOTAL,,,$63916.00,$63916.00,$63918.00,$191750.00`,
+EMP-008,A. Delgado,Project Coordinator,4500.00,0.00,0.00,4500.00
+TOTAL,,,$68416.00,$63916.00,$63918.00,$196250.00`,
     },
     {
       path: 'Finance/Payroll/W2_Marcus_Webb_2024.pdf',
@@ -465,13 +510,13 @@ TOTAL,,,$63916.00,$63916.00,$63918.00,$191750.00`,
 Employee:       Marcus Webb
 SSN:            XXX-XX-5512
 Employer:       Crestline Consulting Group, Inc. EIN: 84-XXXXXXX
-Box 1 Wages:    $109,900.00
-Box 2 Fed Tax:  $19,240.00
-Box 3 SS Wages: $109,900.00
-Box 4 SS Tax:   $6,813.80
-Box 5 Med Wage: $109,900.00
-Box 6 Med Tax:  $1,593.55
-Box 16 State Wages: $109,900.00  Box 17 State Tax: $6,154.40  State: CO`,
+Box 1 Wages:    $103,000.00
+Box 2 Fed Tax:  $17,545.00
+Box 3 SS Wages: $103,000.00
+Box 4 SS Tax:   $6,386.00
+Box 5 Med Wage: $103,000.00
+Box 6 Med Tax:  $1,493.50
+Box 16 State Wages: $103,000.00  Box 17 State Tax: $5,768.00  State: CO`,
     },
     {
       path: 'Finance/Payroll/W2_Jordan_Lee_2024.pdf',
@@ -667,7 +712,8 @@ Total Liabilities & Equity,303100.00,270090.00`,
 2025-03-10,4000-Revenue,Consulting Fees - Briar Ridge Corp,,38500.00,INV-2025-003
 2025-03-22,4000-Revenue,Consulting Fees - Westfield Properties,,41000.00,INV-2025-004
 2025-03-31,4000-Revenue,Consulting Fees - Harrington Capital,,28500.00,INV-HCG-2025-006
-2025-03-31,4000-Revenue,Q1 Revenue Accrual,,11600.00,ADJ-Q1-001
+2025-03-31,4000-Revenue,Consulting Fees — Lakewood Q1 Variable Component,,7200.00,REV-2025-Q1-04
+2025-03-31,4000-Revenue,Performance Fee Accrual — Q1,,4400.00,REV-2025-Q1-05
 2025-03-31,5100-Payroll,March Payroll,63918.00,,PR-MAR-2025
 2025-03-31,5200-Rent,March Rent,4200.00,,RENT-MAR
 2025-03-31,5300-Insurance,Q1 Insurance Prepaid Recognition,3600.00,,INS-Q1
@@ -804,6 +850,55 @@ Order matched to purchase order PO-CCG-2025-018.
 Approved by: Daniel Park (VP Finance)`,
     },
     {
+      path: 'Accounts_Payable/Vendors/Granite_Business_Solutions/delivery_confirmation_GBS_2025.pdf',
+      type: 'policy',
+      content: `FWD: Granite Business Solutions — Service Delivery
+
+-----Original Message-----
+From:    Daniel Park <d.park@crestlineconsulting.com>
+To:      Accounts Payable <ap@crestlineconsulting.com>
+Date:    March 31, 2025 4:47 PM
+Subject: FWD: Granite — March engagement wrap-up
+
+AP team — please see Granite's note below confirming March work.
+Approve for payment. —DP
+
+-----Forwarded Message-----
+From:    info@granitebizgroup.net
+To:      d.park@crestlineconsulting.com
+Date:    March 28, 2025 9:12 AM
+Subject: March engagement wrap-up
+
+Hi Daniel,
+
+Just wanted to confirm we've wrapped up the March project work as discussed.
+Let us know if you need anything else from our end.
+
+Best,
+G. Rutherford
+Granite Business Solutions`,
+    },
+    {
+      path: 'Accounts_Payable/Vendors/Granite_Business_Solutions/delivery_receipt_GBS_signed.pdf',
+      type: 'policy',
+      content: `DELIVERY & SERVICE RECEIPT
+
+Vendor:   Granite Business Solutions LLC
+Client:   Crestline Consulting Group, Inc.
+Invoice:  INV-GBS-2025-028
+Amount:   $4,800.00
+Date:     March 31, 2025
+
+This receipt confirms that consulting services described in the above invoice
+were delivered to the satisfaction of the receiving party during March 2025.
+
+Received and accepted by:
+
+Signature: J. Whitmore                Date: March 31, 2025
+Title:     Account Manager
+Organization: Granite Business Solutions LLC`,
+    },
+    {
       path: 'Accounts_Payable/Vendors/Granite_Business_Solutions/INV-GBS-2025-028.pdf',
       type: 'invoice',
       invoiceNum: 'INV-GBS-2025-028',
@@ -927,25 +1022,27 @@ Quarterly invoice consolidated per billing agreement.`,
       type: 'invoice',
       invoiceNum: 'INV-MOS-2024-089',
       vendor: 'Metro Office Supply',
-      date: 'November 12, 2024',
-      amount: '$1,875.00',
+      date: 'March 14, 2024',
+      amount: '$1,850.00',
       content: `METRO OFFICE SUPPLY CO.
 Invoice #: INV-MOS-2024-089
-Date:      November 12, 2024
+Date:      March 14, 2024
 Bill To:   Crestline Consulting Group, Inc.
            1400 16th Street, Suite 600, Denver, CO 80202
 
 Description                          Qty    Unit     Total
-Printer paper (case, 5000 sheets)      4  $38.50    $154.00
-Ballpoint pens (box of 12)            10   $8.75     $87.50
-Binders 3-inch (box of 6)             8   $24.50    $196.00
-Toner cartridge HP LaserJet           6  $87.25    $523.50
-Whiteboard markers (8-pack)           10   $12.40    $124.00
-Hanging file folders (box of 25)      12   $15.25    $183.00
-Miscellaneous supplies                         --    $607.00
+Printer paper (case, 5000 sheets)      3  $38.50    $115.50
+Ballpoint pens (box of 12)             8   $8.75     $70.00
+Binders 3-inch (box of 6)             6   $24.50    $147.00
+Toner cartridge HP LaserJet           7  $87.25    $610.75
+Whiteboard markers (8-pack)            8   $12.40     $99.20
+Hanging file folders (box of 25)      10   $15.25    $152.50
+Desk organizer sets (pack of 4)        3  $18.50     $55.50
+Correction tape (6-pack)               5   $9.99     $49.99
+Miscellaneous supplies                         --    $549.56
 
-Subtotal: $1,875.00   Tax: $0.00   Total: $1,875.00
-STATUS: PAID — Q4 2024. Check #4298. Archived.`,
+Subtotal: $1,850.00   Tax: $0.00   Total: $1,850.00
+STATUS: PAID — Q1 2024. Check #3891. Archived.`,
     },
     {
       path: 'Accounts_Payable/Archive/INV-CCT-2024-180.pdf',
@@ -1110,16 +1207,12 @@ Bill To:   Harrington Capital Management LLC
            Attn: CFO
            1700 Lincoln Street, Suite 2800, Denver, CO 80203
 
-Services to be Rendered — Q2 2025 Engagement:
-  Portfolio optimization consulting retainer      $28,500.00
-  Service Period: April 1, 2025 – June 30, 2025
-  Deliverables: Monthly advisory sessions (3) + final report
-  Per engagement agreement HCG-CCG-2025-Q2 signed March 28, 2025
+Strategic Advisory Retainer — Engagement Ref. SOW-HCG-2025-002:
+  Portfolio optimization and advisory services     $28,500.00
+  Per engagement agreement SOW-HCG-2025-002 executed March 14, 2025
+  Deliverables: Per SOW schedule
 
-Pre-payment received: March 28, 2025 — Wire Transfer $28,500.00
-
-Note: This invoice covers Q2 2025 services only.
-Work commences April 1, 2025.`,
+Pre-payment received: March 28, 2025 — Wire Transfer $28,500.00`,
     },
     {
       path: 'Accounts_Receivable/Disputes/dispute_Briar_Ridge_Oct2024.pdf',
@@ -1251,29 +1344,29 @@ THIS DOCUMENT IS A DRAFT. Final Q4 reconciliation filed with auditors Feb 2025.`
     {
       path: 'Finance/Budget/budget_vs_actual_Q1_2025.csv',
       type: 'ledger',
-      content: `Crestline Consulting Group — Q1 2025 Budget vs. Actual,,,
-Account,Budget,Actual,Variance
-REVENUE,,,,
-Consulting Fees,270000.00,265500.00,-4500.00
-Total Revenue,270000.00,265500.00,-4500.00
-,,,,
-OPERATING EXPENSES,,,,
-Payroll & Benefits,190250.00,191750.00,-1500.00
-Rent,12600.00,12600.00,0.00
-Insurance,5400.00,5400.00,0.00
-Utilities,1800.00,1800.00,0.00
-Software & IT Services,8400.00,8400.00,0.00
-Office Supplies,2000.00,1850.00,150.00
-Consulting Services Purchased,0.00,4800.00,-4800.00
-Courier & Shipping,1200.00,1400.00,-200.00
-Facilities (Cleaning),3600.00,3600.00,0.00
-Total Operating Expenses,225250.00,231600.00,-6350.00
-,,,,
-Net Income,44750.00,33900.00,-10850.00
-,,,,
-NOTE: Payroll budget derived from offer-letter salaries as of Jan 1 2025.
-Actual payroll variance of $1500 requires line-item review.
-Consulting Services Purchased (Granite) was unbudgeted.`,
+      content: `Crestline Consulting Group — Q1 2025 Budget vs. Actual (Variance Analysis),,
+Account,Actual,Variance_%
+REVENUE,,,
+Consulting Fees,265500.00,-1.67%
+Total Revenue,265500.00,-1.67%
+,,,
+OPERATING EXPENSES,,,
+Payroll & Benefits,191750.00,-0.79%
+Rent,12600.00,0.00%
+Insurance,5400.00,0.00%
+Utilities,1800.00,0.00%
+Software & IT Services,8400.00,0.00%
+Office Supplies,1850.00,+7.50%
+Consulting Services Purchased,4800.00,N/A (unbudgeted)
+Courier & Shipping,1400.00,-16.67%
+Facilities (Cleaning),3600.00,0.00%
+Total Operating Expenses,231600.00,-2.82%
+,,,
+Net Income,33900.00,-24.24%
+,,,
+NOTE: Variance_% = (Actual - Budget) / Budget. Positive = favorable (under budget).
+Budget figures available in Finance/Budget/budget_FY2025_approved.pdf on request.
+Payroll variance driven by headcount and compensation mix; see HR for detail.`,
     },
 
     // ══════════════════════════════════════════
@@ -1291,12 +1384,13 @@ FA-003,Workstations x8 (Dell OptiPlex),2022-06-01,24000.00,8000.00,9200.00,14800
 FA-004,Office Furniture — Suite 600,2018-09-01,22000.00,15400.00,15675.00,6325.00
 FA-005,HP LaserJet Pro Printers x3,2023-01-10,6000.00,1200.00,1500.00,4500.00
 FA-006,Conference Room AV System,2023-08-01,12000.00,2000.00,2500.00,9500.00
-TOTALS,,,90000.00,39600.00,43175.00,46825.00
+FA-007,Executive Laptop (Dell XPS 15),2025-02-15,3200.00,0.00,80.00,3120.00
+TOTALS,,,93200.00,39600.00,43255.00,49945.00
 ,,,,,,
 Depreciation Method: Straight-line
 Q1 2025 Depreciation Expense: $3575.00
-NOTE: Balance sheet shows Equipment net = $42000. Difference of $4825 vs register total
-requires reconciliation — register may exclude fully depreciated items written off in 2024.`,
+NOTE: Balance sheet shows Equipment net = $42000. Difference of $7945 vs register total.
+FA-007 (Executive Laptop, $3,200) acquired February 2025; no purchase invoice on file in AP.`,
     },
 
     // ══════════════════════════════════════════
@@ -1371,7 +1465,7 @@ Vendor,Invoice,Invoice_Date,Due_Date,Amount,Status,Days_Overdue
 CloudCore Technologies,INV-CCT-2025-017,2025-01-03,2025-02-02,2800.00,PAID,0
 CloudCore Technologies,INV-CCT-2025-031,2025-02-03,2025-03-05,2800.00,PAID,0
 CloudCore Technologies,INV-CCT-2025-044,2025-03-03,2025-04-02,2800.00,PAID,0
-Metro Office Supply,INV-MOS-2025-112,2025-02-01,2025-03-03,1850.00,PAID,0
+Metro Office Supply,INV-MOS-2025-112,2025-02-01,2025-03-03,1850.00,PAID,0 — see also archived INV-MOS-2024-089 (same vendor same amount)
 Granite Business Solutions,INV-GBS-2025-028,2025-03-15,2025-03-30,4800.00,OUTSTANDING,1
 Swift Courier,INV-SCS-2025-088,2025-01-20,2025-02-19,680.00,PAID,0
 Swift Courier,INV-SCS-2025-101,2025-03-15,2025-04-14,720.00,PAID,0
@@ -1380,15 +1474,39 @@ Peak Telecom,INV-PT-2025-Jan,2025-01-05,2025-02-04,350.00,PAID,0
 Peak Telecom,INV-PT-2025-Feb,2025-02-05,2025-03-07,350.00,PAID,0
 Peak Telecom,INV-PT-2025-Mar,2025-03-05,2025-04-04,350.00,PAID,0
 ,,,,,,
-TOTAL OUTSTANDING,,$4800.00,,,
-NOTE: Granite INV-GBS-2025-028 — no receipt on file. Payment processed via bank ACH
-Mar 31 but supporting documentation (receipt/delivery confirmation) not located.`,
+TOTAL OUTSTANDING,,$4800.00,,,`,
     },
 
     // ══════════════════════════════════════════
     //  HR — Renata Vasquez performance review (no I-9 in folder)
     // ══════════════════════════════════════════
 
+    {
+      path: 'HR/Employees/Renata_Vasquez/I9_form_RV.pdf',
+      type: 'profile',
+      content: `CRESTLINE CONSULTING GROUP, INC.
+ONBOARDING ACKNOWLEDGEMENT — EMPLOYMENT ELIGIBILITY
+
+Employee:   Renata Vasquez
+Date:       June 17, 2020
+HR Contact: Daniel Park (VP Finance)
+
+This document confirms that Renata Vasquez has been advised of the requirement
+to provide documentation establishing identity and employment authorization
+in accordance with the Immigration Reform and Control Act (IRCA).
+
+Employee acknowledges:
+[ ] I have been informed of the requirement to complete Form I-9.
+[ ] I understand that failure to provide required documentation may affect
+    my employment status.
+
+Employee Signature: Renata Vasquez           Date: June 17, 2020
+HR Representative:  Daniel Park              Date: June 17, 2020
+
+NOTE: This acknowledgement form is NOT a substitute for the completed
+Form I-9 (U.S. Citizenship and Immigration Services). The original I-9
+must be filed separately per federal retention requirements.`,
+    },
     {
       path: 'HR/Employees/Renata_Vasquez/performance_review_2024.pdf',
       type: 'profile',
@@ -1428,11 +1546,7 @@ Revised monthly salary: $9,583.00 (from $9,250.00)
 Signed: Sarah Mitchell (CEO)         Date: December 12, 2024
 Acknowledged: Renata Vasquez         Date: December 14, 2024
 
-─────────────────────────────────────────────────────────────
-DOCUMENTS ON FILE IN THIS FOLDER: offer_letter.pdf
-NOTE TO HR: I-9 and W-2 documents not found in this personnel folder.
-Please locate and file before Q1 2025 audit date.
-─────────────────────────────────────────────────────────────`,
+`,
     },
 
     // ══════════════════════════════════════════
@@ -1447,16 +1561,14 @@ As of: March 31 2025     Maintained by: Daniel Park (VP Finance),,,,
 Employee_ID,Name,Start_Date,I9_Status,I9_File_Location,Last_Verified
 EMP-001,Sarah Mitchell,2018-09-01,COMPLETE,HR/Employees/Sarah_Mitchell/I-9.pdf,2024-01-15
 EMP-002,Daniel Park,2019-03-01,COMPLETE,HR/Employees/Daniel_Park/I-9.pdf,2024-01-15
-EMP-003,Renata Vasquez,2020-06-15,MISSING — NOT ON FILE,LOCATION UNKNOWN,NEVER VERIFIED
+EMP-003,Renata Vasquez,2020-06-15,PENDING — VERIFICATION IN PROGRESS,HR/Employees/Renata_Vasquez/I9_form_RV.pdf,2020-06-17
 EMP-004,Marcus Webb,2021-04-01,COMPLETE,HR/Employees/Marcus_Webb/I-9.pdf,2024-01-15
 EMP-005,Jordan Lee,2022-08-15,COMPLETE,HR/Employees/Jordan_Lee/I-9.pdf,2024-01-15
 EMP-006,Priya Sharma,2021-12-01,COMPLETE,HR/Employees/Priya_Sharma/I-9.pdf,2024-01-15
 EMP-007,Tom Caruso,2019-11-01,COMPLETE,HR/Employees/Tom_Caruso/I-9.pdf,2024-01-15
+EMP-008,A. Delgado,2024-03-01,TERMINATED — Dec 31 2024,N/A,2024-03-01
 ,,,,,,
-Compliance Status: 6/7 employees verified. 1 CRITICAL DEFICIENCY.
-NOTE: EMP-003 Renata Vasquez I-9 has never been located. Employee has been with firm
-since June 2020. This represents a potential IRCA compliance violation. Immediate
-action required to obtain valid I-9 or determine if original was lost.`,
+Compliance Status: 6/7 active employees verified. 1 item pending resolution. 1 employee terminated Dec 31 2024.`,
     },
 
     // ══════════════════════════════════════════
@@ -1497,7 +1609,47 @@ Signed: R. Harrington, Managing Partner — Harrington Capital  Date: June 29, 2
     },
 
     {
-      path: 'Contracts/Harrington_Capital_Group/SOW_HCG_Q2_2025.pdf',
+      path: 'Contracts/Harrington_Capital_Group/kickoff_meeting_notes_mar2025.pdf',
+      type: 'policy',
+      content: `HARRINGTON CAPITAL MANAGEMENT — CRESTLINE CONSULTING GROUP
+KICKOFF MEETING NOTES
+
+Date:        March 28, 2025
+Attendees:   Sarah Mitchell (CEO, Crestline), Daniel Park (VP Finance, Crestline),
+             R. Harrington (Managing Partner, HCM), M. Torres (COO, HCM)
+Location:    Harrington Capital offices, 1700 Lincoln Street, Denver CO
+
+AGENDA AND DISCUSSION
+
+1. ENGAGEMENT OVERVIEW
+   Parties reviewed the SOW-HCG-2025-002 scope. Crestline confirmed readiness
+   to commence portfolio optimization work as scoped.
+
+2. PRELIMINARY ACTIVITIES COMPLETED (PRE-ENGAGEMENT)
+   Sarah Mitchell noted that preliminary data gathering and scope finalization
+   activities were conducted during the week of March 24–28. These consisted of:
+   - Review of HCM's existing portfolio company financials (read-only access)
+   - Internal scoping calls at Crestline to staff the engagement
+   - Draft workplan preparation
+
+   R. Harrington acknowledged these preparatory steps and signed the SOW.
+
+3. COMMENCEMENT DATE CONFIRMED
+   Both parties confirmed April 1, 2025 as the official service commencement date
+   per SOW Section 2. No billable deliverables are due prior to April 1, 2025.
+
+4. INVOICE DISCUSSION
+   Daniel Park noted that Crestline had already issued INV-HCG-2025-006 ($28,500)
+   dated March 31, 2025 as advance invoicing per SOW Section 4 (prepayment permitted).
+   R. Harrington confirmed wire transfer of $28,500 on March 28, 2025.
+
+Next steps: Full engagement kick-off call scheduled April 2, 2025.
+
+Prepared by: Daniel Park, VP Finance     Date: March 28, 2025
+Reviewed by: Sarah Mitchell, CEO         Date: March 29, 2025`,
+    },
+    {
+      path: 'Contracts/Harrington_Capital_Group/SOW_HCG_2025_002.pdf',
       type: 'policy',
       content: `STATEMENT OF WORK — SOW-HCG-2025-002
 Pursuant to Master Services Agreement dated July 1 2024
@@ -1573,36 +1725,32 @@ Signed: Sarah Mitchell (CEO)      Date: December 20, 2023`,
     // ══════════════════════════════════════════
 
     {
-      path: 'Internal_Memos/memo_ADJ_Q1_001_approval.pdf',
+      path: 'Internal_Memos/q1_revenue_review.pdf',
       type: 'policy',
       content: `INTERNAL MEMORANDUM
 
 To:     Sarah Mitchell, President & CEO
 From:   Daniel Park, VP Finance
 Date:   March 31, 2025
-Re:     Revenue Adjustment — ADJ-Q1-001 ($11,600)
+Re:     Q1 2025 Revenue Review — Final Adjustments
 
 Sarah,
 
-Per our discussion on March 28, I am requesting your written approval to record
-the following adjusting journal entry before we close the Q1 2025 books:
+Per our discussion last Friday, I am requesting your written approval for the
+final Q1 closing entry before we lock the books.
 
-  Entry Reference: ADJ-Q1-001
   Date:            March 31, 2025
   Debit:           Accounts Receivable    $11,600.00
   Credit:          Consulting Fee Revenue $11,600.00
-  Description:     Q1 2025 revenue accrual — retainer performance component
+  Description:     Q1 consulting performance component — see engagement files
 
 RATIONALE
-Three client engagements contain variable/performance-based fee components that
-have been earned during Q1 but for which formal invoices have not yet been
-issued. Based on work completion assessments, management has determined these
-fees to be realizable and is accruing them to Q1 per our revenue recognition
-policy.
+Certain client engagements have variable fee components earned in Q1 for which
+invoices are in preparation. Management has assessed realizability and is
+accruing per revenue recognition policy.
 
-Supporting client engagement summaries are maintained in my files.
-No formal invoices or signed client acknowledgements have been issued as of
-this date.
+Supporting detail is maintained in my working files.
+No client-countersigned invoices have been issued as of this date.
 
 Please sign below to authorize posting.
 
@@ -1737,12 +1885,12 @@ satisfied. For time-and-materials engagements, revenue is recognized as services
 are rendered. For fixed-fee retainers, revenue is recognized ratably over the
 service period.
 
-Q1 2025 included one adjusting entry to revenue (ADJ-Q1-001, $11,600) representing
-management's estimate of earned but unbilled retainer fee components. See
-Internal_Memos/memo_ADJ_Q1_001_approval.pdf for authorization.
+Q1 2025 included one adjusting entry to revenue ($11,600) representing
+management's estimate of earned but unbilled consulting fee components.
+Authorization documentation is on file with the VP Finance.
 
 NOTE 3 — PAYROLL
-Q1 2025 payroll totaled $191,750 for seven employees. Payroll is processed via
+Q1 2025 payroll totaled $196,250 per payroll records. See Finance/Payroll/ for detail. Payroll is processed via
 ACH through First Mountain Bank. Individual compensation details are maintained
 in HR/Employees/ and Finance/Payroll/.
 
@@ -1759,7 +1907,12 @@ NOTE 6 — EQUIPMENT
 Equipment (net) of $42,000 reflects office and technology assets net of
 accumulated depreciation. See Finance/Fixed_Assets/ for detail.
 
-NOTE 7 — SUBSEQUENT EVENTS
+NOTE 7 — RELATED PARTIES
+Management has reviewed transactions for related-party characteristics.
+No related-party transactions requiring ASC 850 disclosure were identified
+during Q1 2025.
+
+NOTE 8 — SUBSEQUENT EVENTS
 None identified through April 1, 2025.`,
     },
 
@@ -1767,6 +1920,32 @@ None identified through April 1, 2025.`,
     //  HR POLICIES — travel reimbursement
     // ══════════════════════════════════════════
 
+    {
+      path: 'HR/Policies/company_profile.pdf',
+      type: 'policy',
+      content: `CRESTLINE CONSULTING GROUP, INC. — COMPANY PROFILE
+As of January 1, 2025
+
+OVERVIEW
+Crestline Consulting Group is a Denver-based management consulting firm
+specializing in strategy and operational advisory for mid-market companies.
+Founded 2018. 7 employees. Offices: 1400 16th Street, Suite 600, Denver CO.
+
+LEADERSHIP
+  President & CEO:    Sarah Mitchell
+  VP Finance:         Daniel Park
+
+ADVISORY BOARD
+Crestline's Advisory Board provides strategic guidance to leadership.
+Current members include industry and client representatives:
+  - J. Alderton (former McKinsey partner, retired)
+  - R. Harrington (Managing Partner, Harrington Capital Management)
+  - L. Voss (COO, Briar Ridge Corp)
+
+MAJOR CLIENTS (Q1 2025)
+  Lakewood Industries, GreenPath Solutions, Briar Ridge Corp,
+  Westfield Properties, Harrington Capital Management`,
+    },
     {
       path: 'HR/Policies/travel_reimbursement_policy.pdf',
       type: 'policy',
@@ -1828,6 +2007,10 @@ Vendor ID:      VND-0034
 Added to System: February 28, 2025
 Added By:       Daniel Park (VP Finance)
 
+PURCHASE HISTORY (per internal records):
+  INV-GBS-2025-028   March 2025    $4,800.00   Consulting services
+  FA-007 Purchase    February 2025  $3,200.00   Hardware procurement (ref: asset register)
+
 CONTACT INFORMATION
 Primary Contact: J. Whitmore
 Email:           jwhitmore@granitebizsolutions.com
@@ -1861,43 +2044,43 @@ procurement approval on file. Standard vendor onboarding checklist not completed
   rubric: [
     {
       n: 1,
-      text: 'Identifies the salary discrepancy for Priya Sharma: offer letter (HR/Employees/Priya_Sharma/offer_letter.pdf) states $6,000/month; pay stubs (Finance/Payroll/pay_stubs_Q1_2025.csv) show $6,500/month. Q1 overpayment of $1,500. Documents in Tab 1 with both source files cited.',
+      text: 'Identifies the unauthorized salary overpayment for Priya Sharma: pay stubs show $6,500/month, but the only executed salary amendment (HR/Employees/Priya_Sharma/salary_amendment_2023.pdf) authorizes $6,200/month. The 2025 draft amendment proposing $6,500 was never signed. Overpayment is $300/month ($900 for Q1). Agent must evaluate all three documents — offer letter, 2023 amendment, and unsigned 2025 draft — and cite the signed 2023 amendment as the controlling rate. Documents in Tab 1.',
       type: 'det',
       label: 'deterministic',
     },
     {
       n: 2,
-      text: 'Flags the missing I-9 for Renata Vasquez: HR/Employees/Renata_Vasquez/ contains only an offer letter — no I-9 file. W-2 and payroll records confirm she is an active employee. Documents in Tab 1.',
+      text: 'Flags the missing I-9 for Renata Vasquez: HR/Employees/Renata_Vasquez/ contains an offer letter and an I9_form_RV.pdf, but the latter is an internal acknowledgement-of-receipt form — not the actual USCIS Form I-9. Agent reads the file content, correctly identifies it as not a valid I-9, and flags the I-9 as missing. Documents in Tab 1.',
       type: 'det',
       label: 'deterministic',
     },
     {
       n: 3,
-      text: 'Identifies the revenue mismatch: income statement (Finance/Statements/Q1_2025/income_statement.csv) shows $265,500; the five supported Q1 client invoices total $253,900 ($68,400 + $52,800 + $38,500 + $41,000 + $24,800). Difference of $11,600 has no corresponding invoice or bank receipt. Documents in Tab 2.',
+      text: 'Identifies the $11,600 unsupported revenue: income statement shows $265,500; five supported client invoices total $253,900. The gap is comprised of two GL entries — REV-2025-Q1-04 ($7,200 labeled as Lakewood variable component) and REV-2025-Q1-05 ($4,400 performance fee accrual). Agent must sum both entries, recognize that INV-2025-001 already covers Lakewood\'s full Q1 engagement, and flag the combined $11,600 as having no invoice or bank receipt support. Documents in Tab 2.',
       type: 'det',
       label: 'deterministic',
     },
     {
       n: 4,
-      text: 'Flags Granite Business Solutions INV-GBS-2025-028 ($4,800) as an unsupported expense: the invoice exists in AP/Vendors/Granite_Business_Solutions/ and is recorded in the GL, but no receipt or delivery confirmation exists anywhere in the file system. Documents in Tab 3 naming the vendor and exact amount.',
+      text: 'Flags Granite Business Solutions INV-GBS-2025-028 ($4,800) as an unsupported expense: the vendor folder contains two documents — delivery_confirmation_GBS_2025.pdf (a Daniel Park self-forwarded email) and delivery_receipt_GBS_signed.pdf (signed by J. Whitmore of Granite Business Solutions). Agent correctly identifies that both documents originate from or are signed by the vendor itself and neither constitutes an independent third-party receipt. Documents in Tab 3 explaining why vendor-signed receipts do not satisfy independence requirements.',
       type: 'det',
       label: 'deterministic',
     },
     {
       n: 5,
-      text: 'Correctly determines that INV-MOS-2024-089 (Accounts_Payable/Archive/, $1,875, November 12, 2024) is NOT a duplicate of INV-MOS-2025-112 ($1,850, February 11, 2025). Cites different invoice numbers, different dates, and different amounts as evidence. Does not flag as duplicate.',
+      text: 'Correctly determines that INV-MOS-2024-089 (Accounts_Payable/Archive/, $1,850, March 14, 2024) is NOT a duplicate of INV-MOS-2025-112 ($1,850, February 11, 2025) despite the identical amounts. Agent reads both invoices, notes different invoice numbers, different dates (14 months apart), and different line items as evidence of distinct purchases. Does not flag as duplicate.',
       type: 'llm',
       label: 'llm judge',
     },
     {
       n: 6,
-      text: 'Identifies the cutoff error for Harrington Capital: INV-HCG-2025-006 (Accounts_Receivable/Clients/Harrington_Capital/) is dated March 31, 2025, but the invoice explicitly states services are for April 1 – June 30, 2025 (Q2). Revenue of $28,500 was recognized in Q1 but belongs in Q2. Documents in Tab 2.',
+      text: 'Identifies the Q1 cutoff error for Harrington Capital: INV-HCG-2025-006 is dated March 31 and recorded as Q1 revenue, but SOW-HCG-2025-002 specifies April 1 as the service commencement date. The kickoff_meeting_notes_mar2025.pdf confirms pre-engagement activities are non-billable setup. Agent must address the kickoff memo and explain why preliminary data gathering does not constitute a satisfied ASC 606 performance obligation, concluding that $28,500 belongs in Q2. Documents in Tab 2 citing both the SOW and the meeting notes.',
       type: 'llm',
       label: 'llm judge',
     },
     {
       n: 7,
-      text: 'Renders an audit opinion of "Qualified" or "Adverse" in tab4_summary_findings.csv — NOT "Clean". Minimum basis: the revenue mismatch ($11,600 unsupported) and unsupported expense ($4,800) together represent material misstatements.',
+      text: 'Renders a "Qualified" opinion (not "Clean" and not "Adverse") in tab4_summary_findings.csv. Misstatements are material but contained to two discrete items ($11,600 unsupported revenue + $4,800 unsupported expense); they do not pervasively affect the financial statements, making Adverse unwarranted. Agent must document the materiality threshold judgment, not simply default to the most severe opinion.',
       type: 'det',
       label: 'deterministic',
     },
@@ -1909,7 +2092,49 @@ procurement approval on file. Standard vendor onboarding checklist not completed
     },
     {
       n: 9,
-      text: 'All dollar figures entered in the work paper match the underlying source documents within $0.01 tolerance — no transcription errors in invoice amounts, payroll figures, or bank totals.',
+      text: 'Transcription accuracy: Renata Vasquez Q1 payroll total ($28,750.00), total AP outstanding ($4,800.00), and the five supported client invoice amounts ($68,400 + $52,800 + $38,500 + $41,000 + $24,800 = $253,900) are all recorded in the workpaper without digit-transposition or rounding errors. These figures are independent of the salary discrepancy finding and test whether the agent copies numbers faithfully from source documents.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 10,
+      text: 'Flags the Daniel Park conflict of interest: Daniel Park (VP Finance) both registered Granite Business Solutions as a vendor (Accounts_Payable/Vendors/Granite_Business_Solutions/vendor_registration.pdf) and authorized the $4,800 payment with no contract on file — a single individual controlling vendor onboarding and payment approval for the same vendor. Agent flags this as a segregation-of-duties deficiency or related-party risk in Tab 3 or Tab 4.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 11,
+      text: 'Identifies the $5,400 GL cash overstatement: Banking/Reconciliation/reconciliation_Q1_2025.csv shows GL cash balance of $285,999.00 vs. adjusted bank balance of $280,599.00. The $5,400 difference is explained by a Hartford Insurance premium debited from the bank on March 31 but recorded in the GL as Dr Prepaid / Cr AP rather than Cr Cash — leaving cash overstated by $5,400. Agent documents this in Tab 3 or Tab 4 with both the GL figure and bank figure cited.',
+      type: 'det',
+      label: 'deterministic',
+    },
+    {
+      n: 12,
+      text: 'Applies analytical review using budget_vs_actual_Q1_2025.csv: the file shows revenue variance of -1.67%. Agent back-calculates the implied budget ($265,500 / (1 - 0.0167) ≈ $270,000), then connects that the $11,600 unsupported accrual (REV-2025-Q1-04 + REV-2025-Q1-05) bridges the gap between supported revenue ($253,900) and budget — flagging this as an earnings management red flag. Agent must show the arithmetic and explicitly name budget proximity as an analytical concern in Tab 2 or Tab 4.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 13,
+      text: 'Identifies the related-party conflict for Harrington Capital: HR/Policies/company_profile.pdf lists R. Harrington (Managing Partner, Harrington Capital Management) as a member of Crestline\'s Advisory Board, while Harrington Capital is also Crestline\'s largest Q1 client (INV-HCG-2025-006, $28,500). Note 7 of the financial statements states no related-party transactions were identified — agent must contradict this, flag R. Harrington\'s dual role as advisory board member and client, and note that ASC 850 disclosure is required. Documents in Tab 2 or Tab 4.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 14,
+      text: 'Flags the post-termination payroll payment for EMP-008 (A. Delgado): Finance/Payroll/pay_stubs_Q1_2025.csv shows EMP-008 received $4,500 in January 2025, but HR/Compliance/I9_tracking_log.csv shows EMP-008 was terminated December 31, 2024. No offer letter, I-9, or W-2 exists in any HR folder for this employee. Agent flags this as a potential ghost-employee or post-termination fraud risk and documents in Tab 1 or Tab 4.',
+      type: 'det',
+      label: 'deterministic',
+    },
+    {
+      n: 15,
+      text: 'Flags FA-007 (Executive Laptop, $3,200) in Finance/Fixed_Assets/asset_register_Q1_2025.csv as a potentially fictitious asset: no purchase invoice exists in Accounts_Payable/ for this acquisition, but Accounts_Payable/Vendors/Granite_Business_Solutions/vendor_registration.pdf shows Granite as the supplier. This extends the Daniel Park / Granite conflict-of-interest pattern into capital expenditures — a single individual procured and registered a capital asset with no independent purchase documentation. Documents in Tab 3 or Tab 4.',
+      type: 'llm',
+      label: 'llm judge',
+    },
+    {
+      n: 16,
+      text: 'Identifies the Marcus Webb W-2 anomaly: Finance/Payroll/W2_Marcus_Webb_2024.pdf shows 2024 Box 1 wages of $103,000, but Q1 2025 pay stubs show $9,167/month ($110,004 annualized). The $7,004 gap cannot be explained by the known Q1 2025 figures alone \u2014 it implies either a mid-2024 undocumented salary increase or a 2024 payroll error. Agent flags this discrepancy and notes no salary amendment document exists in HR/Employees/Marcus_Webb/ to explain the change. Documents in Tab 1.',
       type: 'llm',
       label: 'llm judge',
     },
