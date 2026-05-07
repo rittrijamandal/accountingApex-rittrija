@@ -23,6 +23,7 @@ export default function App() {
             <Routes>
               {/* Expert */}
               <Route path="/expert" element={<ExpertHome />} />
+              <Route path="/expert/builder" element={<ExpertHome />} />
               <Route path="/expert/review-queue" element={<ReviewQueue />} />
               <Route path="/expert/*" element={<Navigate to="/expert" replace />} />
 

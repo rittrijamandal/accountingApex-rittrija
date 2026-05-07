@@ -56,7 +56,7 @@ export function ReviewerView({ world, existingScore, existingNotes, onBack }: Pr
   }
 
   return (
-    <AppShell>
+    <AppShell sidebar={false}>
       {/* Sticky header */}
       <div className="glass-header sticky top-0 z-10 px-6 py-3 flex items-center justify-between border-b border-slate-200/60">
         <div className="flex items-center gap-3">
