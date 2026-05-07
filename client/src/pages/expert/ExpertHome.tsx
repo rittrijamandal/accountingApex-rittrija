@@ -5,6 +5,7 @@ import { StatusPill } from "@/components/apex/StatusPill";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
 import { toDisplayWorld, type DisplayWorld } from "@/lib/types";
+import { emptyPayload } from "@/lib/emptyPayload";
 import { Hammer, ClipboardCheck, ArrowRight, Loader2, Trash2, Eye } from "lucide-react";
 
 export default function ExpertHome() {
@@ -63,7 +64,6 @@ export default function ExpertHome() {
 
   async function handleNewWorld() {
     const sb = await getSupabase();
-    const { emptyPayload } = await import("../../lib/emptyPayload");
     const pl = emptyPayload();
     pl.meta!.name = "New business";
     pl.meta!.period = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
