@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { read as readXlsxWorkbook, utils as xlsxUtils } from "xlsx";
 import type { UploadedFile } from "@/lib/types";
 import { pdfBytesToExtractedText } from "@/lib/pdfExtract";
 
@@ -18,12 +19,12 @@ export function isExtractedTextPlaceholder(s: string): boolean {
 
 async function spreadsheetBytesToCsv(u8: Uint8Array, label: string): Promise<string> {
   try {
-    const XLSX = await import("xlsx");
-    const wb = XLSX.read(u8, { type: "array", cellDates: true });
+    // Static ESM imports — dynamic import("xlsx") can resolve to the CJS build and throw "exports is not defined" in the browser.
+    const wb = readXlsxWorkbook(u8, { type: "array", cellDates: true });
     if (!wb.SheetNames?.length) return `[Empty spreadsheet: ${label}]`;
     const first = wb.SheetNames[0]!;
     const ws = wb.Sheets[first]!;
-    return XLSX.utils.sheet_to_csv(ws);
+    return xlsxUtils.sheet_to_csv(ws);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return `[Spreadsheet parse error: ${label} — ${msg}]`;
