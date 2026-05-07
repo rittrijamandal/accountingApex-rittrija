@@ -178,7 +178,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <AppShell>
+    <AppShell sidebar={false}>
       {/* Header */}
       <div className="px-8 pt-8 pb-4">
         <div className="label-eyebrow">Operations</div>

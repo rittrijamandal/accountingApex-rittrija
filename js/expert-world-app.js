@@ -212,12 +212,12 @@ function render(app, dbRow, state, isAdmin) {
   const reviewBadge = reviewBadgeMeta(state.review);
   const showReviewState = state.review.status !== 'draft';
   const adminLink = isAdmin
-    ? '<a href="admin.html" class="btn btn-ghost" style="text-decoration:none">Admin</a>'
+    ? `<a href="${adminHref}" class="btn btn-ghost" style="text-decoration:none">Admin</a>`
     : '';
   app.innerHTML = `
     <div class="editor-sticky">
       <div class="inner">
-        <a href="expert.html" class="btn btn-ghost">← Worlds</a>
+        <a href="${backHref}" class="btn btn-ghost">← Worlds</a>
         ${adminLink}
         <div class="step-title">World Builder</div>
         <button type="button" class="btn btn-ghost" data-action="open-sample-viewer">Sample Viewer</button>
@@ -694,6 +694,10 @@ function toViewerWorld(row, payload) {
   };
 }
 
+// Determines where "← Worlds" links should point based on the calling context.
+let backHref = 'expert.html';
+let adminHref = 'admin.html';
+
 async function init() {
   const app = document.getElementById('app');
   if (!app) return;
@@ -701,16 +705,21 @@ async function init() {
   const ctx = await requireRoles(['expert', 'admin']);
   if (!ctx) return;
 
-  const id = new URLSearchParams(location.search).get('id')?.trim();
+  const _params = new URLSearchParams(location.search);
+  const id = _params.get('id')?.trim();
+  if (_params.get('isAdminOverride') === 'true') {
+    backHref = '/admin';
+    adminHref = '/admin';
+  }
   if (!id) {
-    app.innerHTML = '<div class="wrap"><div class="err-banner">Missing world id. <a href="expert.html" style="color:#8cf">Back</a></div></div>';
+    app.innerHTML = `<div class="wrap"><div class="err-banner">Missing world id. <a href="${backHref}" style="color:#8cf">Back</a></div></div>`;
     return;
   }
 
   const sb = await getSupabase();
   const { data: row, error } = await sb.from('worlds').select('*').eq('id', id).maybeSingle();
   if (error || !row) {
-    app.innerHTML = `<div class="wrap"><div class="err-banner">${esc(error?.message || 'World not found or no access.')}</div><p class="muted" style="margin-top:12px"><a href="expert.html" style="color:var(--green)">← Worlds</a></p></div>`;
+    app.innerHTML = `<div class="wrap"><div class="err-banner">${esc(error?.message || 'World not found or no access.')}</div><p class="muted" style="margin-top:12px"><a href="${backHref}" style="color:var(--green)">← Worlds</a></p></div>`;
     return;
   }
 
@@ -1213,6 +1222,6 @@ init().catch((err) => {
   app.classList.add('wrap');
   app.innerHTML = `
     <div class="err-banner">Failed to load world editor: ${esc(err?.message || String(err))}</div>
-    <p class="muted"><a href="expert.html" style="color:var(--accent)">← Back to worlds</a></p>
+    <p class="muted"><a href="${backHref}" style="color:var(--accent)">← Back to worlds</a></p>
   `;
 });

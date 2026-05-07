@@ -11,7 +11,8 @@
           "*.js",
           "js/**",
           "assets/**",
-          "supabase/**"
+          "supabase/**",
+          "dist-client/**"
         ]
       }
     }

@@ -228,11 +228,15 @@ app.use(express.static(path.join(__dirname)));
 const CLIENT_DIST = path.join(__dirname, 'dist-client');
 app.use(express.static(CLIENT_DIST));
 
-app.get('/expert', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
-app.get('/expert/*', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
-app.get('/admin', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
-app.get('/grader', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
-app.get('/grader/workspace', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
+function sendSPA(res) {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(path.join(CLIENT_DIST, 'index.html'));
+}
+app.get('/expert', (_req, res) => sendSPA(res));
+app.get('/expert/*', (_req, res) => sendSPA(res));
+app.get('/admin', (_req, res) => sendSPA(res));
+app.get('/grader', (_req, res) => sendSPA(res));
+app.get('/grader/workspace', (_req, res) => sendSPA(res));
 
 // Vercel serverless entrypoint
 module.exports = app;
