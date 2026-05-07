@@ -515,6 +515,7 @@ function ApiKeyModal({ onClose }: { onClose: () => void }) {
   const [provider, setProvider] = useState(localStorage.getItem("apex_ai_provider") || "anthropic");
   const [model, setModel] = useState(() => localStorage.getItem(`apex_ai_model_${localStorage.getItem("apex_ai_provider") || "anthropic"}`) || "claude-sonnet-4-20250514");
   const [key, setKey] = useState(() => localStorage.getItem(`apex_api_key_${localStorage.getItem("apex_ai_provider") || "anthropic"}`) || "");
+  const maskedKey = key ? `...${key.slice(-4)}` : "none";
 
   function save() {
     localStorage.setItem("apex_ai_provider", provider);
@@ -529,7 +530,7 @@ function ApiKeyModal({ onClose }: { onClose: () => void }) {
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
         <div className="label-eyebrow mb-1">Configuration</div>
         <h2 className="font-serif-display text-2xl text-slate-900 mb-1">Set API Key</h2>
-        <p className="text-xs text-slate-500 mb-6">Keys are stored locally in your browser only.</p>
+        <p className="text-xs text-slate-500 mb-6">Using {provider === "openai" ? "OpenAI" : "Anthropic"} · {model} · {maskedKey}. Keys are stored locally in your browser only.</p>
         <div className="space-y-4">
           <div>
             <div className="label-eyebrow mb-1.5">Provider</div>
@@ -573,7 +574,7 @@ export default function GraderWorkspace() {
 
   const [catalog, setCatalog]         = useState<CatalogFile[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
-  const [view, setView]               = useState<"list" | "grid">("list");
+  const [workspaceView, setWorkspaceView] = useState<"file" | "world">("file");
   const [drawerOpen, setDrawerOpen]   = useState(false);
   const [showApiModal, setShowApiModal] = useState(false);
 
@@ -600,7 +601,26 @@ export default function GraderWorkspace() {
     getSupabase()
       .then((sb) => sb.from("worlds").select("id,title,payload").eq("id", worldId).single())
       .then(({ data, error: err }) => {
-        if (err || !data) { setFetchError(err?.message || "World not found."); return; }
+        if (err || !data) {
+          if (worldId === "static-acquico") {
+            return fetch("/api/static-worlds/static-acquico")
+              .then((r) => r.ok ? r.json() : Promise.reject(new Error("World not found.")))
+              .then((staticWorld) => {
+                const w: WorldDetail = { id: staticWorld.id, title: staticWorld.title || "AcquiCo Data Room", payload: staticWorld.payload || {} };
+                setWorld(w);
+                const cat = buildCatalog(w.payload);
+                setCatalog(cat);
+                if (cat.length > 0) setActiveFileId(cat[0].id);
+                const topFolders = new Set<string>([""]);
+                if (isFilesWorld(w.payload)) {
+                  w.payload.files.forEach((f) => { const top = f.path.split("/")[0]; if (f.path.includes("/")) topFolders.add(top); });
+                }
+                setExpanded(topFolders);
+              });
+          }
+          setFetchError(err?.message || "World not found.");
+          return;
+        }
         const w: WorldDetail = { id: data.id, title: data.title || "Untitled", payload: data.payload || {} };
         setWorld(w);
         const cat = buildCatalog(w.payload);
@@ -653,6 +673,11 @@ export default function GraderWorkspace() {
   const payload = world?.payload ?? {};
   const isFileworld = world ? isFilesWorld(world.payload) : false;
   const hasKey = Boolean(localStorage.getItem(`apex_api_key_${localStorage.getItem("apex_ai_provider") || "anthropic"}`) || localStorage.getItem("apex_api_key"));
+  const activeProvider = localStorage.getItem("apex_ai_provider") || "anthropic";
+  const activeModel = localStorage.getItem(`apex_ai_model_${activeProvider}`) || (activeProvider === "openai" ? "gpt-4.1" : "claude-sonnet-4-20250514");
+  const activeKey = localStorage.getItem(`apex_api_key_${activeProvider}`) || localStorage.getItem("apex_api_key") || "";
+  const maskedKey = activeKey ? `...${activeKey.slice(-4)}` : "";
+  const apiLabel = `${activeProvider === "openai" ? "OpenAI" : "Anthropic"} · ${activeModel}${maskedKey ? ` · ${maskedKey}` : ""}`;
 
   // Drawer data
   const mis = Array.isArray(payload.misleadingFiles) ? payload.misleadingFiles : [];
@@ -715,7 +740,7 @@ export default function GraderWorkspace() {
             "rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 border transition",
             hasKey ? "border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100" : "border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100"
           )}>
-            <Key className="h-3.5 w-3.5" />{hasKey ? "Key set" : "Set Key"}
+            <Key className="h-3.5 w-3.5" />{hasKey ? apiLabel : "Set Key"}
           </button>
           <button onClick={runAgent} disabled={agentRunning} className="rounded-full bg-slate-900 text-white px-5 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-indigo-700 transition flex items-center gap-1.5 disabled:opacity-50">
             {agentRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
@@ -730,72 +755,30 @@ export default function GraderWorkspace() {
       {/* ── main layout ── */}
       <div className="flex flex-1 min-h-0 gap-3 p-3 relative">
 
-        {/* ── left sidebar ── */}
-        <aside className="w-[230px] min-w-[180px] rounded-3xl bg-white shadow-sm flex flex-col overflow-hidden">
-          <div className="px-4 py-3 flex items-center justify-between border-b border-slate-100">
-            <div className="label-eyebrow">Data Room</div>
-            {!isFileworld && (
-              <div className="flex rounded-full bg-slate-100 p-0.5">
-                <button onClick={() => setView("list")} className={cn("p-1.5 rounded-full transition", view === "list" ? "bg-slate-900 text-white" : "text-slate-600")}><List className="h-3 w-3" /></button>
-                <button onClick={() => setView("grid")} className={cn("p-1.5 rounded-full transition", view === "grid" ? "bg-slate-900 text-white" : "text-slate-600")}><GridIcon className="h-3 w-3" /></button>
-              </div>
-            )}
-          </div>
-
-          <div className="flex-1 overflow-y-auto pb-2">
-            {catalog.length === 0 ? (
-              <div className="flex items-center justify-center p-6 text-slate-400 text-xs italic text-center">No files found.</div>
-            ) : isFileworld ? (
-              /* folder tree for fileworld */
-              <div className="px-1 pt-1">
-                <TreeLevel
-                  node={buildTree(catalog)}
-                  depth={0}
-                  activeId={activeFileId}
-                  onSelect={(f) => { setActiveFileId(f.id); setDrawerOpen(false); }}
-                  expanded={expanded}
-                  onToggle={toggleFolder}
-                />
-              </div>
-            ) : view === "list" ? (
-              /* flat list for structured worlds */
-              <ul className="px-2 pt-1 space-y-0.5">
-                {catalog.map((f) => (
-                  <li key={f.id}>
-                    <button onClick={() => { setActiveFileId(f.id); setDrawerOpen(false); }}
-                      className={cn("w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2 transition", activeFileId === f.id ? "bg-slate-900 text-white" : "hover:bg-slate-50")}>
-                      {f.typeLabel.includes("CSV") || f.typeLabel.includes("XLS")
-                        ? <FileSpreadsheet className={cn("h-4 w-4 shrink-0", activeFileId === f.id ? "text-white" : "text-emerald-600")} />
-                        : <FileText className={cn("h-4 w-4 shrink-0", activeFileId === f.id ? "text-white" : "text-red-500")} />}
-                      <div className="min-w-0 flex-1">
-                        <div className={cn("text-xs font-medium truncate", activeFileId === f.id ? "text-white" : "text-slate-900")}>{f.name}</div>
-                        <div className={cn("text-[10px]", activeFileId === f.id ? "text-slate-300" : "text-slate-500")}>{f.typeLabel}</div>
-                      </div>
-                      {f.isMisleading && <AlertTriangle className="h-3.5 w-3.5 text-red-500 shrink-0" />}
-                      {f.isNoise && <span className="text-[9px] text-slate-400 uppercase tracking-wider shrink-0">noise</span>}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              /* grid */
-              <div className="p-2 grid grid-cols-2 gap-1.5">
-                {catalog.map((f) => (
-                  <button key={f.id} onClick={() => setActiveFileId(f.id)}
-                    className={cn("rounded-2xl p-3 flex flex-col items-center text-center transition", activeFileId === f.id ? "bg-slate-900" : "bg-slate-50 hover:bg-slate-100")}>
-                    <FileText className={cn("h-5 w-5", activeFileId === f.id ? "text-white" : "text-slate-400")} />
-                    <div className={cn("mt-1 text-[10px] font-medium truncate w-full", activeFileId === f.id ? "text-white" : "text-slate-900")}>{f.name}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </aside>
-
         {/* ── center column ── */}
         <section className="flex-1 min-w-0 flex flex-col gap-3 overflow-hidden">
+          <div className="rounded-3xl bg-white shadow-sm px-5 py-3 flex flex-wrap items-center gap-3 shrink-0">
+            <div className="inline-flex rounded-full bg-slate-100 p-1">
+              <button onClick={() => setWorkspaceView("file")} className={cn("rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition", workspaceView === "file" ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900")}>
+                File View
+              </button>
+              <button onClick={() => setWorkspaceView("world")} className={cn("rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition", workspaceView === "world" ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900")}>
+                World View
+              </button>
+            </div>
+            <select
+              value={activeFileId || ""}
+              onChange={(e) => { setActiveFileId(e.target.value); setWorkspaceView("file"); setDrawerOpen(false); }}
+              className="min-w-[280px] flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+            >
+              {catalog.map((f) => (
+                <option key={f.id} value={f.id}>{f.filePath || f.name}</option>
+              ))}
+            </select>
+          </div>
 
           {/* file viewer */}
+          {workspaceView === "file" ? (
           <div className="flex-1 rounded-3xl bg-white shadow-sm overflow-hidden flex flex-col min-h-0">
             {activeFile ? (
               <>
@@ -824,6 +807,34 @@ export default function GraderWorkspace() {
               <div className="flex-1 flex items-center justify-center text-slate-400 italic text-sm">Select a file from the sidebar.</div>
             )}
           </div>
+          ) : (
+          <div className="flex-1 rounded-3xl bg-white shadow-sm overflow-auto p-6">
+            <div className="label-eyebrow mb-2">World Brief</div>
+            <h2 className="font-serif-display text-3xl text-slate-900 tracking-tight">{world.title}</h2>
+            <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+              <div className="rounded-2xl bg-slate-50 p-4"><div className="label-eyebrow">Files</div><div className="mt-1 text-2xl font-serif-display text-slate-900">{catalog.length}</div></div>
+              <div className="rounded-2xl bg-slate-50 p-4"><div className="label-eyebrow">Archetype</div><div className="mt-1 text-slate-700">{String(payload.meta?.archetype || "—")}</div></div>
+              <div className="rounded-2xl bg-slate-50 p-4"><div className="label-eyebrow">Tier</div><div className="mt-1 text-slate-700">{String(payload.meta?.tier || "—")}</div></div>
+              <div className="rounded-2xl bg-slate-50 p-4"><div className="label-eyebrow">Tasks</div><div className="mt-1 text-slate-700">{String(payload.meta?.tasks || (payload.rubric || []).length || "—")}</div></div>
+            </div>
+            <div className="mt-6">
+              <div className="label-eyebrow mb-2">Task Prompt</div>
+              <pre className="whitespace-pre-wrap text-sm text-slate-800 leading-relaxed bg-slate-50 rounded-2xl p-5">{String(payload.taskPrompt || payload.meta?.taskPrompt || "No task prompt provided.")}</pre>
+            </div>
+            {(payload.rubric || []).length > 0 && (
+              <div className="mt-6">
+                <div className="label-eyebrow mb-2">Rubric</div>
+                <div className="space-y-2">
+                  {(payload.rubric || []).map((r, i) => (
+                    <div key={i} className="rounded-2xl border border-slate-100 px-4 py-3 text-sm text-slate-700">
+                      <span className="font-semibold text-slate-900 mr-2">{r.n ?? i + 1}.</span>{r.text || r.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          )}
 
           {/* agent output panel */}
           {agentPanelOpen && (

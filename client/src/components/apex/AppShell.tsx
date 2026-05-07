@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { firstName } from "@/lib/displayName";
 import { LayoutDashboard, ClipboardCheck, Hammer, Gauge, ShieldCheck, LogOut } from "lucide-react";
 
 const nav = [
@@ -22,6 +23,7 @@ function initials(profile: { display_name?: string; email?: string } | null) {
 function SidebarShell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
   const { profile, signOut } = useAuth();
+  const visibleNav = nav.filter((n) => n.to !== "/admin" || profile?.role === "admin");
 
   return (
     <div className="flex min-h-screen w-full bg-slate-50">
@@ -39,7 +41,7 @@ function SidebarShell({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-2 space-y-0.5">
-          {nav.map((n) => {
+          {visibleNav.map((n) => {
             const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
             return (
               <NavLink key={n.to} to={n.to} end={n.exact}
@@ -80,6 +82,7 @@ function SidebarShell({ children }: { children: React.ReactNode }) {
 
 function TopbarShell({ children }: { children: React.ReactNode }) {
   const { profile, signOut } = useAuth();
+  const visibleNav = nav.filter((n) => n.to !== "/admin" || profile?.role === "admin");
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-slate-50">
@@ -96,7 +99,7 @@ function TopbarShell({ children }: { children: React.ReactNode }) {
 
         {/* Inline nav links */}
         <nav className="hidden md:flex items-center gap-1">
-          {nav.map((n) => (
+          {visibleNav.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.exact}
               className={({ isActive }) => cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition",
@@ -115,7 +118,7 @@ function TopbarShell({ children }: { children: React.ReactNode }) {
               {initials(profile)}
             </div>
             <div className="hidden sm:block">
-              <div className="text-xs font-semibold text-slate-900 leading-none">{profile?.display_name || profile?.email?.split("@")[0] || "…"}</div>
+              <div className="text-xs font-semibold text-slate-900 leading-none">{firstName(profile)}</div>
               <div className="text-[9px] uppercase tracking-wider text-indigo-600 font-semibold leading-none mt-0.5 capitalize">{profile?.role || ""}</div>
             </div>
           </div>
