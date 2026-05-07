@@ -695,7 +695,7 @@ function toViewerWorld(row, payload) {
 }
 
 // Determines where "← Worlds" links should point based on the calling context.
-let backHref = 'expert.html';
+let backHref = '/expert/builder';
 let adminHref = 'admin.html';
 
 async function init() {
