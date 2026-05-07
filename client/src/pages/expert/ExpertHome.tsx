@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { AppShell } from "@/components/apex/AppShell";
 import { StatusPill } from "@/components/apex/StatusPill";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,9 +9,12 @@ import { Hammer, ClipboardCheck, ArrowRight, Loader2, Trash2, Eye } from "lucide
 
 export default function ExpertHome() {
   const { profile, userId, loading: authLoading } = useAuth();
+  const { pathname } = useLocation();
+  const isBuilderRoute = pathname === '/expert/builder';
   const [worlds, setWorlds] = useState<DisplayWorld[]>([]);
   const [loadingWorlds, setLoadingWorlds] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // On the /expert/builder route the table is always visible
   const [showTable, setShowTable] = useState(false);
   const [emailById, setEmailById] = useState<Map<string, string>>(new Map());
 
@@ -133,7 +136,7 @@ export default function ExpertHome() {
                 <button
                   key="create"
                   type="button"
-                  onClick={() => setShowTable(true)}
+                  onClick={() => isBuilderRoute ? handleNewWorld() : setShowTable(true)}
                   className="text-left"
                 >
                   {inner}
@@ -149,8 +152,8 @@ export default function ExpertHome() {
         </div>
       </div>
 
-      {/* Worlds table (shown after clicking "Create a World") */}
-      {showTable && (
+      {/* Worlds table (always shown on /expert/builder, otherwise revealed by clicking Create a World) */}
+      {(showTable || isBuilderRoute) && (
         <div className="px-8 pb-12">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-serif-display text-2xl text-slate-900">My Worlds</h2>
