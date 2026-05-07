@@ -13,20 +13,20 @@ export default function ExpertHome() {
   const [loadingWorlds, setLoadingWorlds] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showTable, setShowTable] = useState(false);
+  const [emailById, setEmailById] = useState<Map<string, string>>(new Map());
 
   const displayName = (profile?.display_name || profile?.email?.split("@")[0] || "there").split(" ")[0];
 
   useEffect(() => {
     if (authLoading || !userId) return;
     setLoadingWorlds(true);
-    getSupabase()
-      .then((sb) =>
-        sb
+    (async () => {
+      try {
+        const sb = await getSupabase();
+        const { data, error: err } = await sb
           .from("worlds")
           .select("id,title,is_published,created_at,updated_at,creator_id,payload")
-          .order("updated_at", { ascending: false })
-      )
-      .then(({ data, error: err }) => {
+          .order("updated_at", { ascending: false });
         if (err) { setError(err.message); return; }
         const rows = (data || []).map(toDisplayWorld);
         // put the current user's worlds first
@@ -37,10 +37,18 @@ export default function ExpertHome() {
           return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
         });
         setWorlds(rows);
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoadingWorlds(false));
-  }, [authLoading, userId]);
+        if (profile?.role === "admin") {
+          const { data: profiles } = await sb.from("profiles").select("id,email");
+          const map = new Map((profiles || []).map((p: { id: string; email: string }) => [p.id, p.email] as [string, string]));
+          setEmailById(map);
+        }
+      } catch (e: unknown) {
+        setError((e as Error).message);
+      } finally {
+        setLoadingWorlds(false);
+      }
+    })();
+  }, [authLoading, userId, profile?.role]);
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this world? This cannot be undone.")) return;
@@ -211,7 +219,7 @@ export default function ExpertHome() {
                           {new Date(w.updatedAt).toLocaleString()}
                         </td>
                         <td className="px-5 py-4 text-slate-500 text-xs">
-                          {isOwner ? "YOURS" : isAdmin ? w.creatorId.slice(0, 8) + "…" : "—"}
+                          {isOwner ? "YOURS" : isAdmin ? (emailById.get(w.creatorId) || w.creatorId.slice(0, 8) + "…") : "—"}
                         </td>
                         <td className="px-5 py-4 text-right space-x-2">
                           <button
