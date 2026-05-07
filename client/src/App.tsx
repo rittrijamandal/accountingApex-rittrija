@@ -5,10 +5,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import ExpertHome from "@/pages/expert/ExpertHome";
+import ExpertWorldEditor from "@/pages/expert/ExpertWorldEditor";
 import ReviewQueue from "@/pages/expert/ReviewQueue";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
+import WorldBuilder from "@/pages/expert/WorldBuilder";
 import GraderLobby from "@/pages/grader/GraderLobby";
 import GraderWorkspace from "@/pages/grader/GraderWorkspace";
+import Login from "@/pages/Login";
+import RoleHome from "@/pages/RoleHome";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -21,21 +25,27 @@ export default function App() {
         <BrowserRouter>
           <AuthProvider>
             <Routes>
-              {/* Expert */}
-              <Route path="/expert" element={<ExpertHome />} />
-              <Route path="/expert/builder" element={<ExpertHome />} />
+              {/* Auth */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/login.html" element={<Navigate to="/login" replace />} />
+
+              {/* Expert — specific paths before /expert/* fallback */}
+              <Route path="/expert/builder" element={<WorldBuilder />} />
+              <Route path="/expert/editor/:worldId" element={<ExpertWorldEditor />} />
               <Route path="/expert/review-queue" element={<ReviewQueue />} />
+              <Route path="/expert" element={<ExpertHome />} />
               <Route path="/expert/*" element={<Navigate to="/expert" replace />} />
 
-              {/* Admin — accessible by all roles */}
+              {/* Admin */}
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
 
               {/* Grader */}
               <Route path="/grader" element={<GraderLobby />} />
               <Route path="/grader/workspace" element={<GraderWorkspace />} />
 
-              {/* Root catch-all → expert home */}
-              <Route path="*" element={<Navigate to="/expert" replace />} />
+              <Route path="/" element={<RoleHome />} />
+              <Route path="*" element={<RoleHome />} />
             </Routes>
           </AuthProvider>
         </BrowserRouter>

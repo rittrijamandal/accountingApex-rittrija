@@ -33,10 +33,17 @@ export interface WorldPayload {
   review?: {
     status?: string;
     reviewer_count?: number;
+    threshold?: number;
+    median_score?: number | null;
+    combined_notes?: string;
+    /** Up to three reviewer user IDs chosen by an admin (guidance for who should review). */
+    assigned_reviewer_ids?: string[];
   };
   taskPrompt?: string;
   rubric?: RubricItem[];
   uploadedFiles?: UploadedFile[];
+  ambiguityTypes?: string[];
+  misleadingFiles?: Array<{ file: string; why: string }>;
   transactions?: unknown[];
   chartOfAccounts?: unknown[];
   invoices?: unknown;
@@ -50,11 +57,17 @@ export interface RubricItem {
 }
 
 export interface UploadedFile {
+  id?: string;
   displayLabel?: string;
   fileName?: string;
   type?: string;
   customType?: string;
   notes?: string;
+  extractedText?: string;
+  mimeType?: string;
+  sizeBytes?: number;
+  isMisleading?: boolean;
+  gridRows?: Record<string, string>[];
 }
 
 export interface Profile {

@@ -16,7 +16,14 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api": "http://localhost:3000",
+      "/api": "http://localhost:3001",
+      "/expert-world.html": "http://localhost:3001",
+      "/viewer.html": "http://localhost:3001",
+      "/expert.css": "http://localhost:3001",
+      "/styles.css": "http://localhost:3001",
+      "/grader-browse.css": "http://localhost:3001",
+      "/data.js": "http://localhost:3001",
+      "/js": "http://localhost:3001",
     },
   },
 });

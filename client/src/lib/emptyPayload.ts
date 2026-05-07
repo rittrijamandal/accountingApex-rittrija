@@ -20,6 +20,8 @@ export function emptyPayload(): WorldPayload {
     invoices: [],
     rubric: [],
     taskPrompt: "",
+    ambiguityTypes: [],
+    misleadingFiles: [],
     uploadedFiles: [],
   };
 }

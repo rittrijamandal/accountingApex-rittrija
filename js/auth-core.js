@@ -6,16 +6,31 @@
 let client = null;
 let boot = null;
 
+// Injected at build/deploy time via server.js /api/bootstrap.
+// These public anon credentials are safe to embed (protected by Supabase RLS).
+const FALLBACK_URL = 'https://vbshsbpbtceumwhdeizk.supabase.co';
+const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZic2hzYnBidGNldW13aGRlaXprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMjE5MTYsImV4cCI6MjA5MTU5NzkxNn0.ncOS6b8TpW2f-iVO6Fz-B0fFgXzrbSMY7HURBca9EBM';
+
 async function createSupabase() {
-  const res = await fetch('/api/bootstrap');
-  const cfg = await res.json();
-  if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) {
-    throw new Error(
-      'Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to your .env file and restart the server.'
-    );
+  let supabaseUrl = FALLBACK_URL;
+  let supabaseAnonKey = FALLBACK_KEY;
+
+  // Try the backend bootstrap endpoint; fall back to embedded creds if unavailable.
+  try {
+    const res = await fetch('/api/bootstrap');
+    if (res.ok) {
+      const cfg = await res.json();
+      if (cfg.supabaseUrl && cfg.supabaseAnonKey) {
+        supabaseUrl = cfg.supabaseUrl;
+        supabaseAnonKey = cfg.supabaseAnonKey;
+      }
+    }
+  } catch (_) {
+    // Backend not running locally — using embedded fallback credentials.
   }
+
   const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.49.1');
-  return createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
+  return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
@@ -56,7 +71,7 @@ export async function fetchMyProfile() {
 }
 
 export function roleHomePath(role) {
-  if (role === 'admin') return '/admin';     // new React SPA
+  if (role === 'admin') return '/expert';
   if (role === 'expert') return '/expert';   // new React SPA
   return '/grader';                          // new React SPA
 }

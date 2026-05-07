@@ -295,6 +295,7 @@ function mergeWorldPayload(payload) {
     taskPrompt: payload.taskPrompt != null ? payload.taskPrompt : base.taskPrompt,
     ambiguityTypes: Array.isArray(payload.ambiguityTypes) ? payload.ambiguityTypes : base.ambiguityTypes,
     misleadingFiles: Array.isArray(payload.misleadingFiles) ? payload.misleadingFiles : base.misleadingFiles,
+    uploadedFiles: Array.isArray(payload.uploadedFiles) ? payload.uploadedFiles : [],
   };
 }
 

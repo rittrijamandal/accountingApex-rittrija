@@ -1,14 +1,26 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { LayoutDashboard, ClipboardCheck, Hammer, Gauge, ShieldCheck, LogOut } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, Hammer, Gauge, LogOut, Shield } from "lucide-react";
 
-const nav = [
+const adminHomeNav = [
+  { to: "/admin", label: "Admin Dashboard", icon: Shield, exact: true },
+];
+
+/** Expert landing — hidden for admins (they use Admin Dashboard + Review Queue + World Builder). */
+const expertNav = [
   { to: "/expert",              label: "Expert Home",     icon: LayoutDashboard, exact: true },
   { to: "/expert/review-queue", label: "Review Queue",    icon: ClipboardCheck,  exact: false },
   { to: "/expert/builder",      label: "World Builder",   icon: Hammer,          exact: false },
-  { to: "/grader",              label: "Grader Console",  icon: Gauge,           exact: true },
-  { to: "/admin",               label: "Admin",           icon: ShieldCheck,     exact: true },
+];
+
+const expertNavNoHome = [
+  { to: "/expert/review-queue", label: "Review Queue",    icon: ClipboardCheck,  exact: false },
+  { to: "/expert/builder",      label: "World Builder",   icon: Hammer,          exact: false },
+];
+
+const graderNav = [
+  { to: "/grader", label: "Grader Lobby", icon: Gauge, exact: true },
 ];
 
 function initials(profile: { display_name?: string; email?: string } | null) {
@@ -22,6 +34,8 @@ function initials(profile: { display_name?: string; email?: string } | null) {
 function SidebarShell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
   const { profile, signOut } = useAuth();
+  const role = String(profile?.role || "").toLowerCase();
+  const sidebarNav = role === "admin" ? [...adminHomeNav, ...expertNavNoHome] : expertNav;
 
   return (
     <div className="flex min-h-screen w-full bg-slate-50">
@@ -39,7 +53,7 @@ function SidebarShell({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-2 space-y-0.5">
-          {nav.map((n) => {
+          {sidebarNav.map((n) => {
             const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
             return (
               <NavLink key={n.to} to={n.to} end={n.exact}
@@ -79,7 +93,20 @@ function SidebarShell({ children }: { children: React.ReactNode }) {
 // ─── Topbar shell (Expert / Grader) ──────────────────────────────────────────
 
 function TopbarShell({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
   const { profile, signOut } = useAuth();
+  const isGrader = pathname.startsWith("/grader");
+  const role = String(profile?.role || "").toLowerCase();
+  const isAdmin = role === "admin";
+  const backToExpert = role === "expert" || isAdmin;
+  const expertBridge = isAdmin ? expertNavNoHome : [{ to: "/expert", label: "Expert Home", icon: LayoutDashboard, exact: true }];
+  const nav = isGrader
+    ? backToExpert
+      ? [...(isAdmin ? adminHomeNav : []), ...expertBridge, ...graderNav]
+      : graderNav
+    : isAdmin
+      ? [...adminHomeNav, ...expertNavNoHome]
+      : expertNav;
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-slate-50">
@@ -114,8 +141,8 @@ function TopbarShell({ children }: { children: React.ReactNode }) {
             <div className="h-6 w-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-[9px] font-semibold flex items-center justify-center shrink-0">
               {initials(profile)}
             </div>
-            <div className="hidden sm:block">
-              <div className="text-xs font-semibold text-slate-900 leading-none">{profile?.display_name || profile?.email?.split("@")[0] || "…"}</div>
+            <div className="hidden sm:block min-w-0">
+              <div className="text-xs font-semibold text-slate-900 leading-none truncate max-w-[260px]">{profile?.email || "…"}</div>
               <div className="text-[9px] uppercase tracking-wider text-indigo-600 font-semibold leading-none mt-0.5 capitalize">{profile?.role || ""}</div>
             </div>
           </div>
@@ -140,7 +167,16 @@ export function AppShell({
   children: React.ReactNode;
   sidebar?: boolean;
 }) {
-  return sidebar
-    ? <SidebarShell>{children}</SidebarShell>
-    : <TopbarShell>{children}</TopbarShell>;
+  const { profile } = useAuth();
+  const { pathname } = useLocation();
+  const isAdmin = profile?.role === "admin";
+  const adminSidebarShell =
+    isAdmin && (pathname.startsWith("/expert") || pathname.startsWith("/admin"));
+  const useSidebarLayout = sidebar || adminSidebarShell;
+
+  return useSidebarLayout ? (
+    <SidebarShell>{children}</SidebarShell>
+  ) : (
+    <TopbarShell>{children}</TopbarShell>
+  );
 }

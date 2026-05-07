@@ -28,7 +28,7 @@
     </div>
   </div>
   <script type="module">
-    import { getSupabase, fetchMyProfile, roleHomePath, getSession } from './js/auth-core.js';
+    import { getSupabase, fetchMyProfile, roleHomePath, getSession, clearSupabaseLocalStorage } from './js/auth-core.js';
 
     const errEl = document.getElementById('err');
     const form = document.getElementById('form');
@@ -39,7 +39,33 @@
       errEl.classList.add('visible');
     }
 
+    // ── Loop detection ────────────────────────────────────────────────────────
+    // If login.html is loaded more than twice within 4 seconds it means the
+    // React SPA and this page are bouncing back and forth. Break the cycle by
+    // wiping the stale Supabase session and forcing a fresh sign-in.
+    (function detectLoop() {
+      const now = Date.now();
+      const lastTs = parseInt(sessionStorage.getItem('_login_ts') || '0');
+      const count  = parseInt(sessionStorage.getItem('_login_ct') || '0');
+      sessionStorage.setItem('_login_ts', String(now));
+      if (now - lastTs < 4000) {
+        sessionStorage.setItem('_login_ct', String(count + 1));
+        if (count + 1 >= 2) {
+          // 3 rapid visits → clear the stale session and reset counter
+          clearSupabaseLocalStorage();
+          sessionStorage.removeItem('_login_ct');
+          sessionStorage.removeItem('_login_ts');
+          showErr('Your session expired. Please sign in again.');
+        }
+      } else {
+        sessionStorage.setItem('_login_ct', '0');
+      }
+    })();
+    // ─────────────────────────────────────────────────────────────────────────
+
     (async () => {
+      // Only auto-redirect if loop detection did NOT wipe the session
+      if (sessionStorage.getItem('_login_ct') === null) return; // session was just wiped
       try {
         const existing = await getSession();
         if (existing) {
