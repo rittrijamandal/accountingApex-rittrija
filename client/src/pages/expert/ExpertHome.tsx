@@ -5,7 +5,6 @@ import { StatusPill } from "@/components/apex/StatusPill";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
 import { toDisplayWorld, type DisplayWorld } from "@/lib/types";
-import { firstName } from "@/lib/displayName";
 import { Hammer, ClipboardCheck, ArrowRight, Loader2, Trash2, Eye } from "lucide-react";
 
 export default function ExpertHome() {
@@ -14,9 +13,8 @@ export default function ExpertHome() {
   const [loadingWorlds, setLoadingWorlds] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showTable, setShowTable] = useState(false);
-  const [creating, setCreating] = useState(false);
 
-  const displayName = firstName(profile);
+  const displayName = (profile?.display_name || profile?.email?.split("@")[0] || "there").split(" ")[0];
 
   useEffect(() => {
     if (authLoading || !userId) return;
@@ -53,24 +51,18 @@ export default function ExpertHome() {
   }
 
   async function handleNewWorld() {
-    if (!userId || creating) return;
-    setCreating(true);
-    try {
-      const sb = await getSupabase();
-      const { emptyPayload } = await import("../../lib/emptyPayload");
-      const pl = emptyPayload();
-      pl.meta!.name = "New business";
-      pl.meta!.period = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
-      const { data, error: insErr } = await sb
-        .from("worlds")
-        .insert({ title: "Untitled world", creator_id: userId, is_published: false, payload: pl })
-        .select("id")
-        .single();
-      if (insErr) { alert(insErr.message); return; }
-      window.location.href = `/expert-world.html?id=${data.id}`;
-    } finally {
-      setCreating(false);
-    }
+    const sb = await getSupabase();
+    const { emptyPayload } = await import("../../lib/emptyPayload");
+    const pl = emptyPayload();
+    pl.meta!.name = "New business";
+    pl.meta!.period = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
+    const { data, error: insErr } = await sb
+      .from("worlds")
+      .insert({ title: "Untitled world", creator_id: userId, is_published: false, payload: pl })
+      .select("id")
+      .single();
+    if (insErr) { alert(insErr.message); return; }
+    window.location.href = `/expert-world.html?id=${data.id}`;
   }
 
   if (authLoading) {
@@ -89,18 +81,9 @@ export default function ExpertHome() {
         <h1 className="mt-2 font-serif-display text-4xl text-slate-900 tracking-tight">
           Welcome back, <em className="text-indigo-700">{displayName}</em>
         </h1>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
-          <p className="text-sm text-slate-500">
-            Author benchmark worlds or review submissions from your peers.
-          </p>
-          <button
-            type="button"
-            onClick={() => setShowTable((v) => !v)}
-            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 hover:bg-slate-50 transition"
-          >
-            {showTable ? "Hide worlds" : "View my worlds"}
-          </button>
-        </div>
+        <p className="text-sm text-slate-500 mt-2">
+          Author benchmark worlds or review submissions from your peers.
+        </p>
       </div>
 
       {/* Workflow cards */}
@@ -142,9 +125,8 @@ export default function ExpertHome() {
                 <button
                   key="create"
                   type="button"
-                  onClick={handleNewWorld}
-                  disabled={creating}
-                  className="text-left disabled:opacity-60"
+                  onClick={() => setShowTable(true)}
+                  className="text-left"
                 >
                   {inner}
                 </button>
@@ -169,7 +151,7 @@ export default function ExpertHome() {
               onClick={handleNewWorld}
               className="rounded-full bg-slate-900 text-white px-5 py-2.5 text-xs font-semibold uppercase tracking-wider hover:bg-indigo-700 transition"
             >
-              {creating ? "Creating…" : "+ New world"}
+              + New world
             </button>
           </div>
 

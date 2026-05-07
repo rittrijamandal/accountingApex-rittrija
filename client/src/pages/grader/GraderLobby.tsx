@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/apex/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
-import { firstName as getFirstName } from "@/lib/displayName";
 import { ArrowRight, Loader2 } from "lucide-react";
 
 interface LobbyWorld {
@@ -14,13 +13,12 @@ interface LobbyWorld {
   reviewerCount: number;
   medianScore: number | null;
   taskPrompt: string;
-  isStatic?: boolean;
 }
 
 export default function GraderLobby() {
   const { loading: authLoading, profile } = useAuth();
   const navigate = useNavigate();
-  const firstName = getFirstName(profile);
+  const firstName = (profile?.display_name || profile?.email?.split("@")[0] || "there").split(" ")[0];
   const [worlds, setWorlds] = useState<LobbyWorld[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,9 +34,10 @@ export default function GraderLobby() {
           .eq("is_published", true)
           .order("updated_at", { ascending: false })
       )
-      .then(async ({ data, error: err }) => {
+      .then(({ data, error: err }) => {
         if (err) { setError(err.message); return; }
-        const dbWorlds = (data || []).map((w) => ({
+        setWorlds(
+          (data || []).map((w) => ({
             id: w.id,
             title: w.title || "Untitled world",
             archetype: w.payload?.meta?.archetype || "—",
@@ -46,20 +45,8 @@ export default function GraderLobby() {
             reviewerCount: Math.min(3, Number(w.payload?.review?.reviewer_count || 0)),
             medianScore: w.payload?.review?.median_score != null ? Number(w.payload.review.median_score) : null,
             taskPrompt: typeof w.payload?.taskPrompt === "string" ? w.payload.taskPrompt.slice(0, 120) : "",
-          }));
-        const staticRes = await fetch("/api/static-worlds").then((r) => r.ok ? r.json() : { worlds: [] }).catch(() => ({ worlds: [] }));
-        const staticWorlds = (staticRes.worlds || []).map((w: { id: string; title: string; payload?: Record<string, any>; isStatic?: boolean }) => ({
-          id: w.id,
-          title: w.title || "AcquiCo Data Room",
-          archetype: String(w.payload?.meta?.archetype || "Deals Advisory Data Room"),
-          businessType: String(w.payload?.meta?.company || "AcquiCo"),
-          reviewerCount: 3,
-          medianScore: null,
-          taskPrompt: String(w.payload?.taskPrompt || w.payload?.meta?.taskPrompt || "").slice(0, 120),
-          isStatic: true,
-        }));
-        const ids = new Set(dbWorlds.map((w) => w.id));
-        setWorlds([...staticWorlds.filter((w: LobbyWorld) => !ids.has(w.id)), ...dbWorlds]);
+          }))
+        );
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));

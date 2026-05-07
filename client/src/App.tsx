@@ -9,15 +9,8 @@ import ReviewQueue from "@/pages/expert/ReviewQueue";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import GraderLobby from "@/pages/grader/GraderLobby";
 import GraderWorkspace from "@/pages/grader/GraderWorkspace";
-import { useAuth } from "@/hooks/use-auth";
 
 const queryClient = new QueryClient();
-
-function AdminOnly() {
-  const { profile, loading } = useAuth();
-  if (loading) return null;
-  return profile?.role === "admin" ? <AdminDashboard /> : <Navigate to="/expert" replace />;
-}
 
 export default function App() {
   return (
@@ -33,8 +26,8 @@ export default function App() {
               <Route path="/expert/review-queue" element={<ReviewQueue />} />
               <Route path="/expert/*" element={<Navigate to="/expert" replace />} />
 
-              {/* Admin */}
-              <Route path="/admin" element={<AdminOnly />} />
+              {/* Admin — accessible by all roles */}
+              <Route path="/admin" element={<AdminDashboard />} />
 
               {/* Grader */}
               <Route path="/grader" element={<GraderLobby />} />

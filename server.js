@@ -1,8 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const path    = require('path');
-const fs      = require('fs');
-const vm      = require('vm');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -50,44 +48,6 @@ app.get('/api/ai-config', (_req, res) => {
     providers: AI_PROVIDERS,
     defaultProvider: 'anthropic',
   });
-});
-
-let staticAcquiWorld = null;
-function getStaticAcquiWorld() {
-  if (staticAcquiWorld) return staticAcquiWorld;
-  const file = path.join(__dirname, 'data-acqui-world.js');
-  const code = fs.readFileSync(file, 'utf8');
-  const sandbox = {};
-  vm.runInNewContext(`${code}\nthis.STATIC_ACQUI_WORLD = STATIC_ACQUI_WORLD;`, sandbox, { filename: file });
-  const payload = sandbox.STATIC_ACQUI_WORLD;
-  staticAcquiWorld = {
-    id: 'static-acquico',
-    title: 'AcquiCo Data Room',
-    isStatic: true,
-    payload: {
-      ...payload,
-      taskPrompt: payload?.meta?.taskPrompt || payload?.taskPrompt || '',
-    },
-  };
-  return staticAcquiWorld;
-}
-
-app.get('/api/static-worlds', (_req, res) => {
-  try {
-    res.json({ worlds: [getStaticAcquiWorld()] });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/api/static-worlds/:id', (req, res) => {
-  try {
-    const world = getStaticAcquiWorld();
-    if (req.params.id !== world.id) return res.status(404).json({ error: 'Static world not found' });
-    res.json(world);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
 });
 
 /**
