@@ -1,78 +1,13 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AppShell } from "@/components/apex/AppShell";
-import { StatusPill } from "@/components/apex/StatusPill";
 import { useAuth } from "@/hooks/use-auth";
-import { getSupabase } from "@/lib/supabase";
-import { toDisplayWorld, type DisplayWorld } from "@/lib/types";
-import { emptyPayload } from "@/lib/emptyPayload";
 import { prettifyWelcomeFirstName } from "@/lib/utils";
-import { Hammer, ClipboardCheck, ArrowRight, Loader2, Trash2, Eye } from "lucide-react";
+import { Hammer, ClipboardCheck, ArrowRight, Loader2 } from "lucide-react";
 
 export default function ExpertHome() {
-  const { profile, userId, loading: authLoading } = useAuth();
-  const [worlds, setWorlds] = useState<DisplayWorld[]>([]);
-  const [loadingWorlds, setLoadingWorlds] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showTable, setShowTable] = useState(false);
-  const [emailById, setEmailById] = useState<Map<string, string>>(new Map());
+  const { profile, loading: authLoading } = useAuth();
 
   const displayName = prettifyWelcomeFirstName(profile);
-
-  useEffect(() => {
-    if (authLoading || !userId) return;
-    setLoadingWorlds(true);
-    (async () => {
-      try {
-        const sb = await getSupabase();
-        const { data, error: err } = await sb
-          .from("worlds")
-          .select("id,title,is_published,created_at,updated_at,creator_id,payload")
-          .order("updated_at", { ascending: false });
-        if (err) { setError(err.message); return; }
-        const rows = (data || []).map(toDisplayWorld);
-        // put the current user's worlds first
-        rows.sort((a, b) => {
-          const aMine = a.creatorId === userId ? 0 : 1;
-          const bMine = b.creatorId === userId ? 0 : 1;
-          if (aMine !== bMine) return aMine - bMine;
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-        });
-        setWorlds(rows);
-        if (profile?.role === "admin") {
-          const { data: profiles } = await sb.from("profiles").select("id,email");
-          const map = new Map((profiles || []).map((p: { id: string; email: string }) => [p.id, p.email] as [string, string]));
-          setEmailById(map);
-        }
-      } catch (e: unknown) {
-        setError((e as Error).message);
-      } finally {
-        setLoadingWorlds(false);
-      }
-    })();
-  }, [authLoading, userId, profile?.role]);
-
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this world? This cannot be undone.")) return;
-    const sb = await getSupabase();
-    const { error: delErr } = await sb.from("worlds").delete().eq("id", id);
-    if (delErr) { alert(delErr.message); return; }
-    setWorlds((prev) => prev.filter((w) => w.id !== id));
-  }
-
-  async function handleNewWorld() {
-    const sb = await getSupabase();
-    const pl = emptyPayload();
-    pl.meta!.name = "New business";
-    pl.meta!.period = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
-    const { data, error: insErr } = await sb
-      .from("worlds")
-      .insert({ title: "Untitled world", creator_id: userId, is_published: false, payload: pl })
-      .select("id")
-      .single();
-    if (insErr) { alert(insErr.message); return; }
-    window.location.href = `/expert-world.html?id=${data.id}`;
-  }
 
   if (authLoading) {
     return (
@@ -100,7 +35,7 @@ export default function ExpertHome() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl mx-auto">
           {[
             {
-              action: "create",
+              to: "/expert/builder",
               icon: Hammer,
               eyebrow: "Authoring",
               title: "Create a World",
@@ -115,8 +50,8 @@ export default function ExpertHome() {
               desc: "Score worlds submitted by other experts. Three independent reviewers must score each world before approval.",
               cta: "Open review queue",
             },
-          ].map((c) => {
-            const inner = (
+          ].map((c) => (
+            <Link key={c.to} to={c.to}>
               <div className="group rounded-3xl bg-white p-10 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition flex flex-col">
                 <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
                   <c.icon className="h-6 w-6 text-indigo-700" />
@@ -128,134 +63,10 @@ export default function ExpertHome() {
                   {c.cta} <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
                 </div>
               </div>
-            );
-            if (c.action === "create") {
-              return (
-                <button
-                  key="create"
-                  type="button"
-                  onClick={() => setShowTable(true)}
-                  className="text-left"
-                >
-                  {inner}
-                </button>
-              );
-            }
-            return (
-              <Link key={c.to} to={c.to!}>
-                {inner}
-              </Link>
-            );
-          })}
+            </Link>
+          ))}
         </div>
       </div>
-
-      {/* Worlds table — revealed after clicking Create a World */}
-      {showTable && (
-        <div className="px-8 pb-12">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-serif-display text-2xl text-slate-900">My Worlds</h2>
-            <button
-              type="button"
-              onClick={handleNewWorld}
-              className="rounded-full bg-slate-900 text-white px-5 py-2.5 text-xs font-semibold uppercase tracking-wider hover:bg-indigo-700 transition"
-            >
-              + New world
-            </button>
-          </div>
-
-          {error && (
-            <div className="rounded-2xl bg-red-50 border border-red-200 text-red-700 px-5 py-4 text-sm mb-4">
-              {error}
-            </div>
-          )}
-
-          <div className="rounded-3xl bg-white shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50/60">
-                <tr className="text-left">
-                  <th className="px-5 py-3.5 label-eyebrow">Title</th>
-                  <th className="px-5 py-3.5 label-eyebrow">Status</th>
-                  <th className="px-5 py-3.5 label-eyebrow">Updated</th>
-                  <th className="px-5 py-3.5 label-eyebrow">Owner</th>
-                  <th className="px-5 py-3.5 label-eyebrow text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingWorlds ? (
-                  <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-slate-400">
-                      <Loader2 className="h-5 w-5 animate-spin inline" />
-                    </td>
-                  </tr>
-                ) : worlds.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-slate-400 italic">
-                      No worlds yet — create one to open the editor.
-                    </td>
-                  </tr>
-                ) : (
-                  worlds.map((w) => {
-                    const isOwner = w.creatorId === userId;
-                    const isAdmin = profile?.role === "admin";
-                    const canEdit = isOwner || isAdmin;
-                    return (
-                      <tr key={w.id} className="border-t border-slate-100 hover:bg-slate-50/60">
-                        <td className="px-5 py-4 font-semibold text-slate-900">
-                          {canEdit ? (
-                            <a
-                              href={`/expert-world.html?id=${w.id}`}
-                              className="text-indigo-700 hover:underline"
-                            >
-                              {w.name}
-                            </a>
-                          ) : (
-                            w.name
-                          )}
-                        </td>
-                        <td className="px-5 py-4">
-                          <StatusPill status={w.status} />
-                        </td>
-                        <td className="px-5 py-4 text-slate-500 font-mono text-xs">
-                          {new Date(w.updatedAt).toLocaleString()}
-                        </td>
-                        <td className="px-5 py-4 text-slate-500 text-xs">
-                          {isOwner ? "YOURS" : isAdmin ? (emailById.get(w.creatorId) || w.creatorId.slice(0, 8) + "…") : "—"}
-                        </td>
-                        <td className="px-5 py-4 text-right space-x-2">
-                          <button
-                            onClick={() => {
-                              try {
-                                sessionStorage.setItem("apex_viewer_mode", "expert-world-preview");
-                                sessionStorage.setItem("apex_viewer_return_href", "/expert");
-                                sessionStorage.setItem("apex_active_world", JSON.stringify({ meta: w.payload?.meta, ...w.payload }));
-                              } catch { /* ignore */ }
-                              window.open("/viewer.html", "_blank");
-                            }}
-                            title="Sample viewer"
-                            className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                          </button>
-                          {canEdit && (
-                            <button
-                              onClick={() => handleDelete(w.id)}
-                              title="Delete world"
-                              className="inline-flex items-center gap-1 rounded-full border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 transition"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
     </AppShell>
   );
 }
