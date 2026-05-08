@@ -286,7 +286,7 @@ function PdfViewer({ text, title }: { text: string; title?: string }) {
       <Loader2 className="h-4 w-4 animate-spin" /> Rendering PDF…
     </div>
   );
-  return <iframe src={src} title={title || "PDF"} className="w-full h-[680px] rounded-xl border-0 bg-white" />;
+  return <iframe src={src} title={title || "PDF"} className="w-full h-[calc(100vh-220px)] min-h-[500px] rounded-xl border-0 bg-white" />;
 }
 
 // ─── File Viewer ──────────────────────────────────────────────────────────────
@@ -371,7 +371,7 @@ function FileViewer({ file, payload }: { file: CatalogFile; payload: WorldPayloa
         </div>
         {(payload.rubric || []).length > 0 && (
           <>
-            <div className="label-eyebrow mb-3">Grading Rubric</div>
+            <div className="label-eyebrow mb-3">Rubric</div>
             <div className="space-y-2">
               {(payload.rubric || []).map((r, i) => (
                 <div key={i} className="rounded-xl border border-slate-100 bg-white px-4 py-3 flex gap-3 items-start">
@@ -682,7 +682,7 @@ export default function GraderWorkspace() {
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [view, setView]               = useState<"list" | "grid">("list");
   const [drawerOpen, setDrawerOpen]   = useState(false);
-  const [sidebarTab, setSidebarTab]   = useState<"task" | "rubric" | "dataroom">("dataroom");
+  const [sidebarTab, setSidebarTab]   = useState<"taskrubric" | "dataroom">("dataroom");
 
   // Folder expansion for fileworld tree
   const [expanded, setExpanded] = useState<Set<string>>(new Set([""]));
@@ -780,7 +780,14 @@ export default function GraderWorkspace() {
     if (!world) return;
     const mock = isFakeApiKeyPhrase(apiKey);
     const provider = localStorage.getItem("apex_ai_provider") || "anthropic";
-    const model = localStorage.getItem(`apex_ai_model_${provider}`) || (provider === "openai" ? "gpt-4.1" : "claude-sonnet-4-20250514");
+    const storedModel = localStorage.getItem(`apex_ai_model_${provider}`) || "";
+    const VALID_MODEL_RE = /^[a-z0-9][\w.-]{2,60}$/i;
+    if (storedModel && !VALID_MODEL_RE.test(storedModel)) {
+      localStorage.removeItem(`apex_ai_model_${provider}`);
+    }
+    const model = (storedModel && VALID_MODEL_RE.test(storedModel))
+      ? storedModel
+      : (provider === "openai" ? "gpt-4.1" : "claude-sonnet-4-20250514");
     setAgentRunning(true);
     setAgentOutput(null);
     setAgentError(null);
@@ -857,7 +864,7 @@ export default function GraderWorkspace() {
   }
   const taskFiles    = catalog.filter(isTaskFile);
   const dataRoomFiles = catalog.filter((f) => !isTaskFile(f));
-  const taskRoomCatalog = sidebarTab === "task" ? taskFiles : dataRoomFiles;
+  const taskRoomCatalog = dataRoomFiles;
   const rubric = (payload.rubric || []) as RubricItem[];
 
   // Drawer data
@@ -985,11 +992,10 @@ export default function GraderWorkspace() {
         <aside className="w-[260px] min-w-[220px] rounded-3xl bg-white shadow-sm flex flex-col overflow-hidden">
           {/* Tab strip */}
           <div className="px-2 pt-2 pb-1 border-b border-slate-100">
-            <div className="grid grid-cols-3 gap-1 bg-slate-50 rounded-2xl p-1">
+            <div className="grid grid-cols-2 gap-1 bg-slate-50 rounded-2xl p-1">
               {([
-                { key: "task",     label: "Task",     icon: ClipboardList },
-                { key: "rubric",   label: "Rubric",   icon: ListChecks },
-                { key: "dataroom", label: "Data Room", icon: Database },
+                { key: "taskrubric", label: "Task & Rubric", icon: ClipboardList },
+                { key: "dataroom",   label: "Data Room",     icon: Database },
               ] as const).map((tab) => (
                 <button
                   key={tab.key}
@@ -1021,12 +1027,9 @@ export default function GraderWorkspace() {
 
           {/* Tab content */}
           <div className="flex-1 overflow-y-auto pb-2">
-            {sidebarTab === "rubric" ? (
+            {sidebarTab === "taskrubric" ? (
               <div className="px-4 py-4">
-                <div className="label-eyebrow mb-2">About grading</div>
-                <p className="text-[11px] text-slate-600 leading-relaxed mb-4">
-                  Score each rubric criterion against the agent's output. Open the full rubric on the right to see every criterion in detail.
-                </p>
+                <div className="label-eyebrow mb-2">Rubric overview</div>
                 {rubric.length > 0 ? (
                   <>
                     <div className="rounded-2xl bg-slate-50 px-4 py-3 mb-3">
@@ -1067,7 +1070,7 @@ export default function GraderWorkspace() {
               </div>
             ) : taskRoomCatalog.length === 0 ? (
               <div className="flex items-center justify-center p-6 text-slate-400 text-xs italic text-center">
-                {sidebarTab === "task" ? "No task files in this world." : "No files found."}
+                No files found.
               </div>
             ) : sidebarTab === "dataroom" && isFileworld ? (
               <div className="px-1 pt-1">
@@ -1177,31 +1180,34 @@ export default function GraderWorkspace() {
                 </div>
               </div>
             </div>
-          ) : sidebarTab === "rubric" ? (
-            // ── Rubric tab opens the full rubric in the main panel ──
+          ) : sidebarTab === "taskrubric" ? (
+            // ── Task & Rubric tab: task prompt above rubric items ──
             <div className="flex-1 rounded-3xl bg-white shadow-sm overflow-hidden flex flex-col min-h-0">
               <div className="px-6 py-3 flex items-center gap-2 border-b border-slate-100 shrink-0">
-                <ListChecks className="h-4 w-4 text-indigo-600 shrink-0" />
+                <ClipboardList className="h-4 w-4 text-indigo-600 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-slate-900">Grading Rubric</div>
+                  <div className="text-sm font-semibold text-slate-900">Task &amp; Rubric</div>
                   <div className="text-[11px] text-slate-500">
                     {rubric.length > 0
-                      ? `${rubric.length} criteri${rubric.length === 1 ? "on" : "a"} authored for this world`
-                      : "No criteria authored"}
+                      ? `${rubric.length} criteri${rubric.length === 1 ? "on" : "a"} · run the agent to evaluate`
+                      : "No rubric criteria authored"}
                   </div>
                 </div>
               </div>
-              <div className="flex-1 overflow-auto p-6">
-                {rubric.length > 0 ? (
-                  <>
-                    <p className="text-xs text-slate-500 leading-relaxed mb-5 max-w-2xl">
-                      Run the agent (top right) and then score each criterion below by comparing the agent's response against the expected behaviour.
-                    </p>
-                    <RubricList rubric={rubric} />
-                  </>
-                ) : (
-                  <div className="text-sm text-slate-400 italic">No rubric was authored for this world yet.</div>
-                )}
+              <div className="flex-1 overflow-auto p-6 space-y-6">
+                <div>
+                  <div className="label-eyebrow mb-2">Task</div>
+                  <div className="rounded-2xl bg-indigo-50/60 border border-indigo-100 p-5 text-sm text-slate-800 leading-relaxed whitespace-pre-wrap font-mono">
+                    {String(payload.meta?.taskPrompt || payload.taskPrompt || "(no task prompt authored)")}
+                  </div>
+                </div>
+                <div>
+                  <div className="label-eyebrow mb-2">Rubric</div>
+                  <RubricList rubric={rubric} />
+                  {rubric.length > 0 && (
+                    <p className="text-[11px] text-slate-400 mt-3">Run the agent (top right) then score each criterion against its output.</p>
+                  )}
+                </div>
               </div>
             </div>
           ) : activeFile ? (

@@ -133,7 +133,7 @@ export default function GraderLobby() {
   return (
     <AppShell sidebar={false}>
       <div className="px-8 pt-8 pb-2">
-        <div className="label-eyebrow">Grader Console</div>
+        <div className="label-eyebrow">World Lobby</div>
         <h1 className="mt-2 font-serif-display text-4xl text-slate-900 tracking-tight">
           Welcome back, <em className="text-indigo-700">{firstName}</em>
         </h1>
@@ -142,7 +142,7 @@ export default function GraderLobby() {
             ? "Sample viewer — preview snapshot is pinned below. Published worlds load underneath."
             : loading
               ? "Loading…"
-              : `${worlds.length} published benchmark world${worlds.length !== 1 ? "s" : ""} ready for grading.`}
+              : `${worlds.length} published world${worlds.length !== 1 ? "s" : ""} available.`}
         </p>
       </div>
 
@@ -152,7 +152,7 @@ export default function GraderLobby() {
             <div className="min-w-0">
               <div className="label-eyebrow text-indigo-700">Sample viewer</div>
               <p className="text-sm text-slate-700 mt-1">
-                You&apos;re in the grader lobby with a session preview of your world. Enter it below or exit to return to
+                You&apos;re in the world lobby with a session preview of your world. Enter it below or exit to return to
                 editing.
               </p>
             </div>
