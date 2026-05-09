@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowLeft, Star, Loader2, FileText, FileSpreadsheet, ClipboardList, ListChecks, Database, ChevronRight, Folder, FolderOpen, File } from "lucide-react";
 import { AppShell } from "@/components/apex/AppShell";
 import { StatusPill } from "@/components/apex/StatusPill";
@@ -197,31 +197,36 @@ interface Props {
   world: QueueWorld;
   existingScore: number;
   existingNotes: string;
+  avgScore: number | null;
   onBack: () => void;
   onScoreSubmitted: (score: number, notes: string) => void;
 }
 
-export function ReviewerView({ world, existingScore, existingNotes, onBack, onScoreSubmitted }: Props) {
+export function ReviewerView({ world, existingScore, existingNotes, avgScore, onBack, onScoreSubmitted }: Props) {
   const { userId } = useAuth();
   const [score, setScore] = useState<number>(existingScore);
   const [notes, setNotes] = useState(existingNotes);
   const [submitting, setSubmitting] = useState(false);
 
   const payload = world.payload || {};
-  const files = getDataRoomFilesFromPayload(world.payload);
+  // Memoized so uid() inside getDataRoomFilesFromPayload doesn't regenerate on every render
+  const files = useMemo(() => getDataRoomFilesFromPayload(world.payload), [world.payload]);
   const rubric = Array.isArray(payload.rubric) ? payload.rubric : [];
   const taskPrompt = String(payload.taskPrompt || "");
 
   // Detect fileworld: any file has "/" in its displayLabel
-  const isFileworld = files.some((f) => (f.displayLabel || "").includes("/"));
-  const fileTree = isFileworld ? buildFileTree(files) : null;
-  const initialExpanded = new Set<string>([""]);
-  if (isFileworld) {
-    files.forEach((f) => {
-      const parts = (f.displayLabel || "").split("/");
-      if (parts.length > 1) initialExpanded.add(parts[0]);
-    });
-  }
+  const isFileworld = useMemo(() => files.some((f) => (f.displayLabel || "").includes("/")), [files]);
+  const fileTree = useMemo(() => isFileworld ? buildFileTree(files) : null, [isFileworld, files]);
+  const initialExpanded = useMemo(() => {
+    const s = new Set<string>([""]);
+    if (isFileworld) {
+      files.forEach((f) => {
+        const parts = (f.displayLabel || "").split("/");
+        if (parts.length > 1) s.add(parts[0]);
+      });
+    }
+    return s;
+  }, [isFileworld, files]);
   const [expanded, setExpanded] = useState<Set<string>>(initialExpanded);
   function toggleFolder(k: string) {
     setExpanded((prev) => {
@@ -439,6 +444,12 @@ export function ReviewerView({ world, existingScore, existingNotes, onBack, onSc
           <div className="px-5 py-4 border-b border-slate-100">
             <div className="label-eyebrow">Reviewer Panel</div>
             <h3 className="mt-1 font-serif-display text-xl text-slate-900 tracking-tight">Score this world</h3>
+            {avgScore != null && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+                <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+                <span>Avg score so far: <span className="font-mono font-semibold text-slate-700">{avgScore.toFixed(1)} / 5</span></span>
+              </div>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5">

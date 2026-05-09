@@ -159,11 +159,16 @@ export default function ReviewQueue() {
       );
     }
     const existing = myScores[activeId] || { score: 0, notes: "" };
+    const worldScores = scoresByWorld[activeId] || [];
+    const avgScore = worldScores.length > 0
+      ? worldScores.reduce((sum, r) => sum + r.score, 0) / worldScores.length
+      : null;
     return (
       <ReviewerView
         world={world}
         existingScore={existing.score}
         existingNotes={existing.notes}
+        avgScore={avgScore}
         onBack={() => setActiveId(null)}
         onScoreSubmitted={(score, notes) => {
           setMyScores((prev) => ({ ...prev, [activeId]: { score, notes } }));
