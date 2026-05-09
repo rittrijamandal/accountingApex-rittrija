@@ -237,7 +237,7 @@ export default function ReviewQueue() {
                 <th className="px-5 py-3.5 label-eyebrow">Creator</th>
                 <th className="px-5 py-3.5 label-eyebrow">Status</th>
                 <th className="px-5 py-3.5 label-eyebrow">Reviews</th>
-                {isAdmin && <th className="px-5 py-3.5 label-eyebrow">Median</th>}
+                <th className="px-5 py-3.5 label-eyebrow">Avg Score</th>
                 <th className="px-5 py-3.5 label-eyebrow">My Score</th>
                 <th className="px-5 py-3.5 label-eyebrow text-right">Action</th>
               </tr>
@@ -245,13 +245,13 @@ export default function ReviewQueue() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={isAdmin ? 7 : 6} className="px-5 py-10 text-center text-slate-400">
+                  <td colSpan={7} className="px-5 py-10 text-center text-slate-400">
                     <Loader2 className="h-5 w-5 animate-spin inline" />
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 7 : 6} className="px-5 py-10 text-center text-slate-400 italic">
+                  <td colSpan={7} className="px-5 py-10 text-center text-slate-400 italic">
                     No worlds match your search.
                   </td>
                 </tr>
@@ -261,7 +261,10 @@ export default function ReviewQueue() {
                   const actualReviews = scoresByWorld[w.id]?.length ?? reviewCount;
                   const status = deriveStatus(w);
                   const myScore = myScores[w.id];
-                  const median = w.payload?.review?.median_score;
+                  const worldScores = scoresByWorld[w.id] || [];
+                  const avgScore = worldScores.length > 0
+                    ? worldScores.reduce((sum, r) => sum + r.score, 0) / worldScores.length
+                    : null;
 
                   return (
                     <tr key={w.id} className="border-t border-slate-100 hover:bg-slate-50/60">
@@ -273,11 +276,9 @@ export default function ReviewQueue() {
                       <td className="px-5 py-4 text-slate-600 font-mono text-xs">
                         {actualReviews}
                       </td>
-                      {isAdmin && (
-                        <td className="px-5 py-4 text-slate-700 font-mono text-xs">
-                          {median != null ? Number(median).toFixed(1) : "—"}
-                        </td>
-                      )}
+                      <td className="px-5 py-4 text-slate-700 font-mono text-xs">
+                        {avgScore != null ? `${avgScore.toFixed(1)} / 5` : <span className="text-slate-400">—</span>}
+                      </td>
                       <td className="px-5 py-4 text-slate-600 font-mono text-xs">
                         {myScore ? `${myScore.score} / 5` : <span className="text-slate-400">—</span>}
                       </td>
