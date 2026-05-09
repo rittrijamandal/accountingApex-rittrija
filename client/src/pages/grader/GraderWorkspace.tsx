@@ -673,6 +673,7 @@ export default function GraderWorkspace() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const worldId = searchParams.get("id");
+  const noRun = searchParams.get("noRun") === "1";
 
   const [world, setWorld] = useState<WorldDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -975,10 +976,12 @@ export default function GraderWorkspace() {
           ) : null}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button onClick={runAgent} disabled={agentRunning} className="rounded-full bg-slate-900 text-white px-5 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-indigo-700 transition flex items-center gap-1.5 disabled:opacity-50">
-            {agentRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
-            {agentRunning ? "Running…" : "Run Agent"}
-          </button>
+          {!noRun && (
+            <button onClick={runAgent} disabled={agentRunning} className="rounded-full bg-slate-900 text-white px-5 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-indigo-700 transition flex items-center gap-1.5 disabled:opacity-50">
+              {agentRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+              {agentRunning ? "Running…" : "Run Agent"}
+            </button>
+          )}
           <button onClick={() => setDrawerOpen(true)} className="rounded-full bg-white shadow-sm border border-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-slate-50 flex items-center gap-1.5 transition">
             <Info className="h-3.5 w-3.5" /> Info
           </button>
