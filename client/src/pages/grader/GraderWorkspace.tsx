@@ -4,7 +4,7 @@ import { AppShell } from "@/components/apex/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
 import { ACQUI_STATIC_ID, ACQUI_WORLD_PAYLOAD } from "@/data/acqui-world";
-import { SESSION_PREVIEW_WORLD_ID, loadSessionPreviewPayload } from "@/lib/graderSessionPreview";
+import { SESSION_PREVIEW_WORLD_ID, loadSessionPreviewPayload, getViewerReturnHref } from "@/lib/graderSessionPreview";
 import { isExtractedTextPlaceholder } from "@/lib/dataRoomFileImport";
 import { cn } from "@/lib/utils";
 import {
@@ -674,6 +674,7 @@ export default function GraderWorkspace() {
   const [searchParams] = useSearchParams();
   const worldId = searchParams.get("id");
   const noRun = searchParams.get("noRun") === "1";
+  const returnTo = searchParams.get("returnTo") || (worldId === SESSION_PREVIEW_WORLD_ID ? getViewerReturnHref() : null);
 
   const [world, setWorld] = useState<WorldDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -903,8 +904,8 @@ export default function GraderWorkspace() {
       <AppShell sidebar={false}>
         <div className="p-8">
           <div className="rounded-2xl bg-red-50 border border-red-200 text-red-700 px-5 py-4 text-sm mb-4">{fetchError || "World not found."}</div>
-          <button onClick={() => navigate("/grader")} className="rounded-full bg-slate-900 text-white px-5 py-2.5 text-xs font-semibold uppercase tracking-wider hover:bg-indigo-700 transition">
-            Back to Lobby
+          <button onClick={() => navigate(returnTo || "/grader")} className="rounded-full bg-slate-900 text-white px-5 py-2.5 text-xs font-semibold uppercase tracking-wider hover:bg-indigo-700 transition">
+            {returnTo ? "Go Back" : "Back to Lobby"}
           </button>
         </div>
       </AppShell>
@@ -961,8 +962,8 @@ export default function GraderWorkspace() {
       {/* ── sticky header ── */}
       <div className="glass-header sticky top-0 z-10 px-5 py-3 flex items-center justify-between gap-4 border-b border-slate-200/60">
         <div className="flex items-center gap-2 min-w-0">
-          <button onClick={() => navigate("/grader")} className="rounded-full px-3 py-1.5 text-xs uppercase tracking-wider font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 transition">
-            <ArrowLeft className="h-3.5 w-3.5" /> Lobby
+          <button onClick={() => navigate(returnTo || "/grader")} className="rounded-full px-3 py-1.5 text-xs uppercase tracking-wider font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-1.5 shrink-0 transition">
+            <ArrowLeft className="h-3.5 w-3.5" /> {returnTo ? "Back" : "Lobby"}
           </button>
           <ChevronRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
           <span className="text-sm font-semibold text-slate-900 truncate">{world.title}</span>

@@ -76,7 +76,9 @@ export default function ReviewQueue() {
           (allProfs || []).forEach((p: { id: string; email: string | null }) => {
             if (p.email) emails[p.id] = p.email;
           });
+        }
 
+        {
           const { data: allScores, error: scoresErr } = await sb
             .from("world_review_scores")
             .select("world_id, reviewer_id, score, notes");
@@ -163,9 +165,20 @@ export default function ReviewQueue() {
         existingScore={existing.score}
         existingNotes={existing.notes}
         onBack={() => setActiveId(null)}
-        onScoreSubmitted={(score, notes) =>
-          setMyScores((prev) => ({ ...prev, [activeId]: { score, notes } }))
-        }
+        onScoreSubmitted={(score, notes) => {
+          setMyScores((prev) => ({ ...prev, [activeId]: { score, notes } }));
+          setScoresByWorld((prev) => {
+            const existing = prev[activeId] || [];
+            const idx = existing.findIndex((r) => r.reviewer_id === userId);
+            const entry = { reviewer_id: userId!, reviewer_email: "", score, notes };
+            return {
+              ...prev,
+              [activeId]: idx >= 0
+                ? existing.map((r, i) => (i === idx ? entry : r))
+                : [...existing, entry],
+            };
+          });
+        }}
       />
     );
   }
@@ -253,7 +266,7 @@ export default function ReviewQueue() {
                         <StatusPill status={status} />
                       </td>
                       <td className="px-5 py-4 text-slate-600 font-mono text-xs">
-                        {isAdmin ? actualReviews : reviewCount}
+                        {actualReviews}
                       </td>
                       {isAdmin && (
                         <td className="px-5 py-4 text-slate-700 font-mono text-xs">

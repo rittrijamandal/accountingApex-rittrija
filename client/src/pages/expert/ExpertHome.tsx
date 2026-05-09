@@ -5,6 +5,7 @@ import { StatusPill } from "@/components/apex/StatusPill";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
 import { toDisplayWorld, type DisplayWorld } from "@/lib/types";
+import { SESSION_PREVIEW_WORLD_ID } from "@/lib/graderSessionPreview";
 import { prettifyWelcomeFirstName } from "@/lib/utils";
 import { Hammer, ClipboardCheck, Globe, Plus, ArrowRight, Loader2, Pencil, Trash2, Eye } from "lucide-react";
 
@@ -190,7 +191,7 @@ export default function ExpertHome() {
                           JSON.stringify({ meta: w.payload?.meta, ...w.payload })
                         );
                       } catch { /* ignore */ }
-                      navigate("/grader");
+                      navigate(`/grader/workspace?id=${SESSION_PREVIEW_WORLD_ID}&noRun=1`);
                     }}
                     title="Preview as user"
                     className="rounded-full border border-slate-200 px-3 py-2.5 text-slate-600 hover:bg-slate-50 transition"
