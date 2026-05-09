@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { LayoutDashboard, ClipboardCheck, Hammer, Gauge, LogOut, Shield } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, Globe, Gauge, LogOut, Shield } from "lucide-react";
 
 const adminHomeNav = [
   { to: "/admin", label: "Admin Dashboard", icon: Shield, exact: true },
@@ -11,12 +11,12 @@ const adminHomeNav = [
 const expertNav = [
   { to: "/expert",              label: "Expert Home",     icon: LayoutDashboard, exact: true },
   { to: "/expert/review-queue", label: "Review Queue",    icon: ClipboardCheck,  exact: false },
-  { to: "/expert/builder",      label: "World Builder",   icon: Hammer,          exact: false },
+  { to: "/expert/worlds",       label: "Published Worlds", icon: Globe,           exact: false },
 ];
 
 const expertNavNoHome = [
   { to: "/expert/review-queue", label: "Review Queue",    icon: ClipboardCheck,  exact: false },
-  { to: "/expert/builder",      label: "World Builder",   icon: Hammer,          exact: false },
+  { to: "/expert/worlds",       label: "Published Worlds", icon: Globe,           exact: false },
 ];
 
 const graderNav = [

@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { emptyPayload } from "@/lib/emptyPayload";
 import { normalizeWorldPayload } from "@/lib/normalizeWorldPayload";
 import { importFilesForDataRoom } from "@/lib/dataRoomFileImport";
+import { SESSION_PREVIEW_WORLD_ID } from "@/lib/graderSessionPreview";
 import { getSupabase } from "@/lib/supabase";
 import type { UploadedFile, WorldPayload } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -537,7 +538,7 @@ export default function ExpertWorldEditor() {
     } catch {
       /* ignore */
     }
-    navigate("/grader");
+    navigate(`/grader/workspace?id=${SESSION_PREVIEW_WORLD_ID}&noRun=1`);
   };
 
   const submitForReview = async () => {
@@ -687,10 +688,10 @@ export default function ExpertWorldEditor() {
         <div className="p-8 max-w-lg">
           <div className="rounded-2xl bg-red-50 border border-red-200 text-red-700 px-5 py-4 text-sm">{loadErr}</div>
           <Link
-            to="/expert/builder"
+            to="/expert"
             className="inline-flex mt-6 text-sm font-semibold text-indigo-700 hover:underline"
           >
-            ← Back to World Builder
+            ← Back to Expert Home
           </Link>
         </div>
       </AppShell>
@@ -713,10 +714,10 @@ export default function ExpertWorldEditor() {
       <div className="flex flex-col flex-1 min-h-0 bg-slate-50">
         <header className="glass-header sticky top-0 z-20 shrink-0 border-b border-slate-200/60 px-6 py-3 flex flex-wrap items-center gap-3">
           <Link
-            to="/expert/builder"
+            to="/expert"
             className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 hover:bg-slate-100 transition"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> World Builder
+            <ArrowLeft className="h-3.5 w-3.5" /> Expert Home
           </Link>
           <div className="h-5 w-px bg-slate-200 hidden sm:block" />
           <div className="min-w-0">

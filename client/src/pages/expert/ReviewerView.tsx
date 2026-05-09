@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Star, Loader2, FileText, FileSpreadsheet, ClipboardList, ListChecks, Database, ChevronRight } from "lucide-react";
+import { ArrowLeft, Star, Loader2, FileText, FileSpreadsheet, ClipboardList, ListChecks, Database, ChevronRight, Folder, FolderOpen, File } from "lucide-react";
 import { AppShell } from "@/components/apex/AppShell";
 import { StatusPill } from "@/components/apex/StatusPill";
 import { CsvPreview } from "@/components/apex/CsvPreview";
@@ -9,6 +9,8 @@ import { getSupabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { getDataRoomFilesFromPayload, isExtractedTextPlaceholder } from "@/lib/dataRoomFileImport";
 import type { QueueWorld, UploadedFile, RubricItem } from "@/lib/types";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function decodeBasicEntities(s: string): string {
   return s
@@ -52,8 +54,85 @@ function fileTypeLabel(f: UploadedFile): string {
 }
 
 function isSpreadsheetFile(f: UploadedFile): boolean {
-  return ["spreadsheet"].includes(fileTypeLabel(f).toLowerCase()) || isProbablyCsv(String(f.extractedText ?? ""));
+  return fileTypeLabel(f).toLowerCase() === "spreadsheet" || isProbablyCsv(String(f.extractedText ?? ""));
 }
+
+// ─── File tree for fileworld (hierarchical) data rooms ───────────────────────
+
+interface FileTreeNode { [name: string]: FileTreeNodeVal }
+interface FileTreeNodeVal { _isDir: boolean; _children?: FileTreeNode; _file?: { idx: number; f: UploadedFile } }
+
+function buildFileTree(files: UploadedFile[]): FileTreeNode {
+  const root: FileTreeNode = {};
+  files.forEach((f, idx) => {
+    const path = (f.displayLabel || f.fileName || `File ${idx + 1}`).replace(/\\/g, "/");
+    const parts = path.split("/").filter(Boolean);
+    let node = root;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const seg = parts[i];
+      if (!node[seg]) node[seg] = { _isDir: true, _children: {} };
+      node = node[seg]._children!;
+    }
+    node[parts[parts.length - 1]] = { _isDir: false, _file: { idx, f } };
+  });
+  return root;
+}
+
+function FileTreeLevel({
+  node, depth, activeFileId, onSelect, expanded, onToggle,
+}: {
+  node: FileTreeNode; depth: number; activeFileId: string | null;
+  onSelect: (f: UploadedFile, idx: number) => void;
+  expanded: Set<string>; onToggle: (k: string) => void;
+}) {
+  const entries = Object.entries(node).sort(([, a], [, b]) => {
+    if (a._isDir && !b._isDir) return -1;
+    if (!a._isDir && b._isDir) return 1;
+    return 0;
+  });
+  return (
+    <>
+      {entries.map(([name, val]) => {
+        if (val._isDir) {
+          const isOpen = expanded.has(name);
+          return (
+            <div key={name}>
+              <button
+                onClick={() => onToggle(name)}
+                className="w-full flex items-center gap-1.5 py-1.5 hover:bg-slate-50 text-slate-600 text-xs"
+                style={{ paddingLeft: `${12 + depth * 14}px` }}
+              >
+                {isOpen
+                  ? <FolderOpen className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                  : <Folder className="h-3.5 w-3.5 text-slate-400 shrink-0" />}
+                <span className="font-medium truncate">{name}/</span>
+              </button>
+              {isOpen && val._children && (
+                <FileTreeLevel node={val._children} depth={depth + 1} activeFileId={activeFileId} onSelect={onSelect} expanded={expanded} onToggle={onToggle} />
+              )}
+            </div>
+          );
+        }
+        const { idx, f } = val._file!;
+        const id = f.id || `file-${idx}`;
+        const isActive = id === activeFileId;
+        return (
+          <button
+            key={id}
+            onClick={() => onSelect(f, idx)}
+            className={cn("w-full flex items-center gap-1.5 py-2 pr-3 text-xs rounded-xl transition", isActive ? "bg-slate-900 text-white" : "hover:bg-slate-50 text-slate-700")}
+            style={{ paddingLeft: `${12 + (depth + 1) * 14}px` }}
+          >
+            <File className={cn("h-3.5 w-3.5 shrink-0", isActive ? "text-white" : "text-slate-400")} />
+            <span className="truncate font-medium">{name}</span>
+          </button>
+        );
+      })}
+    </>
+  );
+}
+
+// ─── File preview ─────────────────────────────────────────────────────────────
 
 function FilePreview({ file }: { file: UploadedFile }) {
   const raw = String(file.extractedText ?? "").trim();
@@ -89,6 +168,8 @@ function FilePreview({ file }: { file: UploadedFile }) {
   );
 }
 
+// ─── Rubric list ──────────────────────────────────────────────────────────────
+
 function RubricList({ rubric }: { rubric: RubricItem[] }) {
   if (!rubric || rubric.length === 0) {
     return <div className="text-xs text-slate-400 italic px-3 py-4">No rubric authored for this world.</div>;
@@ -110,6 +191,8 @@ function RubricList({ rubric }: { rubric: RubricItem[] }) {
   );
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 interface Props {
   world: QueueWorld;
   existingScore: number;
@@ -128,6 +211,25 @@ export function ReviewerView({ world, existingScore, existingNotes, onBack, onSc
   const files = getDataRoomFilesFromPayload(world.payload);
   const rubric = Array.isArray(payload.rubric) ? payload.rubric : [];
   const taskPrompt = String(payload.taskPrompt || "");
+
+  // Detect fileworld: any file has "/" in its displayLabel
+  const isFileworld = files.some((f) => (f.displayLabel || "").includes("/"));
+  const fileTree = isFileworld ? buildFileTree(files) : null;
+  const initialExpanded = new Set<string>([""]);
+  if (isFileworld) {
+    files.forEach((f) => {
+      const parts = (f.displayLabel || "").split("/");
+      if (parts.length > 1) initialExpanded.add(parts[0]);
+    });
+  }
+  const [expanded, setExpanded] = useState<Set<string>>(initialExpanded);
+  function toggleFolder(k: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k); else next.add(k);
+      return next;
+    });
+  }
 
   const [sidebarTab, setSidebarTab] = useState<"taskrubric" | "dataroom">("taskrubric");
   const [activeFileId, setActiveFileId] = useState<string | null>(files.length > 0 ? (files[0].id || "file-0") : null);
@@ -242,6 +344,17 @@ export function ReviewerView({ world, existingScore, existingNotes, onBack, onSc
               <div className="flex items-center justify-center p-6 text-slate-400 text-xs italic text-center">
                 No files in this world.
               </div>
+            ) : isFileworld && fileTree ? (
+              <div className="px-1 pt-1">
+                <FileTreeLevel
+                  node={fileTree}
+                  depth={0}
+                  activeFileId={activeFileId}
+                  onSelect={(f, idx) => setActiveFileId(f.id || `file-${idx}`)}
+                  expanded={expanded}
+                  onToggle={toggleFolder}
+                />
+              </div>
             ) : (
               <ul className="px-2 pt-1 space-y-0.5">
                 {files.map((f, i) => {
@@ -305,7 +418,7 @@ export function ReviewerView({ world, existingScore, existingNotes, onBack, onSc
                   : <FileText className="h-4 w-4 text-red-500 shrink-0" />}
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-slate-900 truncate">
-                    {activeFile.displayLabel || activeFile.fileName || "File"}
+                    {activeFile.fileName || activeFile.displayLabel || "File"}
                   </div>
                   <div className="text-[11px] text-slate-500">{fileTypeLabel(activeFile)}</div>
                 </div>

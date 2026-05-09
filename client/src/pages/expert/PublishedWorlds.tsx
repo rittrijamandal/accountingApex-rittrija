@@ -127,7 +127,7 @@ export default function PublishedWorlds() {
                 <div className="px-4 pb-4">
                   <button
                     type="button"
-                    onClick={() => navigate(`/grader/workspace?id=${w.id}&noRun=1`)}
+                    onClick={() => navigate(`/grader/workspace?id=${w.id}&noRun=1&returnTo=${encodeURIComponent("/expert/worlds")}`)}
                     className="w-full rounded-full bg-emerald-700 text-white px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider hover:bg-emerald-800 transition flex items-center justify-center gap-1.5"
                   >
                     <Globe className="h-3 w-3" /> Enter World
