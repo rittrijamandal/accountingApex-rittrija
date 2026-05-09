@@ -22,21 +22,12 @@ export default function WorldBuilder() {
         sb
           .from("worlds")
           .select("id,title,is_published,created_at,updated_at,creator_id,payload")
+          .eq("creator_id", userId)
           .order("updated_at", { ascending: false })
       )
       .then(({ data, error: err }) => {
-        if (err) {
-          setError(err.message);
-          return;
-        }
-        const rows = (data || []).map(toDisplayWorld);
-        rows.sort((a, b) => {
-          const aMine = a.creatorId === userId ? 0 : 1;
-          const bMine = b.creatorId === userId ? 0 : 1;
-          if (aMine !== bMine) return aMine - bMine;
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-        });
-        setWorlds(rows);
+        if (err) { setError(err.message); return; }
+        setWorlds((data || []).map(toDisplayWorld));
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoadingWorlds(false));
@@ -46,10 +37,7 @@ export default function WorldBuilder() {
     if (!confirm("Delete this world? This cannot be undone.")) return;
     const sb = await getSupabase();
     const { error: delErr } = await sb.from("worlds").delete().eq("id", id);
-    if (delErr) {
-      alert(delErr.message);
-      return;
-    }
+    if (delErr) { alert(delErr.message); return; }
     setWorlds((prev) => prev.filter((w) => w.id !== id));
   }
 
@@ -64,10 +52,7 @@ export default function WorldBuilder() {
       .insert({ title: "Untitled world", creator_id: userId, is_published: false, payload: pl })
       .select("id")
       .single();
-    if (insErr) {
-      alert(insErr.message);
-      return;
-    }
+    if (insErr) { alert(insErr.message); return; }
     navigate(`/expert/editor/${data.id}`, { replace: true });
   }
 
@@ -92,8 +77,7 @@ export default function WorldBuilder() {
           <div className="label-eyebrow">Authoring</div>
           <h1 className="mt-2 font-serif-display text-4xl text-slate-900 tracking-tight">World Builder</h1>
           <p className="text-sm text-slate-500 mt-2 max-w-xl">
-            Create and edit benchmark worlds. Open any row to edit in split view — use the data room to upload files or ZIP
-            archives (they unpack into documents). Save when you are done.
+            Create and edit your benchmark worlds. Open any row to edit — use the data room to upload files or ZIP archives.
           </p>
         </div>
         <button
@@ -109,7 +93,6 @@ export default function WorldBuilder() {
         {error && (
           <div className="rounded-2xl bg-red-50 border border-red-200 text-red-700 px-5 py-4 text-sm mb-4">{error}</div>
         )}
-
         <div className="rounded-3xl bg-white shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-slate-50/60">
@@ -117,80 +100,66 @@ export default function WorldBuilder() {
                 <th className="px-5 py-3.5 label-eyebrow">Title</th>
                 <th className="px-5 py-3.5 label-eyebrow">Status</th>
                 <th className="px-5 py-3.5 label-eyebrow">Updated</th>
-                <th className="px-5 py-3.5 label-eyebrow">Owner</th>
                 <th className="px-5 py-3.5 label-eyebrow text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loadingWorlds ? (
                 <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-slate-400">
+                  <td colSpan={4} className="px-5 py-8 text-center text-slate-400">
                     <Loader2 className="h-5 w-5 animate-spin inline" />
                   </td>
                 </tr>
               ) : worlds.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-slate-400 italic">
+                  <td colSpan={4} className="px-5 py-8 text-center text-slate-400 italic">
                     No worlds yet — create one to open the editor.
                   </td>
                 </tr>
               ) : (
-                worlds.map((w) => {
-                  const isOwner = w.creatorId === userId;
-                  const canEdit = isOwner;
-                  return (
-                    <tr key={w.id} className="border-t border-slate-100 hover:bg-slate-50/60">
-                      <td className="px-5 py-4 font-semibold text-slate-900">
-                        {canEdit ? (
-                          <Link to={`/expert/editor/${w.id}`} className="text-indigo-700 hover:underline">
-                            {w.name}
-                          </Link>
-                        ) : (
-                          w.name
-                        )}
-                      </td>
-                      <td className="px-5 py-4">
-                        <StatusPill status={w.status} />
-                      </td>
-                      <td className="px-5 py-4 text-slate-500 font-mono text-xs">
-                        {new Date(w.updatedAt).toLocaleString()}
-                      </td>
-                      <td className="px-5 py-4 text-slate-500 text-xs">{isOwner ? "YOURS" : "—"}</td>
-                      <td className="px-5 py-4 text-right space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            try {
-                              sessionStorage.setItem("apex_viewer_mode", "expert-world-preview");
-                              sessionStorage.setItem("apex_viewer_return_href", "/expert/builder");
-                              sessionStorage.setItem(
-                                "apex_active_world",
-                                JSON.stringify({ meta: w.payload?.meta, ...w.payload })
-                              );
-                            } catch {
-                              /* ignore */
-                            }
-                            navigate("/grader");
-                          }}
-                          title="Open grader lobby preview"
-                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </button>
-                        {canEdit && (
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(w.id)}
-                            title="Delete world"
-                            className="inline-flex items-center gap-1 rounded-full border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 transition"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
+                worlds.map((w) => (
+                  <tr key={w.id} className="border-t border-slate-100 hover:bg-slate-50/60">
+                    <td className="px-5 py-4 font-semibold text-slate-900">
+                      <Link to={`/expert/editor/${w.id}`} className="text-indigo-700 hover:underline">
+                        {w.name}
+                      </Link>
+                    </td>
+                    <td className="px-5 py-4">
+                      <StatusPill status={w.status} />
+                    </td>
+                    <td className="px-5 py-4 text-slate-500 font-mono text-xs">
+                      {new Date(w.updatedAt).toLocaleString()}
+                    </td>
+                    <td className="px-5 py-4 text-right space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          try {
+                            sessionStorage.setItem("apex_viewer_mode", "expert-world-preview");
+                            sessionStorage.setItem("apex_viewer_return_href", "/expert/builder");
+                            sessionStorage.setItem(
+                              "apex_active_world",
+                              JSON.stringify({ meta: w.payload?.meta, ...w.payload })
+                            );
+                          } catch { /* ignore */ }
+                          navigate("/grader");
+                        }}
+                        title="Preview as user"
+                        className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(w.id)}
+                        title="Delete world"
+                        className="inline-flex items-center gap-1 rounded-full border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 transition"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

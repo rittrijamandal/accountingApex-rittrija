@@ -8,6 +8,7 @@ import ExpertHome from "@/pages/expert/ExpertHome";
 import ExpertWorldEditor from "@/pages/expert/ExpertWorldEditor";
 import ReviewQueue from "@/pages/expert/ReviewQueue";
 import WorldBuilder from "@/pages/expert/WorldBuilder";
+import PublishedWorlds from "@/pages/expert/PublishedWorlds";
 import GraderLobby from "@/pages/grader/GraderLobby";
 import GraderWorkspace from "@/pages/grader/GraderWorkspace";
 import Login from "@/pages/Login";
@@ -33,6 +34,7 @@ export default function App() {
               <Route path="/expert/builder" element={<WorldBuilder />} />
               <Route path="/expert/editor/:worldId" element={<ExpertWorldEditor />} />
               <Route path="/expert/review-queue" element={<ReviewQueue />} />
+              <Route path="/expert/worlds" element={<PublishedWorlds />} />
               <Route path="/expert" element={<ExpertHome />} />
               <Route path="/expert/*" element={<Navigate to="/expert" replace />} />
 
