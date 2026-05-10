@@ -118,6 +118,29 @@ export default function ReviewQueue() {
       .finally(() => setLoading(false));
   }, [authLoading, userId, isAdmin]);
 
+  async function unpublishWorld(worldId: string) {
+    const w = queue.find((x) => x.id === worldId);
+    if (!w) return;
+    if (!confirm("Retract this world? It will be unpublished and return to in-review status.")) return;
+    setActionBusy(`unpublish:${worldId}`);
+    try {
+      const sb = await getSupabase();
+      const payload = { ...w.payload, review: { ...w.payload?.review, status: "in_review" } };
+      const { error: uErr } = await sb
+        .from("worlds")
+        .update({ is_published: false, payload })
+        .eq("id", worldId);
+      if (uErr) throw uErr;
+      setQueue((prev) =>
+        prev.map((row) => (row.id === worldId ? { ...row, is_published: false, payload } : row))
+      );
+    } catch (e) {
+      alert(e instanceof Error ? e.message : String(e));
+    } finally {
+      setActionBusy(null);
+    }
+  }
+
   async function approveWorld(worldId: string) {
     const w = queue.find((x) => x.id === worldId);
     if (!w) return;
@@ -294,16 +317,29 @@ export default function ReviewQueue() {
                             >
                               <Eye className="h-3 w-3 mr-1" /> Reviews
                             </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-8 text-[10px] uppercase tracking-wider text-emerald-800 border-emerald-200 hover:bg-emerald-50"
-                              disabled={!!actionBusy || w.is_published}
-                              onClick={() => approveWorld(w.id)}
-                            >
-                              <CheckCircle className="h-3 w-3 mr-1" /> Approve
-                            </Button>
+                            {w.is_published ? (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-[10px] uppercase tracking-wider text-red-700 border-red-200 hover:bg-red-50"
+                                disabled={!!actionBusy}
+                                onClick={() => unpublishWorld(w.id)}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" /> Retract
+                              </Button>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-[10px] uppercase tracking-wider text-emerald-800 border-emerald-200 hover:bg-emerald-50"
+                                disabled={!!actionBusy}
+                                onClick={() => approveWorld(w.id)}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" /> Approve
+                              </Button>
+                            )}
                             <Button
                               type="button"
                               size="sm"
