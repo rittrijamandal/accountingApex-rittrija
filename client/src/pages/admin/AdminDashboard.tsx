@@ -1,61 +1,35 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/apex/AppShell";
-import { StatusPill } from "@/components/apex/StatusPill";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
-import { toReviewStatus } from "@/lib/types";
-import { cn } from "@/lib/utils";
-import { Loader2, MoreHorizontal, Trash2, ExternalLink } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import {
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
+  Tooltip, ResponsiveContainer, Legend,
+} from "recharts";
 
-interface ProfileRow {
-  id: string;
-  email: string;
-  display_name?: string;
-  role: "admin" | "expert" | "grader";
-  created_at: string;
+interface AdminStats {
+  totalUsers: number;
+  totalWorlds: number;
+  publishedWorlds: number;
+  inReviewWorlds: number;
+  draftWorlds: number;
+  totalReviews: number;
+  avgScore: number | null;
+  roleBreakdown: { name: string; value: number }[];
+  statusBreakdown: { name: string; value: number }[];
+  scoreDistribution: { score: string; count: number }[];
 }
 
-interface WorldAdminRow {
-  id: string;
-  title: string;
-  creator_id: string;
-  creator_email: string;
-  is_published: boolean;
-  archetype: string;
-  review_status: string;
-  reviewer_count: number;
-  median_score: number | null;
-  review_scores: { reviewer_email: string; score: number; notes: string }[];
-}
+const ROLE_COLORS = ["#6366f1", "#10b981", "#94a3b8"];
+const STATUS_COLORS = ["#10b981", "#6366f1", "#f59e0b", "#94a3b8"];
 
-interface AdminData {
-  profiles: ProfileRow[];
-  worlds: WorldAdminRow[];
-  stats: { totalUsers: number; publishedWorlds: number; totalWorlds: number };
-}
-
-function initials(email: string) {
-  return (email || "?").slice(0, 2).toUpperCase();
-}
-
-function ReviewerDots({ scores, count }: { scores: { reviewer_email: string; score: number }[]; count: number }) {
+function StatCard({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
   return (
-    <div className="flex gap-1">
-      {Array.from({ length: 3 }).map((_, i) => {
-        const r = scores[i];
-        return (
-          <div
-            key={i}
-            title={r ? `${r.reviewer_email} · ${r.score}/5` : "Pending"}
-            className={cn(
-              "h-6 w-6 rounded-full text-[9px] font-bold flex items-center justify-center",
-              i < count ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-400"
-            )}
-          >
-            {r ? initials(r.reviewer_email) : i + 1}
-          </div>
-        );
-      })}
+    <div className="rounded-3xl bg-white shadow-sm p-6">
+      <div className="label-eyebrow">{label}</div>
+      <div className="mt-2 font-serif-display text-4xl text-slate-900 leading-none">{value}</div>
+      {sub && <div className="mt-1 text-xs text-slate-500">{sub}</div>}
     </div>
   );
 }
@@ -63,13 +37,9 @@ function ReviewerDots({ scores, count }: { scores: { reviewer_email: string; sco
 export default function AdminDashboard() {
   const { profile, loading: authLoading } = useAuth();
   const isAdmin = profile?.role === "admin";
-
-  const [tab, setTab] = useState<"worlds" | "users">("worlds");
-  const [data, setData] = useState<AdminData | null>(null);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (authLoading) return;
@@ -77,97 +47,57 @@ export default function AdminDashboard() {
     getSupabase()
       .then(async (sb) => {
         const [
-          { data: profiles, error: pErr },
-          { data: worlds, error: wErr },
-          { data: scores, error: sErr },
+          { data: profiles },
+          { data: worlds },
+          { data: scores },
         ] = await Promise.all([
-          sb.from("profiles").select("id,email,display_name,role,created_at").order("created_at", { ascending: false }),
-          sb.from("worlds").select("id,title,creator_id,is_published,payload,created_at").order("created_at", { ascending: false }),
-          sb.from("world_review_scores").select("world_id,reviewer_id,score,notes"),
+          sb.from("profiles").select("id,role"),
+          sb.from("worlds").select("id,is_published,payload"),
+          sb.from("world_review_scores").select("world_id,score"),
         ]);
-        if (pErr || wErr || sErr) throw pErr || wErr || sErr;
 
-        const userById = new Map((profiles || []).map((u) => [u.id, u]));
-        const scoresByWorld = new Map<string, { reviewer_email: string; score: number; notes: string }[]>();
-        (scores || []).forEach((r) => {
-          if (!scoresByWorld.has(r.world_id)) scoresByWorld.set(r.world_id, []);
-          scoresByWorld.get(r.world_id)!.push({
-            reviewer_email: userById.get(r.reviewer_id)?.email || r.reviewer_id.slice(0, 8),
-            score: Number(r.score),
-            notes: r.notes || "",
-          });
-        });
+        const roleCount: Record<string, number> = { admin: 0, expert: 0, grader: 0 };
+        (profiles || []).forEach((u) => { roleCount[u.role] = (roleCount[u.role] || 0) + 1; });
 
-        const worldRows: WorldAdminRow[] = (worlds || []).map((w) => {
-          const reviewScores = scoresByWorld.get(w.id) || [];
-          const reviewCount = Math.min(3, Number(w.payload?.review?.reviewer_count || reviewScores.length));
-          const medianScore = w.payload?.review?.median_score != null ? Number(w.payload.review.median_score) : null;
-          return {
-            id: w.id,
-            title: w.title || "Untitled",
-            creator_id: w.creator_id,
-            creator_email: userById.get(w.creator_id)?.email || w.creator_id.slice(0, 8) + "…",
-            is_published: Boolean(w.is_published),
-            archetype: w.payload?.meta?.archetype || "—",
-            review_status: String(w.payload?.review?.status || "draft"),
-            reviewer_count: reviewCount,
-            median_score: medianScore,
-            review_scores: reviewScores,
-          };
-        });
+        const published = (worlds || []).filter((w) => w.is_published).length;
+        const inReview = (worlds || []).filter((w) => !w.is_published && w.payload?.review?.status === "in_review").length;
+        const draft = (worlds || []).length - published - inReview;
 
-        setData({
-          profiles: (profiles || []) as ProfileRow[],
-          worlds: worldRows,
-          stats: {
-            totalUsers: (profiles || []).length,
-            publishedWorlds: (worlds || []).filter((w) => w.is_published).length,
-            totalWorlds: (worlds || []).length,
-          },
+        const allScores = (scores || []).map((s) => Number(s.score));
+        const avgScore = allScores.length > 0
+          ? allScores.reduce((a, b) => a + b, 0) / allScores.length
+          : null;
+
+        const scoreDist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        allScores.forEach((s) => { if (s >= 1 && s <= 5) scoreDist[Math.round(s)]++; });
+
+        setStats({
+          totalUsers: (profiles || []).length,
+          totalWorlds: (worlds || []).length,
+          publishedWorlds: published,
+          inReviewWorlds: inReview,
+          draftWorlds: draft,
+          totalReviews: (scores || []).length,
+          avgScore,
+          roleBreakdown: [
+            { name: "Expert", value: roleCount.expert || 0 },
+            { name: "Grader", value: roleCount.grader || 0 },
+            { name: "Admin", value: roleCount.admin || 0 },
+          ].filter((r) => r.value > 0),
+          statusBreakdown: [
+            { name: "Published", value: published },
+            { name: "In Review", value: inReview },
+            { name: "Draft", value: draft },
+          ].filter((s) => s.value > 0),
+          scoreDistribution: [1, 2, 3, 4, 5].map((n) => ({
+            score: `${n} ★`,
+            count: scoreDist[n],
+          })),
         });
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [authLoading]);
-
-  async function handleRoleChange(userId: string, role: string) {
-    if (!isAdmin) return;
-    const sb = await getSupabase();
-    const { error } = await sb.from("profiles").update({ role }).eq("id", userId);
-    if (error) { alert(error.message); return; }
-    setData((prev) => prev ? {
-      ...prev,
-      profiles: prev.profiles.map((u) => u.id === userId ? { ...u, role: role as ProfileRow["role"] } : u),
-    } : prev);
-  }
-
-  async function handleDeleteWorld(worldId: string) {
-    if (!isAdmin) return;
-    if (!confirm("Force delete this world? This cannot be undone.")) return;
-    const sb = await getSupabase();
-    const { error } = await sb.from("worlds").delete().eq("id", worldId);
-    if (error) { alert(error.message); return; }
-    setData((prev) => prev ? { ...prev, worlds: prev.worlds.filter((w) => w.id !== worldId) } : prev);
-  }
-
-  async function handleTogglePublish(worldId: string, current: boolean) {
-    if (!isAdmin) return;
-    const sb = await getSupabase();
-    const { error } = await sb.from("worlds").update({ is_published: !current }).eq("id", worldId);
-    if (error) { alert(error.message); return; }
-    setData((prev) => prev ? {
-      ...prev,
-      worlds: prev.worlds.map((w) => w.id === worldId ? { ...w, is_published: !current } : w),
-    } : prev);
-  }
-
-  const q = search.toLowerCase();
-  const filteredWorlds = data?.worlds.filter(
-    (w) => !q || w.title.toLowerCase().includes(q) || w.creator_email.toLowerCase().includes(q)
-  ) ?? [];
-  const filteredUsers = data?.profiles.filter(
-    (u) => !q || u.email.toLowerCase().includes(q) || u.role.includes(q)
-  ) ?? [];
 
   if (authLoading) {
     return (
@@ -179,7 +109,6 @@ export default function AdminDashboard() {
 
   return (
     <AppShell sidebar={false}>
-      {/* Header */}
       <div className="px-8 pt-8 pb-4">
         <div className="label-eyebrow">Operations</div>
         <h1 className="mt-2 font-serif-display text-4xl text-slate-900 tracking-tight">Admin Dashboard</h1>
@@ -190,187 +119,130 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Stat cards */}
-      {data && (
-        <div className="px-8 pb-4 grid grid-cols-3 gap-4 max-w-3xl">
-          {[
-            { label: "Total Users", value: data.stats.totalUsers },
-            { label: "Published Worlds", value: data.stats.publishedWorlds },
-            { label: "Total Worlds", value: data.stats.totalWorlds },
-          ].map((s) => (
-            <div key={s.label} className="rounded-3xl bg-white shadow-sm p-6">
-              <div className="label-eyebrow">{s.label}</div>
-              <div className="mt-2 font-serif-display text-4xl text-slate-900">{s.value}</div>
-            </div>
-          ))}
-        </div>
+      {error && (
+        <div className="mx-8 mb-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 px-5 py-4 text-sm">{error}</div>
       )}
 
-      {/* Tabs + search */}
-      <div className="px-8 pb-4 flex items-center justify-between">
-        <div className="inline-flex rounded-full bg-white shadow-sm p-1">
-          {(["worlds", "users"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={cn(
-                "px-5 py-2 text-xs font-semibold uppercase tracking-wider rounded-full transition",
-                tab === t ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
-              )}
-            >
-              {t === "worlds" ? "World Directory" : "User Directory"}
-            </button>
-          ))}
+      {loading || !stats ? (
+        <div className="flex justify-center py-24">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         </div>
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={tab === "worlds" ? "Search worlds…" : "Search users…"}
-          className="rounded-full bg-white shadow-sm px-4 py-2.5 text-sm w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-        />
-      </div>
-
-      {/* Table */}
-      <div className="px-8 pb-12">
-        {error && (
-          <div className="rounded-2xl bg-red-50 border border-red-200 text-red-700 px-5 py-4 text-sm mb-4">{error}</div>
-        )}
-
-        {loading ? (
-          <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-slate-400" /></div>
-        ) : tab === "worlds" ? (
-          <div className="rounded-3xl bg-white shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50/60">
-                <tr className="text-left">
-                  <th className="px-5 py-3.5 label-eyebrow">World</th>
-                  <th className="px-5 py-3.5 label-eyebrow">Creator</th>
-                  <th className="px-5 py-3.5 label-eyebrow">Review Status</th>
-                  <th className="px-5 py-3.5 label-eyebrow">Reviewers</th>
-                  <th className="px-5 py-3.5 label-eyebrow">Median Score</th>
-                  {isAdmin && <th className="px-5 py-3.5 label-eyebrow text-right">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredWorlds.length === 0 ? (
-                  <tr><td colSpan={isAdmin ? 6 : 5} className="px-5 py-10 text-center text-slate-400 italic">No worlds found.</td></tr>
-                ) : filteredWorlds.map((w) => {
-                  const status = w.is_published ? "APPROVED" : toReviewStatus(w.review_status);
-                  return (
-                    <tr key={w.id} className="border-t border-slate-100 hover:bg-slate-50/60">
-                      <td className="px-5 py-4">
-                        <div className="font-semibold text-slate-900">{w.title}</div>
-                        <div className="text-xs text-slate-400 font-mono">{w.archetype}</div>
-                      </td>
-                      <td className="px-5 py-4 text-slate-600 text-xs font-mono">{w.creator_email}</td>
-                      <td className="px-5 py-4"><StatusPill status={status} /></td>
-                      <td className="px-5 py-4">
-                        <ReviewerDots scores={w.review_scores} count={w.reviewer_count} />
-                      </td>
-                      <td className="px-5 py-4">
-                        {w.median_score != null ? (
-                          <span className={cn(
-                            "font-serif-display text-xl",
-                            w.median_score >= 4 ? "text-emerald-700" : w.median_score >= 3 ? "text-slate-900" : "text-red-700"
-                          )}>
-                            {w.median_score.toFixed(1)}
-                          </span>
-                        ) : <span className="text-slate-400">—</span>}
-                      </td>
-                      {isAdmin && (
-                        <td className="px-5 py-4 text-right relative">
-                          <button
-                            onClick={() => setOpenMenu(openMenu === w.id ? null : w.id)}
-                            className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider hover:bg-slate-200 inline-flex items-center gap-1.5 transition"
-                          >
-                            Actions <MoreHorizontal className="h-3 w-3" />
-                          </button>
-                          {openMenu === w.id && (
-                            <div className="absolute right-4 top-full mt-1 w-48 bg-white rounded-2xl shadow-lg z-20 overflow-hidden p-1">
-                              <a
-                                href={`/expert-world.html?id=${w.id}&isAdminOverride=true`}
-                                className="w-full text-left px-3 py-2 rounded-xl text-xs hover:bg-slate-50 text-slate-700 flex items-center gap-2"
-                              >
-                                <ExternalLink className="h-3.5 w-3.5" /> Edit World
-                              </a>
-                              <button
-                                onClick={() => { handleTogglePublish(w.id, w.is_published); setOpenMenu(null); }}
-                                className="w-full text-left px-3 py-2 rounded-xl text-xs hover:bg-emerald-50 text-emerald-700 font-semibold"
-                              >
-                                {w.is_published ? "Unpublish" : "Publish"}
-                              </button>
-                              <button
-                                onClick={() => { handleDeleteWorld(w.id); setOpenMenu(null); }}
-                                className="w-full text-left px-3 py-2 rounded-xl text-xs hover:bg-red-50 text-red-700 font-semibold flex items-center gap-2"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" /> Delete
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+      ) : (
+        <div className="px-8 pb-12 space-y-6">
+          {/* Stat cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <StatCard label="Total Users" value={stats.totalUsers} />
+            <StatCard label="Total Worlds" value={stats.totalWorlds} />
+            <StatCard label="Published" value={stats.publishedWorlds} />
+            <StatCard label="Total Reviews" value={stats.totalReviews} />
+            <StatCard
+              label="Avg Review Score"
+              value={stats.avgScore != null ? `${stats.avgScore.toFixed(1)} / 5` : "—"}
+              sub={stats.totalReviews > 0 ? `across ${stats.totalReviews} review${stats.totalReviews !== 1 ? "s" : ""}` : "no reviews yet"}
+            />
           </div>
-        ) : (
-          <div className="rounded-3xl bg-white shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50/60">
-                <tr className="text-left">
-                  <th className="px-5 py-3.5 label-eyebrow">User</th>
-                  <th className="px-5 py-3.5 label-eyebrow">First Name</th>
-                  <th className="px-5 py-3.5 label-eyebrow">Role</th>
-                  <th className="px-5 py-3.5 label-eyebrow">Joined</th>
-                  {isAdmin && <th className="px-5 py-3.5 label-eyebrow text-right">Change Role</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.length === 0 ? (
-                  <tr><td colSpan={isAdmin ? 5 : 4} className="px-5 py-10 text-center text-slate-400 italic">No users found.</td></tr>
-                ) : filteredUsers.map((u) => (
-                  <tr key={u.id} className="border-t border-slate-100 hover:bg-slate-50/60">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
-                          {initials(u.email)}
-                        </div>
-                        <span className="font-mono text-xs text-slate-700">{u.email}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-sm font-medium text-slate-800">
-                      {u.display_name || <span className="text-slate-300 italic text-xs">—</span>}
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 capitalize">
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-slate-500 text-xs">
-                      {new Date(u.created_at).toLocaleDateString()}
-                    </td>
-                    {isAdmin && (
-                      <td className="px-5 py-4 text-right">
-                        <select
-                          value={u.role}
-                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                          className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                        >
-                          <option value="admin">Admin</option>
-                          <option value="expert">Expert</option>
-                          <option value="grader">Grader</option>
-                        </select>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+          {/* Charts row */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* World status breakdown */}
+            <div className="rounded-3xl bg-white shadow-sm p-6">
+              <div className="label-eyebrow mb-1">World Status</div>
+              <p className="text-xs text-slate-500 mb-4">Breakdown by review stage</p>
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={stats.statusBreakdown}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={85}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {stats.statusBreakdown.map((_, i) => (
+                      <Cell key={i} fill={STATUS_COLORS[i % STATUS_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v: number) => [`${v} world${v !== 1 ? "s" : ""}`, ""]} />
+                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "11px" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* User role breakdown */}
+            <div className="rounded-3xl bg-white shadow-sm p-6">
+              <div className="label-eyebrow mb-1">User Roles</div>
+              <p className="text-xs text-slate-500 mb-4">Distribution across roles</p>
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={stats.roleBreakdown}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={85}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {stats.roleBreakdown.map((_, i) => (
+                      <Cell key={i} fill={ROLE_COLORS[i % ROLE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v: number) => [`${v} user${v !== 1 ? "s" : ""}`, ""]} />
+                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "11px" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Score distribution */}
+            <div className="rounded-3xl bg-white shadow-sm p-6">
+              <div className="label-eyebrow mb-1">Score Distribution</div>
+              <p className="text-xs text-slate-500 mb-4">Review scores across all worlds</p>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={stats.scoreDistribution} barSize={28}>
+                  <XAxis dataKey="score" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={28} />
+                  <Tooltip formatter={(v: number) => [`${v} review${v !== 1 ? "s" : ""}`, "Count"]} />
+                  <Bar dataKey="count" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Secondary stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-3xl bg-white shadow-sm p-6 flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0">
+                <span className="font-serif-display text-xl text-indigo-700">{stats.inReviewWorlds}</span>
+              </div>
+              <div>
+                <div className="label-eyebrow">In Review</div>
+                <div className="text-xs text-slate-500 mt-0.5">worlds awaiting approval</div>
+              </div>
+            </div>
+            <div className="rounded-3xl bg-white shadow-sm p-6 flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0">
+                <span className="font-serif-display text-xl text-amber-700">{stats.draftWorlds}</span>
+              </div>
+              <div>
+                <div className="label-eyebrow">Draft</div>
+                <div className="text-xs text-slate-500 mt-0.5">worlds not yet submitted</div>
+              </div>
+            </div>
+            <div className="rounded-3xl bg-white shadow-sm p-6 flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center shrink-0">
+                <span className="font-serif-display text-xl text-emerald-700">
+                  {stats.totalUsers > 0 ? (stats.totalReviews / stats.totalUsers).toFixed(1) : "—"}
+                </span>
+              </div>
+              <div>
+                <div className="label-eyebrow">Reviews / User</div>
+                <div className="text-xs text-slate-500 mt-0.5">avg engagement rate</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
