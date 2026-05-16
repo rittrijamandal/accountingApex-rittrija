@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/apex/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
+import { clearExpertWorldPreviewSession } from "@/lib/graderSessionPreview";
 import { ACQUI_STATIC_ID, ACQUI_WORLD_PAYLOAD } from "@/data/acqui-world";
 import {
   GRADER_LOBBY_TITLE_ORDER,
@@ -61,6 +62,18 @@ export default function GraderLobby() {
   const [worlds, setWorlds] = useState<LobbyWorld[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /** Graders should never see expert sample-preview session keys; clear so lobby stays curriculum-only. */
+  useEffect(() => {
+    if (authLoading) return;
+    if (profile?.role === "grader") {
+      try {
+        clearExpertWorldPreviewSession();
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [authLoading, profile?.role]);
 
   useEffect(() => {
     if (authLoading) return;

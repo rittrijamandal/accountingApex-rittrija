@@ -5,6 +5,7 @@ import { StatusPill } from "@/components/apex/StatusPill";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
 import { toDisplayWorld, type DisplayWorld } from "@/lib/types";
+import { SESSION_PREVIEW_WORLD_ID } from "@/lib/graderSessionPreview";
 import { ArrowLeft, Loader2, Trash2, Eye } from "lucide-react";
 
 export default function WorldBuilder() {
@@ -142,9 +143,9 @@ export default function WorldBuilder() {
                               JSON.stringify({ meta: w.payload?.meta, ...w.payload })
                             );
                           } catch { /* ignore */ }
-                          navigate("/grader");
+                          navigate(`/grader/workspace?id=${SESSION_PREVIEW_WORLD_ID}&noRun=1`);
                         }}
-                        title="Preview as user"
+                        title="Sample preview (grader workspace)"
                         className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition"
                       >
                         <Eye className="h-3.5 w-3.5" />
