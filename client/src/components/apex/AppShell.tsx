@@ -1,10 +1,11 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { LayoutDashboard, ClipboardCheck, Globe, Gauge, LogOut, Shield } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, Globe, Gauge, LogOut, Shield, Users } from "lucide-react";
 
 const adminHomeNav = [
   { to: "/admin", label: "Admin Dashboard", icon: Shield, exact: true },
+  { to: "/admin/users", label: "User Directory", icon: Users, exact: false },
 ];
 
 /** Expert landing — hidden for admins (they use Admin Dashboard + Review Queue + World Builder). */

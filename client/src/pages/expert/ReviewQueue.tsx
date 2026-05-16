@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AppShell } from "@/components/apex/AppShell";
 import { StatusPill } from "@/components/apex/StatusPill";
 import { ReviewerView } from "./ReviewerView";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 import { toReviewStatus, type QueueWorld, type SupabaseWorld } from "@/lib/types";
 import {
   Dialog,
@@ -14,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Search, Loader2, Eye, CheckCircle, ClipboardCheck } from "lucide-react";
+import { Search, Loader2, Eye, CheckCircle, ClipboardCheck, UserPlus } from "lucide-react";
 
 interface ScoreRow { score: number; notes: string }
 
@@ -23,6 +25,11 @@ interface ReviewScoreDetail {
   reviewer_email: string;
   score: number;
   notes: string;
+}
+
+interface ExpertOption {
+  id: string;
+  email: string;
 }
 
 function deriveStatus(w: SupabaseWorld) {
@@ -43,6 +50,11 @@ export default function ReviewQueue() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [reviewsWorldId, setReviewsWorldId] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState<string | null>(null);
+  const [expertPool, setExpertPool] = useState<ExpertOption[]>([]);
+  const [assignWorldId, setAssignWorldId] = useState<string | null>(null);
+  const [assignSlotIds, setAssignSlotIds] = useState<[string, string, string]>(["", "", ""]);
+  const [assignBusy, setAssignBusy] = useState(false);
+  const [idToEmail, setIdToEmail] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!activeId || loading) return;
@@ -76,6 +88,18 @@ export default function ReviewQueue() {
           (allProfs || []).forEach((p: { id: string; email: string | null }) => {
             if (p.email) emails[p.id] = p.email;
           });
+          const { data: experts } = await sb
+            .from("profiles")
+            .select("id,email")
+            .eq("role", "expert")
+            .order("email");
+          setExpertPool(
+            (experts || [])
+              .filter((p: { email: string | null }) => p.email)
+              .map((p: { id: string; email: string }) => ({ id: p.id, email: p.email })),
+          );
+        } else {
+          setExpertPool([]);
         }
 
         {
@@ -97,9 +121,9 @@ export default function ReviewQueue() {
           setScoresByWorld(byWorld);
         }
 
-        // Exclude own worlds from the review queue
+        // Experts: exclude own worlds. Admins: see every world (including drafts) for assignment & moderation.
         const enriched: QueueWorld[] = rows
-          .filter((w) => w.creator_id !== userId)
+          .filter((w) => isAdmin || w.creator_id !== userId)
           .map((w) => ({ ...w, creator_email: emails[w.creator_id] || `${w.creator_id.slice(0, 8)}…` }));
 
         const { data: scoresData } = await sb
@@ -108,6 +132,7 @@ export default function ReviewQueue() {
           .eq("reviewer_id", userId);
 
         setQueue(enriched);
+        setIdToEmail(emails);
         const scoreMap: Record<string, ScoreRow> = {};
         (scoresData || []).forEach((s) => {
           scoreMap[s.world_id] = { score: Number(s.score), notes: s.notes || "" };
@@ -163,6 +188,49 @@ export default function ReviewQueue() {
       setActionBusy(null);
     }
   }
+
+  function openAssignDialog(w: QueueWorld) {
+    const cur = w.payload?.review?.assigned_reviewer_ids ?? [];
+    setAssignSlotIds([cur[0] ?? "", cur[1] ?? "", cur[2] ?? ""]);
+    setAssignWorldId(w.id);
+  }
+
+  function assignedEmailsLine(w: QueueWorld): string | null {
+    const ids = w.payload?.review?.assigned_reviewer_ids ?? [];
+    if (!ids.length) return null;
+    return ids.map((id) => idToEmail[id] || `${id.slice(0, 8)}…`).join(" · ");
+  }
+
+  async function saveReviewerAssignments() {
+    if (!assignWorldId) return;
+    const w = queue.find((x) => x.id === assignWorldId);
+    if (!w) return;
+    const picked = assignSlotIds.filter(Boolean);
+    const unique = [...new Set(picked)];
+    const wasDraft = deriveStatus(w) === "DRAFT";
+    setAssignBusy(true);
+    try {
+      const sb = await getSupabase();
+      const nextReview = {
+        ...w.payload?.review,
+        assigned_reviewer_ids: unique,
+        ...(unique.length && wasDraft ? { status: "in_review" as const } : {}),
+      };
+      const payload = { ...w.payload, review: nextReview };
+      const { error: uErr } = await sb.from("worlds").update({ payload }).eq("id", assignWorldId);
+      if (uErr) throw uErr;
+      setQueue((prev) =>
+        prev.map((row) => (row.id === assignWorldId ? { ...row, payload } : row)),
+      );
+      setAssignWorldId(null);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : String(e));
+    } finally {
+      setAssignBusy(false);
+    }
+  }
+
+  const assignWorld = assignWorldId ? queue.find((x) => x.id === assignWorldId) : null;
 
   if (authLoading) {
     return (
@@ -231,7 +299,7 @@ export default function ReviewQueue() {
             {loading ? (
               "Loading…"
             ) : filtered.length > 0 ? (
-              `${filtered.length} world${filtered.length !== 1 ? "s" : ""} available to review.`
+              `${filtered.length} world${filtered.length !== 1 ? "s" : ""}${isAdmin ? " (all creators, including drafts)" : " available to review"}.`
             ) : (
               <em className="font-serif-display text-slate-400">No worlds to show.</em>
             )}
@@ -253,12 +321,15 @@ export default function ReviewQueue() {
           <div className="rounded-2xl bg-red-50 border border-red-200 text-red-700 px-5 py-4 text-sm mb-4">{error}</div>
         )}
         <div className="rounded-3xl bg-white shadow-sm overflow-hidden overflow-x-auto">
-          <table className="w-full text-sm min-w-[760px]">
+          <table className={cn("w-full text-sm", isAdmin ? "min-w-[960px]" : "min-w-[760px]")}>
             <thead className="bg-slate-50/60">
               <tr className="text-left">
                 <th className="px-5 py-3.5 label-eyebrow">World Name</th>
                 <th className="px-5 py-3.5 label-eyebrow">Creator</th>
                 <th className="px-5 py-3.5 label-eyebrow">Status</th>
+                {isAdmin && (
+                  <th className="px-5 py-3.5 label-eyebrow">Assigned experts</th>
+                )}
                 <th className="px-5 py-3.5 label-eyebrow">Reviews</th>
                 <th className="px-5 py-3.5 label-eyebrow">Avg Score</th>
                 <th className="px-5 py-3.5 label-eyebrow">My Score</th>
@@ -268,13 +339,13 @@ export default function ReviewQueue() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-slate-400">
+                  <td colSpan={isAdmin ? 8 : 7} className="px-5 py-10 text-center text-slate-400">
                     <Loader2 className="h-5 w-5 animate-spin inline" />
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-slate-400 italic">
+                  <td colSpan={isAdmin ? 8 : 7} className="px-5 py-10 text-center text-slate-400 italic">
                     No worlds match your search.
                   </td>
                 </tr>
@@ -288,6 +359,7 @@ export default function ReviewQueue() {
                   const avgScore = worldScores.length > 0
                     ? worldScores.reduce((sum, r) => sum + r.score, 0) / worldScores.length
                     : null;
+                  const assignedLine = assignedEmailsLine(w);
 
                   return (
                     <tr key={w.id} className="border-t border-slate-100 hover:bg-slate-50/60">
@@ -296,6 +368,24 @@ export default function ReviewQueue() {
                       <td className="px-5 py-4">
                         <StatusPill status={status} />
                       </td>
+                      {isAdmin && (
+                        <td className="px-5 py-4 align-top">
+                          <div className="text-xs text-slate-600 max-w-[200px] leading-snug" title={assignedLine || undefined}>
+                            {assignedLine || <span className="text-slate-400">—</span>}
+                          </div>
+                          {!w.is_published && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="mt-2 h-7 text-[10px] uppercase tracking-wider"
+                              onClick={() => openAssignDialog(w)}
+                            >
+                              <UserPlus className="h-3 w-3 mr-1" /> Assign
+                            </Button>
+                          )}
+                        </td>
+                      )}
                       <td className="px-5 py-4 text-slate-600 font-mono text-xs">
                         {actualReviews}
                       </td>
@@ -398,6 +488,70 @@ export default function ReviewQueue() {
           </div>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setReviewsWorldId(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!assignWorldId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAssignWorldId(null);
+            setAssignSlotIds(["", "", ""]);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif-display">Assign reviewers</DialogTitle>
+            <DialogDescription>
+              Choose up to three experts for <span className="font-medium text-slate-800">{assignWorld?.title || "this world"}</span>.
+              Draft worlds move to <strong>in review</strong> when you save with at least one reviewer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {([0, 1, 2] as const).map((i) => (
+              <div key={i}>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block mb-1">
+                  Reviewer {i + 1}
+                </span>
+                <select
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                  value={assignSlotIds[i]}
+                  onChange={(e) => {
+                    const next: [string, string, string] = [...assignSlotIds];
+                    next[i] = e.target.value;
+                    setAssignSlotIds(next);
+                  }}
+                >
+                  <option value="">— None —</option>
+                  {expertPool.map((e) => (
+                    <option key={e.id} value={e.id}>{e.email}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+            {expertPool.length === 0 && (
+              <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                No users with the Expert role. Promote users to Expert in{" "}
+                <Link to="/admin/users" className="text-indigo-700 underline font-medium">User Directory</Link> first.
+              </p>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => {
+                setAssignWorldId(null);
+                setAssignSlotIds(["", "", ""]);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="button" disabled={assignBusy} onClick={() => void saveReviewerAssignments()}>
+              {assignBusy ? "Saving…" : "Save assignments"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

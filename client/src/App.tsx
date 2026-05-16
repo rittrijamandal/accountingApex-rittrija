@@ -14,6 +14,7 @@ import GraderWorkspace from "@/pages/grader/GraderWorkspace";
 import Login from "@/pages/Login";
 import RoleHome from "@/pages/RoleHome";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+import UserDirectory from "@/pages/admin/UserDirectory";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +39,8 @@ export default function App() {
               <Route path="/expert" element={<ExpertHome />} />
               <Route path="/expert/*" element={<Navigate to="/expert" replace />} />
 
-              {/* Admin */}
+              {/* Admin — specific paths before wildcard */}
+              <Route path="/admin/users" element={<UserDirectory />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
 

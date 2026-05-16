@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AppShell } from "@/components/apex/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
@@ -62,6 +63,9 @@ export default function UserDirectory() {
     <AppShell sidebar={false}>
       <div className="px-8 pt-8 pb-5 flex items-end justify-between">
         <div>
+          <div className="text-xs text-slate-500 mb-1">
+            <Link to="/admin" className="text-indigo-600 hover:underline font-medium">← Admin dashboard</Link>
+          </div>
           <div className="label-eyebrow">Admin · Operations</div>
           <h1 className="mt-2 font-serif-display text-4xl text-slate-900 tracking-tight">User Directory</h1>
           <p className="text-sm text-slate-500 mt-2">

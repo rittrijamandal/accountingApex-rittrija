@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AppShell } from "@/components/apex/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users } from "lucide-react";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
   Tooltip, ResponsiveContainer, Legend,
@@ -116,6 +117,15 @@ export default function AdminDashboard() {
           <p className="mt-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5 inline-block">
             View-only — you can see data but only admins can make changes.
           </p>
+        )}
+        {isAdmin && (
+          <Link
+            to="/admin/users"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-900 text-white px-5 py-2.5 text-xs font-semibold uppercase tracking-wider hover:bg-indigo-700 transition shadow-sm"
+          >
+            <Users className="h-3.5 w-3.5" />
+            User directory · roles
+          </Link>
         )}
       </div>
 

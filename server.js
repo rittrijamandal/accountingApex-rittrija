@@ -236,6 +236,7 @@ app.get('/expert', (_req, res) => sendSPA(res));
 app.get('/expert/*', (_req, res) => sendSPA(res));
 app.get('/login', (_req, res) => sendSPA(res));
 app.get('/admin', (_req, res) => sendSPA(res));
+app.get('/admin/users', (_req, res) => sendSPA(res));
 app.get('/grader', (_req, res) => sendSPA(res));
 app.get('/grader/workspace', (_req, res) => sendSPA(res));
 
