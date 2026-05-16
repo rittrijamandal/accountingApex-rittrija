@@ -196,10 +196,18 @@ function RubricList({ rubric }: { rubric: RubricItem[] }) {
 /** DB row may be sparse; align Deals & Advisory / AcquiCo with the same curriculum as the grader lobby static world. */
 function effectiveReviewerPayload(world: QueueWorld): WorldPayload {
   const p = (world.payload || {}) as WorldPayload;
-  if (canonicalGraderLobbyTitle((world.title || "").trim()) !== "Deals & Advisory") return p;
+  const meta = p.meta;
+  const metaCompany = (meta as { company?: string } | undefined)?.company;
+  const titleCandidate =
+    (world.title || "").trim() ||
+    String(metaCompany || meta?.name || "").trim();
+  if (canonicalGraderLobbyTitle(titleCandidate) !== "Deals & Advisory") return p;
+
   const c = ACQUI_WORLD_PAYLOAD;
+  // If DB has non-empty uploadedFiles, getDataRoomFilesFromPayload uses that and ignores `files` — strip it for curriculum.
+  const { uploadedFiles: _u, files: _f, rubric: _r, ...rest } = p as WorldPayload & Record<string, unknown>;
   return {
-    ...p,
+    ...(rest as WorldPayload),
     files: c.files,
     rubric: c.rubric,
     meta: { ...c.meta, ...p.meta },
