@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
 import { ACQUI_STATIC_ID, ACQUI_WORLD_PAYLOAD } from "@/data/acqui-world";
 import { SESSION_PREVIEW_WORLD_ID, loadSessionPreviewPayload, getViewerReturnHref } from "@/lib/graderSessionPreview";
+import { canonicalGraderLobbyTitle } from "@/lib/graderLobbyWorlds";
 import { isExtractedTextPlaceholder } from "@/lib/dataRoomFileImport";
 import { cn } from "@/lib/utils";
 import {
@@ -669,7 +670,7 @@ function RubricList({ rubric, compact = false }: { rubric: RubricItem[]; compact
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function GraderWorkspace() {
-  const { loading: authLoading } = useAuth();
+  const { loading: authLoading, profile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const worldId = searchParams.get("id");
@@ -707,6 +708,12 @@ export default function GraderWorkspace() {
 
   useEffect(() => {
     if (authLoading || !worldId) return;
+    setFetchError(null);
+    if (profile?.role === "grader" && worldId === SESSION_PREVIEW_WORLD_ID) {
+      setFetchError("Sample preview is for experts from the editor. Use the three worlds in the Grader Lobby.");
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     // Session preview from Expert "Sample viewer" — same payload as viewer.html used to load
@@ -759,9 +766,19 @@ export default function GraderWorkspace() {
     }
 
     getSupabase()
-      .then((sb) => sb.from("worlds").select("id,title,payload").eq("id", worldId).single())
+      .then((sb) => sb.from("worlds").select("id,title,payload,is_published").eq("id", worldId).single())
       .then(({ data, error: err }) => {
         if (err || !data) { setFetchError(err?.message || "World not found."); return; }
+        if (profile?.role === "grader") {
+          if (!data.is_published) {
+            setFetchError("This world is not published. Graders can only open the three lobby worlds.");
+            return;
+          }
+          if (!canonicalGraderLobbyTitle(data.title || "")) {
+            setFetchError("Only Audit, Invoice Approval, and Deals & Advisory are available to graders.");
+            return;
+          }
+        }
         const w: WorldDetail = { id: data.id, title: data.title || "Untitled", payload: data.payload || {} };
         setWorld(w);
         const cat = buildCatalog(w.payload);
@@ -776,7 +793,7 @@ export default function GraderWorkspace() {
       })
       .catch((e) => setFetchError(e.message))
       .finally(() => setLoading(false));
-  }, [authLoading, worldId]);
+  }, [authLoading, worldId, profile?.role]);
 
   async function executeAgentRun(apiKey: string) {
     if (!world) return;
