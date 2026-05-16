@@ -9,3 +9,11 @@ export function canonicalGraderLobbyTitle(title: string): GraderLobbyCanonicalTi
   if ((GRADER_LOBBY_TITLE_ORDER as readonly string[]).includes(t)) return t as GraderLobbyCanonicalTitle;
   return null;
 }
+
+/** Human-facing world name in admin/review UIs (legacy DB title → curriculum label). */
+export function curriculumWorldDisplayTitle(dbTitle: string | null | undefined): string {
+  const raw = (dbTitle || "").trim();
+  if (!raw) return "Untitled world";
+  const c = canonicalGraderLobbyTitle(raw);
+  return c ?? raw;
+}

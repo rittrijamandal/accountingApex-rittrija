@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { getDataRoomFilesFromPayload, isExtractedTextPlaceholder } from "@/lib/dataRoomFileImport";
+import { curriculumWorldDisplayTitle } from "@/lib/graderLobbyWorlds";
 import type { QueueWorld, UploadedFile, RubricItem } from "@/lib/types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -274,7 +275,7 @@ export function ReviewerView({ world, existingScore, existingNotes, avgScore, on
             <ArrowLeft className="h-3.5 w-3.5" /> Back to queue
           </button>
           <ChevronRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
-          <span className="text-sm font-semibold text-slate-900 truncate">{world.title}</span>
+          <span className="text-sm font-semibold text-slate-900 truncate">{curriculumWorldDisplayTitle(world.title)}</span>
           <StatusPill status={world.payload?.review?.status === "in_review" ? "IN REVIEW" : "DRAFT"} />
         </div>
         <div className="text-xs text-slate-500 shrink-0">

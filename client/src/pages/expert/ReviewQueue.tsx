@@ -6,6 +6,7 @@ import { ReviewerView } from "./ReviewerView";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { curriculumWorldDisplayTitle } from "@/lib/graderLobbyWorlds";
 import { toReviewStatus, type QueueWorld, type SupabaseWorld } from "@/lib/types";
 import {
   Dialog,
@@ -279,12 +280,12 @@ export default function ReviewQueue() {
     );
   }
 
-  const filtered = queue.filter(
-    (w) =>
-      !search ||
-      w.title?.toLowerCase().includes(search.toLowerCase()) ||
-      w.creator_email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = queue.filter((w) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    const display = curriculumWorldDisplayTitle(w.title).toLowerCase();
+    return display.includes(q) || w.title?.toLowerCase().includes(q) || w.creator_email?.toLowerCase().includes(q);
+  });
 
   const reviewsWorld = reviewsWorldId ? queue.find((w) => w.id === reviewsWorldId) : null;
   const reviewsList = reviewsWorldId ? scoresByWorld[reviewsWorldId] || [] : [];
@@ -363,7 +364,7 @@ export default function ReviewQueue() {
 
                   return (
                     <tr key={w.id} className="border-t border-slate-100 hover:bg-slate-50/60">
-                      <td className="px-5 py-4 font-semibold text-slate-900">{w.title || "Untitled world"}</td>
+                      <td className="px-5 py-4 font-semibold text-slate-900">{curriculumWorldDisplayTitle(w.title)}</td>
                       <td className="px-5 py-4 text-slate-600">{w.creator_email || w.creator_id.slice(0, 8) + "…"}</td>
                       <td className="px-5 py-4">
                         <StatusPill status={status} />
@@ -464,7 +465,7 @@ export default function ReviewQueue() {
           <DialogHeader>
             <DialogTitle className="font-serif-display">Reviewer scores</DialogTitle>
             <DialogDescription>
-              {reviewsWorld?.title || "World"} — all submitted scores ({reviewsList.length}).
+              {reviewsWorld ? curriculumWorldDisplayTitle(reviewsWorld.title) : "World"} — all submitted scores ({reviewsList.length}).
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -505,7 +506,11 @@ export default function ReviewQueue() {
           <DialogHeader>
             <DialogTitle className="font-serif-display">Assign reviewers</DialogTitle>
             <DialogDescription>
-              Choose up to three experts for <span className="font-medium text-slate-800">{assignWorld?.title || "this world"}</span>.
+              Choose up to three experts for{" "}
+              <span className="font-medium text-slate-800">
+                {assignWorld ? curriculumWorldDisplayTitle(assignWorld.title) : "this world"}
+              </span>
+              .
               Draft worlds move to <strong>in review</strong> when you save with at least one reviewer.
             </DialogDescription>
           </DialogHeader>
