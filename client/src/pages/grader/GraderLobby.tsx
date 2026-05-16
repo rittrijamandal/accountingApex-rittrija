@@ -4,62 +4,15 @@ import { AppShell } from "@/components/apex/AppShell";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
 import { clearExpertWorldPreviewSession } from "@/lib/graderSessionPreview";
-import { ACQUI_STATIC_ID, ACQUI_WORLD_PAYLOAD } from "@/data/acqui-world";
-import {
-  GRADER_LOBBY_TITLE_ORDER,
-  canonicalGraderLobbyTitle,
-} from "@/lib/graderLobbyWorlds";
+import { buildCurriculumLobbyWorldsFromDbRows, type CurriculumLobbyWorld } from "@/lib/graderLobbyWorlds";
 import { cn, prettifyWelcomeFirstName } from "@/lib/utils";
 import { ArrowRight, Loader2 } from "lucide-react";
-
-interface LobbyWorld {
-  id: string;
-  title: string;
-  archetype: string;
-  businessType: string;
-  reviewerCount: number;
-  medianScore: number | null;
-  taskPrompt: string;
-}
-
-const TITLE_MEDIAN_SCORES: Record<string, number> = {
-  Audit: 7.4,
-  "Invoice Approval": 6.8,
-  "Deals & Advisory": 8.2,
-};
-
-const TITLE_REVIEWER_COUNTS: Record<string, number> = {
-  Audit: 3,
-  "Invoice Approval": 2,
-  "Deals & Advisory": 3,
-};
-
-function rowFromDb(w: {
-  id: string;
-  title: string | null;
-  payload: { meta?: { archetype?: string; type?: string }; review?: { reviewer_count?: number; median_score?: number | null }; taskPrompt?: string } | null;
-}, canonical: string): LobbyWorld {
-  const title = canonical;
-  return {
-    id: w.id,
-    title,
-    archetype: w.payload?.meta?.archetype || "—",
-    businessType: w.payload?.meta?.type || "—",
-    reviewerCount:
-      TITLE_REVIEWER_COUNTS[title] ??
-      Math.min(3, Number(w.payload?.review?.reviewer_count || 0)),
-    medianScore:
-      TITLE_MEDIAN_SCORES[title] ??
-      (w.payload?.review?.median_score != null ? Number(w.payload.review.median_score) : null),
-    taskPrompt: typeof w.payload?.taskPrompt === "string" ? w.payload.taskPrompt.slice(0, 120) : "",
-  };
-}
 
 export default function GraderLobby() {
   const { loading: authLoading, profile } = useAuth();
   const navigate = useNavigate();
   const firstName = prettifyWelcomeFirstName(profile);
-  const [worlds, setWorlds] = useState<LobbyWorld[]>([]);
+  const [worlds, setWorlds] = useState<CurriculumLobbyWorld[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,41 +44,13 @@ export default function GraderLobby() {
           setError(err.message);
           return;
         }
-        const rows = data || [];
-        const byCanonical = new Map<string, (typeof rows)[0]>();
-        for (const w of rows) {
-          const c = canonicalGraderLobbyTitle(w.title || "");
-          if (!c) continue;
-          if (!byCanonical.has(c)) byCanonical.set(c, w);
-        }
-
-        const staticDeals: LobbyWorld = {
-          id: ACQUI_STATIC_ID,
-          title: "Deals & Advisory",
-          archetype: ACQUI_WORLD_PAYLOAD.meta.archetype,
-          businessType: "—",
-          reviewerCount: TITLE_REVIEWER_COUNTS["Deals & Advisory"],
-          medianScore: TITLE_MEDIAN_SCORES["Deals & Advisory"],
-          taskPrompt: ACQUI_WORLD_PAYLOAD.meta.taskPrompt.slice(0, 120),
-        };
-
-        const ordered: LobbyWorld[] = [];
-        for (const canonical of GRADER_LOBBY_TITLE_ORDER) {
-          if (canonical === "Deals & Advisory") {
-            const db = byCanonical.get("Deals & Advisory");
-            ordered.push(db ? rowFromDb(db, canonical) : staticDeals);
-            continue;
-          }
-          const db = byCanonical.get(canonical);
-          if (db) ordered.push(rowFromDb(db, canonical));
-        }
-        setWorlds(ordered);
+        setWorlds(buildCurriculumLobbyWorldsFromDbRows(data || []));
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [authLoading]);
 
-  function launchWorkspace(world: LobbyWorld) {
+  function launchWorkspace(world: CurriculumLobbyWorld) {
     navigate(`/grader/workspace?id=${world.id}`);
   }
 

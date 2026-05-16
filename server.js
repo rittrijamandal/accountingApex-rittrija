@@ -208,37 +208,33 @@ app.post('/api/test-grader', async (req, res) => {
   await anthropicMessagesPost(apiKey, req.body, res);
 });
 
-// Ensure root always resolves on serverless platforms.
-app.get('/', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+// React SPA shell (dist-client/) — register ALL shell paths BEFORE express.static so
+// nothing under the repo root or dist can shadow them (e.g. GET /login must never 404).
+const CLIENT_DIST = path.join(__dirname, 'dist-client');
+function sendSPA(res) {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(path.join(CLIENT_DIST, 'index.html'));
+}
 
-// /admin.html still reachable directly; /admin goes to the new React SPA
+app.get('/', (_req, res) => sendSPA(res));
+app.get('/login.html', (_req, res) => sendSPA(res));
+app.get('/login', (_req, res) => sendSPA(res));
+app.get('/admin/users', (_req, res) => sendSPA(res));
+app.get('/admin', (_req, res) => sendSPA(res));
+app.get('/expert', (_req, res) => sendSPA(res));
+app.get('/expert/*', (_req, res) => sendSPA(res));
+app.get('/grader/workspace', (_req, res) => sendSPA(res));
+app.get('/grader', (_req, res) => sendSPA(res));
+
+// /admin.html still reachable via static; /admin is the new React SPA.
 
 app.get('/review-queue', (_req, res) => {
   res.sendFile(path.join(__dirname, 'review-queue.html'));
 });
 
-// Existing vanilla HTML/CSS/JS static files (served before the React SPA)
+// Existing vanilla HTML/CSS/JS static files, then built client assets
 app.use(express.static(path.join(__dirname)));
-
-// React SPA (dist-client/) — serves the new Lovable UI for /expert and /expert/*
-// These routes are intentionally placed AFTER the existing static-file middleware so
-// that old pages (expert.html, grader.html, admin.html, etc.) are unaffected.
-const CLIENT_DIST = path.join(__dirname, 'dist-client');
 app.use(express.static(CLIENT_DIST));
-
-function sendSPA(res) {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.sendFile(path.join(CLIENT_DIST, 'index.html'));
-}
-app.get('/expert', (_req, res) => sendSPA(res));
-app.get('/expert/*', (_req, res) => sendSPA(res));
-app.get('/login', (_req, res) => sendSPA(res));
-app.get('/admin', (_req, res) => sendSPA(res));
-app.get('/admin/users', (_req, res) => sendSPA(res));
-app.get('/grader', (_req, res) => sendSPA(res));
-app.get('/grader/workspace', (_req, res) => sendSPA(res));
 
 // Vercel serverless entrypoint
 module.exports = app;
@@ -247,7 +243,7 @@ module.exports = app;
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`\n  APEX server running at http://localhost:${PORT}`);
-    console.log(`  Home (auth redirect):    http://localhost:${PORT}/`);
+    console.log(`  Home (React SPA):        http://localhost:${PORT}/`);
     console.log(`  Expert dashboard (new):  http://localhost:${PORT}/expert`);
     console.log(`  Review queue (new):      http://localhost:${PORT}/expert/review-queue`);
     console.log(`  Sample world viewer:     http://localhost:${PORT}/viewer.html`);

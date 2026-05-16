@@ -70,10 +70,49 @@ export async function fetchMyProfile() {
   return data;
 }
 
+const ADMIN_ALIASES = new Set(['admin', 'administrator', 'superadmin', 'super_admin', 'owner']);
+const EXPERT_ALIASES = new Set(['expert', 'reviewer', 'author']);
+const GRADER_ALIASES = new Set(['grader', 'student', 'judge']);
+
+/** @param {unknown} raw */
+export function canonicalAppRole(raw) {
+  const r = String(raw ?? '')
+    .trim()
+    .toLowerCase();
+  if (!r) return null;
+  if (ADMIN_ALIASES.has(r)) return 'admin';
+  if (EXPERT_ALIASES.has(r)) return 'expert';
+  if (GRADER_ALIASES.has(r)) return 'grader';
+  return null;
+}
+
+/**
+ * Prefer profiles.role, then Supabase user_metadata / app_metadata role.
+ * @param {import('@supabase/supabase-js').User | null} user
+ * @param {{ role?: string | null } | null} profile
+ */
+export function resolveAppRole(user, profile) {
+  const tries = [profile?.role, user?.user_metadata?.role, user?.app_metadata?.role];
+  for (const t of tries) {
+    const c = canonicalAppRole(t);
+    if (c) return c;
+  }
+  return 'grader';
+}
+
 export function roleHomePath(role) {
-  if (role === 'admin') return '/expert';
-  if (role === 'expert') return '/expert';   // new React SPA
-  return '/grader';                          // new React SPA
+  const c = canonicalAppRole(role) || 'grader';
+  if (c === 'admin') return '/admin';
+  if (c === 'expert') return '/expert';
+  return '/grader';
+}
+
+/**
+ * @param {import('@supabase/supabase-js').User | null} user
+ * @param {{ role?: string | null } | null} profile
+ */
+export function roleHomePathForUser(user, profile) {
+  return roleHomePath(resolveAppRole(user, profile));
 }
 
 export function clearSupabaseLocalStorage() {
@@ -108,5 +147,5 @@ export async function signOut() {
 
 export async function signOutAndRedirect() {
   await signOut();
-  window.location.replace('/login.html');
+  window.location.replace('/login');
 }

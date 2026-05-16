@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
+import { resolveAppRole, roleHomeHref } from "@/lib/role";
 import { Loader2 } from "lucide-react";
 
 /**
@@ -18,11 +19,10 @@ export default function RoleHome() {
     );
   }
 
-  const role = String(profile?.role || "").trim().toLowerCase();
-  if (role === "admin")  return <Navigate to="/admin" replace />;
-  if (role === "expert") return <Navigate to="/expert" replace />;
-  if (role === "grader") return <Navigate to="/grader" replace />;
+  if (!profile) {
+    return <Navigate to="/login" replace />;
+  }
 
-  // No profile loaded yet (or unknown role) → send to login.
-  return <Navigate to="/login" replace />;
+  const appRole = resolveAppRole(null, profile);
+  return <Navigate to={roleHomeHref(appRole)} replace />;
 }

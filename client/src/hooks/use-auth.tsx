@@ -1,14 +1,20 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { getSupabase } from "@/lib/supabase";
+import { resolveAppRole } from "@/lib/role";
 import type { Profile } from "@/lib/types";
 
+function loginAppPath(): string {
+  const base = import.meta.env.BASE_URL || "/";
+  if (!base || base === "/") return "/login";
+  const prefix = base.endsWith("/") ? base.slice(0, -1) : base;
+  return `${prefix}/login`;
+}
+
 function goToLogin() {
-  // Use the React-internal /login route (NOT /login.html). Vite serves the
-  // SPA shell for any path inside the client root, so /login.html ends up
-  // serving the same React app and creates an infinite redirect loop.
-  if (window.location.pathname !== "/login") {
-    window.location.replace("/login");
+  const target = loginAppPath();
+  if (window.location.pathname !== target) {
+    window.location.replace(target);
   }
 }
 
@@ -39,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Skip the auth check on the login page — it manages auth itself.
     // (Re-runs whenever the user navigates AWAY from /login so the profile
     // is loaded after a successful soft sign-in.)
-    if (pathname === "/login") {
+    if (pathname === loginAppPath()) {
       setLoading(false);
       return;
     }
@@ -97,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        setProfile(prof as Profile);
+        setProfile({ ...(prof as Profile), role: resolveAppRole(user, prof as Profile) });
         setUserId(user.id);
       } catch (e: unknown) {
         if (cancelled) return;

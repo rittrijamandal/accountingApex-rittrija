@@ -24,11 +24,11 @@
       <button type="submit" class="btn" id="submit">CREATE ACCOUNT</button>
     </form>
     <div class="auth-footer">
-      ALREADY HAVE AN ACCOUNT? <a href="login.html">SIGN IN</a>.
+      ALREADY HAVE AN ACCOUNT? <a href="/login">SIGN IN</a>.
     </div>
   </div>
   <script type="module">
-    import { getSupabase, fetchMyProfile, roleHomePath, getSession } from './js/auth-core.js';
+    import { getSupabase, fetchMyProfile, roleHomePathForUser, getSession } from './js/auth-core.js';
 
     const errEl = document.getElementById('err');
     const form = document.getElementById('form');
@@ -43,9 +43,11 @@
       try {
         const existing = await getSession();
         if (existing) {
+          const sb = await getSupabase();
+          const { data: { user } } = await sb.auth.getUser();
           const profile = await fetchMyProfile();
-          if (profile) {
-            window.location.replace(roleHomePath(profile.role));
+          if (profile && user) {
+            window.location.replace(roleHomePathForUser(user, profile));
             return;
           }
         }
@@ -80,7 +82,7 @@
           }
           const profile = await fetchMyProfile();
           if (!profile) throw new Error('Profile not created. Apply the database migration in Supabase.');
-          window.location.replace(roleHomePath(profile.role));
+          window.location.replace(roleHomePathForUser(data.user, profile));
           return;
         }
         showErr('CHECK YOUR EMAIL TO CONFIRM, THEN SIGN IN.');

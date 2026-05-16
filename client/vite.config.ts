@@ -1,9 +1,33 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
+/** In dev, deep links like /login must serve index.html (same as production Express). */
+function spaShellFallback(): Plugin {
+  return {
+    name: "spa-shell-fallback",
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        if (req.method !== "GET" && req.method !== "HEAD") return next();
+        const raw = req.url?.split("?")[0] ?? "";
+        if (raw.includes(".")) return next();
+        if (
+          raw === "/login" ||
+          raw.startsWith("/admin") ||
+          raw.startsWith("/expert") ||
+          raw.startsWith("/grader")
+        ) {
+          const qs = req.url?.includes("?") ? "?" + req.url.split("?").slice(1).join("?") : "";
+          req.url = "/" + qs;
+        }
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), spaShellFallback()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

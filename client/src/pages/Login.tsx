@@ -1,16 +1,8 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSupabase } from "@/lib/supabase";
+import { resolveAppRole, roleHomeHref } from "@/lib/role";
 import { Loader2 } from "lucide-react";
-
-function rolePath(role: string | undefined) {
-  const r = String(role || "").trim().toLowerCase();
-  if (r === "admin")  return "/admin";
-  if (r === "expert") return "/expert";
-  if (r === "grader") return "/grader";
-  // Unknown role → fall back to grader (least-privileged) rather than /expert
-  return "/grader";
-}
 
 export default function Login() {
   const navigate = useNavigate();
@@ -35,10 +27,9 @@ export default function Login() {
           .maybeSingle();
         if (cancelled) return;
         if (prof) {
-          const role = (prof as { role?: string }).role;
-          // Helpful for debugging "wrong destination after login" issues.
-          console.info("[Login] auto-redirect: signed in as", (prof as { email?: string }).email, "role=", role);
-          navigate(rolePath(role), { replace: true });
+          const appRole = resolveAppRole(user, prof as { role?: string | null });
+          console.info("[Login] auto-redirect:", (prof as { email?: string }).email, "→", appRole);
+          navigate(roleHomeHref(appRole), { replace: true });
           return;
         }
       } catch { /* fall through to login form */ }
@@ -64,9 +55,9 @@ export default function Login() {
         .maybeSingle();
       if (profErr) throw profErr;
       if (!prof) throw new Error("Profile missing. Run the SQL migration and try again.");
-      const role = (prof as { role?: string }).role;
-      console.info("[Login] sign-in success:", (prof as { email?: string }).email, "role=", role, "→", rolePath(role));
-      navigate(rolePath(role), { replace: true });
+      const appRole = resolveAppRole(user, prof as { role?: string | null });
+      console.info("[Login] sign-in success:", (prof as { email?: string }).email, "→", appRole);
+      navigate(roleHomeHref(appRole), { replace: true });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Sign in failed";
       setError(msg);

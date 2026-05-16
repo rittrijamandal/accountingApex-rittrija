@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/apex/AppShell";
 import { StatusPill } from "@/components/apex/StatusPill";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
 import { toDisplayWorld, type DisplayWorld } from "@/lib/types";
 import { SESSION_PREVIEW_WORLD_ID } from "@/lib/graderSessionPreview";
+import { resolveAppRole } from "@/lib/role";
 import { prettifyWelcomeFirstName } from "@/lib/utils";
 import { Hammer, ClipboardCheck, Globe, Plus, ArrowRight, Loader2, Pencil, Trash2, Eye } from "lucide-react";
 
@@ -65,6 +66,10 @@ export default function ExpertHome() {
         <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     );
+  }
+
+  if (resolveAppRole(null, profile) === "admin") {
+    return <Navigate to="/admin" replace />;
   }
 
   return (

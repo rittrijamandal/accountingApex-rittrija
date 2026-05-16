@@ -28,7 +28,7 @@
     </div>
   </div>
   <script type="module">
-    import { getSupabase, fetchMyProfile, roleHomePath, getSession, clearSupabaseLocalStorage } from './js/auth-core.js';
+    import { getSupabase, fetchMyProfile, roleHomePathForUser, getSession, clearSupabaseLocalStorage } from './js/auth-core.js';
 
     const errEl = document.getElementById('err');
     const form = document.getElementById('form');
@@ -71,7 +71,11 @@
         if (existing) {
           const profile = await fetchMyProfile();
           if (profile) {
-            window.location.replace(roleHomePath(profile.role));
+            const sb = await getSupabase();
+            const { data: { user } } = await sb.auth.getUser();
+            if (user) {
+              window.location.replace(roleHomePathForUser(user, profile));
+            }
             return;
           }
         }
@@ -92,7 +96,9 @@
         if (error) throw error;
         const profile = await fetchMyProfile();
         if (!profile) throw new Error('Profile missing. Run the SQL migration and try again.');
-        window.location.replace(roleHomePath(profile.role));
+        const { data: { user } } = await sb.auth.getUser();
+        if (!user) throw new Error('Sign-in succeeded but no user returned.');
+        window.location.replace(roleHomePathForUser(user, profile));
       } catch (err) {
         showErr(err.message || 'Sign in failed');
       } finally {
