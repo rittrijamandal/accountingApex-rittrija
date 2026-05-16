@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Star, Loader2, FileText, FileSpreadsheet, ClipboardList, ListChecks, Database, ChevronRight, Folder, FolderOpen, File } from "lucide-react";
 import { AppShell } from "@/components/apex/AppShell";
 import { StatusPill } from "@/components/apex/StatusPill";
@@ -7,9 +7,10 @@ import { TextPdfPane } from "@/components/apex/TextPdfPane";
 import { useAuth } from "@/hooks/use-auth";
 import { getSupabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { ACQUI_WORLD_PAYLOAD } from "@/data/acqui-world";
 import { getDataRoomFilesFromPayload, isExtractedTextPlaceholder } from "@/lib/dataRoomFileImport";
-import { curriculumWorldDisplayTitle } from "@/lib/graderLobbyWorlds";
-import type { QueueWorld, UploadedFile, RubricItem } from "@/lib/types";
+import { canonicalGraderLobbyTitle, curriculumWorldDisplayTitle } from "@/lib/graderLobbyWorlds";
+import type { QueueWorld, UploadedFile, RubricItem, WorldPayload } from "@/lib/types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -192,6 +193,21 @@ function RubricList({ rubric }: { rubric: RubricItem[] }) {
   );
 }
 
+/** DB row may be sparse; align Deals & Advisory / AcquiCo with the same curriculum as the grader lobby static world. */
+function effectiveReviewerPayload(world: QueueWorld): WorldPayload {
+  const p = (world.payload || {}) as WorldPayload;
+  if (canonicalGraderLobbyTitle((world.title || "").trim()) !== "Deals & Advisory") return p;
+  const c = ACQUI_WORLD_PAYLOAD;
+  return {
+    ...p,
+    files: c.files,
+    rubric: c.rubric,
+    meta: { ...c.meta, ...p.meta },
+    taskPrompt: c.meta.taskPrompt,
+    review: p.review,
+  } as WorldPayload;
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface Props {
@@ -209,11 +225,10 @@ export function ReviewerView({ world, existingScore, existingNotes, avgScore, on
   const [notes, setNotes] = useState(existingNotes);
   const [submitting, setSubmitting] = useState(false);
 
-  const payload = world.payload || {};
-  // Memoized so uid() inside getDataRoomFilesFromPayload doesn't regenerate on every render
-  const files = useMemo(() => getDataRoomFilesFromPayload(world.payload), [world.payload]);
+  const payload = useMemo(() => effectiveReviewerPayload(world), [world]);
+  const files = useMemo(() => getDataRoomFilesFromPayload(payload), [payload]);
   const rubric = Array.isArray(payload.rubric) ? payload.rubric : [];
-  const taskPrompt = String(payload.taskPrompt || "");
+  const taskPrompt = String(payload.taskPrompt || (payload.meta as { taskPrompt?: string } | undefined)?.taskPrompt || "");
 
   // Detect fileworld: any file has "/" in its displayLabel
   const isFileworld = useMemo(() => files.some((f) => (f.displayLabel || "").includes("/")), [files]);
@@ -229,6 +244,10 @@ export function ReviewerView({ world, existingScore, existingNotes, avgScore, on
     return s;
   }, [isFileworld, files]);
   const [expanded, setExpanded] = useState<Set<string>>(initialExpanded);
+  useEffect(() => {
+    setExpanded(new Set(initialExpanded));
+  }, [world.id, initialExpanded]);
+
   function toggleFolder(k: string) {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -238,7 +257,20 @@ export function ReviewerView({ world, existingScore, existingNotes, avgScore, on
   }
 
   const [sidebarTab, setSidebarTab] = useState<"taskrubric" | "dataroom">("taskrubric");
-  const [activeFileId, setActiveFileId] = useState<string | null>(files.length > 0 ? (files[0].id || "file-0") : null);
+  const [activeFileId, setActiveFileId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (files.length === 0) {
+      setActiveFileId(null);
+      return;
+    }
+    setActiveFileId((prev) => {
+      const firstId = files[0].id || "file-0";
+      if (!prev) return firstId;
+      const stillThere = files.some((f, i) => (f.id || `file-${i}`) === prev);
+      return stillThere ? prev : firstId;
+    });
+  }, [world.id, files]);
 
   const activeFile = files.find((f, i) => (f.id || `file-${i}`) === activeFileId) ?? null;
 
@@ -276,7 +308,7 @@ export function ReviewerView({ world, existingScore, existingNotes, avgScore, on
           </button>
           <ChevronRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
           <span className="text-sm font-semibold text-slate-900 truncate">{curriculumWorldDisplayTitle(world.title)}</span>
-          <StatusPill status={world.payload?.review?.status === "in_review" ? "IN REVIEW" : "DRAFT"} />
+          <StatusPill status={payload.review?.status === "in_review" ? "IN REVIEW" : "DRAFT"} />
         </div>
         <div className="text-xs text-slate-500 shrink-0">
           by {world.creator_email || world.creator_id.slice(0, 8)}
